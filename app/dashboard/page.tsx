@@ -32,10 +32,19 @@ import LGPDArticleModal from "@/components/LGPDArticleModal"
 import AICardioArticleModal from "@/components/AICardioArticleModal"
 import ProductivityArticleModal from "@/components/ProductivityArticleModal"
 import DockSidebar from "@/components/DockSidebar"
+import ProtectedRoute from "@/components/ProtectedRoute"
 import type { MedicalProfile } from "@/components/MedicalProfileWizard"
 import { useToast } from "@/components/ui/toast"
 
 export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
+  )
+}
+
+function DashboardContent() {
   const [selectedModal, setSelectedModal] = useState<string | null>(null)
   const [showSetupWizard, setShowSetupWizard] = useState(false)
   const [showProfileWizard, setShowProfileWizard] = useState(false)
