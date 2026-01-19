@@ -72,9 +72,9 @@ export default function AICardioArticleModal({ isOpen, onClose }: AICardioArticl
                     </div>
                     <p className="text-sm text-zinc-400">Precisão em ECG automático</p>
                   </div>
-                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-6 border border-green-500/20">
+                  <div className="bg-gradient-to-br from-brand-500/10 to-brand-500/10 rounded-xl p-6 border border-brand-500/20">
                     <div className="flex items-center gap-3 mb-2">
-                      <Shield className="w-8 h-8 text-green-400" />
+                      <Shield className="w-8 h-8 text-brand-400" />
                       <span className="text-3xl font-bold text-white">60%</span>
                     </div>
                     <p className="text-sm text-zinc-400">Mais rápido na triagem</p>
@@ -114,7 +114,7 @@ export default function AICardioArticleModal({ isOpen, onClose }: AICardioArticl
                         arritmias, bloqueios e sinais precoces de infarto com <strong>precisão de até 92%</strong>. 
                         O algoritmo da Apple Watch, por exemplo, já salvou milhares de vidas detectando fibrilação atrial.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Detecta padrões que passam despercebidos em leituras manuais</span>
                       </div>
@@ -131,7 +131,7 @@ export default function AICardioArticleModal({ isOpen, onClose }: AICardioArticl
                         colesterol, histórico familiar, exames laboratoriais) e calcular o risco individual de 
                         infarto ou AVC nos próximos 5-10 anos com <strong>precisão superior aos escores tradicionais</strong>.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Personaliza planos de prevenção baseados em perfil único do paciente</span>
                       </div>
@@ -148,7 +148,7 @@ export default function AICardioArticleModal({ isOpen, onClose }: AICardioArticl
                         tomografias cardíacas. A IA consegue calcular fração de ejeção, detectar valvopatias 
                         e identificar áreas isquêmicas com <strong>velocidade 10x superior</strong> ao radiologista humano.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Reduz tempo de laudo de 2 horas para 12 minutos</span>
                       </div>
@@ -165,7 +165,7 @@ export default function AICardioArticleModal({ isOpen, onClose }: AICardioArticl
                         24/7, alertando o médico automaticamente quando detectam anomalias. Isso permite 
                         <strong> intervenção precoce</strong> antes de eventos graves.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Pacientes com insuficiência cardíaca têm redução de 30% nas internações</span>
                       </div>

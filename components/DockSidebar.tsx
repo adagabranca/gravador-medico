@@ -93,10 +93,10 @@ export default function DockSidebar() {
           width: expandedItem ? "240px" : "80px",
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="relative h-full rounded-3xl bg-gradient-to-br from-green-900 to-emerald-950 backdrop-blur-2xl border border-green-700 shadow-2xl overflow-visible"
+  className="relative h-full rounded-3xl bg-gradient-to-br from-brand-800 to-brand-900 backdrop-blur-2xl border border-brand-700 shadow-2xl overflow-visible"
       >
-        {/* Subtle Glow */}
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-green-500/5 pointer-events-none" />
+  {/* Subtle Glow */}
+  <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-brand-500/5 pointer-events-none" />
 
         <div className="relative h-full flex flex-col items-center py-8">
           {/* Logo */}
@@ -104,7 +104,7 @@ export default function DockSidebar() {
             whileHover={{ scale: 1.1, rotate: 5 }}
             className="mb-12"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-lg">
               <span className="text-2xl font-bold text-white">G</span>
             </div>
           </motion.div>
@@ -144,8 +144,8 @@ export default function DockSidebar() {
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
                         isActive
-                          ? "bg-green-700 text-white"
-                          : "text-gray-300 hover:text-white hover:bg-green-800"
+              ? "bg-brand-700 text-white"
+                : "text-gray-300 hover:text-white hover:bg-brand-800"
                       }`}
                     >
                       {item.icon}
@@ -180,7 +180,7 @@ export default function DockSidebar() {
             whileTap={{ scale: 0.95 }}
             className="mt-auto"
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 ring-gray-200">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center ring-2 ring-gray-200">
               <User className="w-6 h-6 text-white" />
             </div>
           </motion.button>

@@ -123,7 +123,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               placeholder="Dr(a). Seu Nome"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-500/50 transition-colors"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 transition-colors"
             />
           </div>
 
@@ -136,7 +136,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
               value={profile.crm}
               onChange={(e) => setProfile({ ...profile, crm: e.target.value })}
               placeholder="CRM/UF 123456"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-500/50 transition-colors"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors"
             />
           </div>
 
@@ -147,7 +147,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
             <select
               value={profile.specialty}
               onChange={(e) => setProfile({ ...profile, specialty: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-teal-500/50 transition-colors"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-500/50 transition-colors"
             >
               <option value="" className="bg-gray-900">Selecione...</option>
               {specialties.map(spec => (
@@ -170,7 +170,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
                 subspecialties: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
               })}
               placeholder="Ex: Ecocardiografia, Hemodinâmica"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-500/50 transition-colors"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors"
             />
             <p className="text-xs text-gray-500 mt-1">Separe por vírgulas</p>
           </div>
@@ -192,7 +192,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
               onClick={() => setProfile({ ...profile, preferredFormat: format.id })}
               className={`w-full p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                 profile.preferredFormat === format.id
-                  ? 'bg-teal-500/20 border-teal-500'
+                  ? 'bg-brand-50 border-brand text-brand-500'
                   : 'bg-white/5 border-white/10 hover:border-white/30'
               }`}
             >
@@ -202,7 +202,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
                   <p className="text-sm text-gray-400">{format.description}</p>
                 </div>
                 {profile.preferredFormat === format.id && (
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0" />
+                  <Check className="w-5 h-5 text-brand-400 flex-shrink-0" />
                 )}
               </div>
             </button>
@@ -230,7 +230,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
                   })}
                   className={`p-3 rounded-xl border-2 transition-all duration-300 text-sm font-medium ${
                     profile.careType.includes(type)
-                      ? 'bg-teal-500/20 border-teal-500 text-teal-300'
+                      ? 'bg-brand-50 border-brand text-brand-500'
                       : 'bg-white/5 border-white/10 hover:border-white/30 text-gray-400'
                   }`}
                 >
@@ -288,9 +288,9 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
             </p>
           </div>
 
-          <div className="p-4 bg-gradient-to-br from-teal-500/10 to-blue-500/10 rounded-xl border border-teal-500/20">
+          <div className="p-4 bg-gradient-to-br from-brand-50 to-blue-500/10 rounded-xl border border-brand-50">
             <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
+              <Sparkles className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-semibold text-white mb-1">Prompt Personalizado</h4>
                 <p className="text-sm text-gray-400">
@@ -379,7 +379,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
                           width: index < currentStep ? '100%' : '0%' 
                         }}
                         transition={{ duration: 0.3 }}
-                        className="h-full bg-gradient-to-r from-teal-500 to-blue-500"
+                        className="h-full bg-gradient-to-r from-brand-500 to-brand-600"
                       />
                     </div>
                   ))}
@@ -415,7 +415,7 @@ export default function MedicalProfileWizard({ isOpen, onClose, onComplete }: Me
                 <button
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02]"
+                  className="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02]"
                 >
                   {currentStep === totalSteps ? (
                     <>

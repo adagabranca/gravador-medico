@@ -32,9 +32,9 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
       icon: Download,
       content: (
         <div className="space-y-6">
-          <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-teal-500/10 to-teal-600/10 rounded-2xl border border-teal-500/20">
-            <div className="p-4 rounded-xl bg-teal-500/20">
-              <Download className="w-8 h-8 text-teal-400" />
+          <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-brand-500/10 to-brand-600/10 rounded-2xl border border-brand-500/20">
+            <div className="p-4 rounded-xl bg-brand-500/20">
+              <Download className="w-8 h-8 text-brand-400" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">VoicePen</h3>
@@ -46,7 +46,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
             href="https://apps.apple.com/us/app/ai-note-taker-voicepen/id6462815872"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-4 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02]"
+            className="flex items-center justify-center gap-2 w-full py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02]"
           >
             Baixar pela App Store
             <ExternalLink className="w-4 h-4" />
@@ -54,14 +54,14 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
 
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
-              <div className="p-1 rounded-full bg-teal-500/20">
-                <Check className="w-4 h-4 text-teal-400" />
+              <div className="p-1 rounded-full bg-brand-500/20">
+                <Check className="w-4 h-4 text-brand-400" />
               </div>
               <span className="text-gray-300">App instalado</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <div className="p-1 rounded-full bg-teal-500/20">
-                <Check className="w-4 h-4 text-teal-400" />
+              <div className="p-1 rounded-full bg-brand-500/20">
+                <Check className="w-4 h-4 text-brand-400" />
               </div>
               <span className="text-gray-300">Permissões de microfone ok</span>
             </div>
@@ -138,7 +138,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-purple-400" />
               SOAP (padrão ouro)
-              <span className="ml-auto px-2 py-1 bg-teal-500/20 text-teal-300 text-xs rounded-full">
+              <span className="ml-auto px-2 py-1 bg-brand-500/20 text-brand-300 text-xs rounded-full">
                 Recomendado
               </span>
             </h3>
@@ -148,7 +148,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
               <p>A: Hipótese diagnóstica...</p>
               <p>P: Plano terapêutico...</p>
             </div>
-            <button className="mt-4 w-full py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
+            <button className="mt-4 w-full py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
               <FileText className="w-4 h-4" />
               Copiar
             </button>
@@ -224,9 +224,9 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
       icon: Mic,
       content: (
         <div className="space-y-6">
-          <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-teal-500/10 to-emerald-600/10 rounded-2xl border border-teal-500/20">
-            <div className="p-4 rounded-xl bg-teal-500/20">
-              <Mic className="w-8 h-8 text-teal-400" />
+          <div className="flex items-center gap-4 p-6 bg-gradient-to-br from-brand-500/10 to-brand-600/10 rounded-2xl border border-brand-500/20">
+            <div className="p-4 rounded-xl bg-brand-500/20">
+              <Mic className="w-8 h-8 text-brand-400" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">Script de teste</h3>
@@ -234,7 +234,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500/5 to-teal-500/5 rounded-xl p-6 border border-blue-500/20">
+          <div className="bg-gradient-to-br from-blue-500/5 to-brand-500/5 rounded-xl p-6 border border-blue-500/20">
             <p className="text-sm text-gray-300 leading-relaxed italic">
               "Paciente teste, 35 anos, sexo masculino. Queixa de dor de cabeça há 3 dias, tipo pressão, 
               localização frontal. Sem febre. Tomou paracetamol com melhora parcial. Ao exame: BEG, 
@@ -249,16 +249,16 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
             </summary>
             <div className="px-6 pb-4 border-t border-white/10 pt-4">
               <div className="bg-black/40 rounded-xl p-4 font-mono text-xs text-gray-300 space-y-2">
-                <p className="text-teal-400 font-semibold">S (Subjetivo):</p>
+                <p className="text-brand-400 font-semibold">S (Subjetivo):</p>
                 <p>• Dor de cabeça há 3 dias</p>
                 <p>• Tipo pressão, localização frontal</p>
                 <p>• Sem febre</p>
-                <p className="text-teal-400 font-semibold mt-3">O (Objetivo):</p>
+                <p className="text-brand-400 font-semibold mt-3">O (Objetivo):</p>
                 <p>• BEG, afebril</p>
                 <p>• Sem sinais de irritação meníngea</p>
-                <p className="text-teal-400 font-semibold mt-3">A (Avaliação):</p>
+                <p className="text-brand-400 font-semibold mt-3">A (Avaliação):</p>
                 <p>• Hipótese: Cefaleia tensional</p>
-                <p className="text-teal-400 font-semibold mt-3">P (Plano):</p>
+                <p className="text-brand-400 font-semibold mt-3">P (Plano):</p>
                 <p>• Orientações gerais</p>
                 <p>• Analgésico se necessário</p>
                 <p>• Retorno se piora</p>
@@ -266,7 +266,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
             </div>
           </details>
 
-          <button className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
+          <button className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
             Concluir configuração
             <Check className="w-5 h-5" />
           </button>
@@ -317,8 +317,8 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
               <div className="p-6 border-b border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20">
-                      <currentStepData.icon className="w-5 h-5 text-teal-400" />
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-brand-500/20 to-blue-500/20">
+                      <currentStepData.icon className="w-5 h-5 text-brand-400" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">
@@ -348,7 +348,7 @@ export default function SetupWizard({ isOpen, onClose }: SetupWizardProps) {
                           width: index < currentStep ? '100%' : '0%' 
                         }}
                         transition={{ duration: 0.3 }}
-                        className="h-full bg-gradient-to-r from-teal-500 to-blue-500"
+                        className="h-full bg-gradient-to-r from-brand-500 to-brand-600"
                       />
                     </div>
                   ))}

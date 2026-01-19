@@ -65,9 +65,9 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                     </div>
                     <p className="text-sm text-zinc-400">Ganho médio por dia</p>
                   </div>
-                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-6 border border-green-500/20">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Zap className="w-8 h-8 text-green-400" />
+                  <div className="bg-gradient-to-br from-brand-50 to-brand-50 rounded-xl p-6 border border-brand-50">
+                      <div className="flex items-center gap-3 mb-2">
+                      <Zap className="w-8 h-8 text-brand-400" />
                       <span className="text-3xl font-bold text-white">45%</span>
                     </div>
                     <p className="text-sm text-zinc-400">Mais produtivo</p>
@@ -150,7 +150,7 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                         Ferramentas de transcrição automática (como VoicePen) transformam sua fala em prontuário 
                         estruturado SOAP enquanto você atende. Você foca no paciente, a IA cuida da documentação.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Reduz tempo de prontuário de 12 minutos para 2 minutos</span>
                       </div>
@@ -170,16 +170,16 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                         vez (10h), faça TODOS os prontuários pendentes juntos (14h), atualize-se cientificamente 
                         apenas em horários fixos (19h).
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Elimina "troca de contexto" que consome 23 minutos por interrupção</span>
                       </div>
                     </div>
 
                     {/* Strategy 3 */}
-                    <div className="bg-gradient-to-r from-green-500/10 to-transparent rounded-xl p-6 border-l-4 border-green-500">
-                      <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                        <span className="text-2xl text-green-400">3.</span>
+                    <div className="bg-gradient-to-r from-brand-50 to-transparent rounded-xl p-6 border-l-4 border-brand">
+            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+              <span className="text-2xl text-brand-400">3.</span>
                         Delegação Inteligente
                       </h3>
                       <p className="text-zinc-300 leading-relaxed mb-4">
@@ -190,7 +190,7 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                         simples, preenchimento de formulários, retornos de exames normais. Secretárias e 
                         enfermeiras qualificadas são seus maiores aliados.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Médicos que delegam bem atendem 35% mais pacientes</span>
                       </div>
@@ -210,7 +210,7 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                         ANTES da consulta. Você chega já sabendo queixa principal, medicações e alergias - economiza 
                         5 minutos por paciente.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Consultas mais objetivas e focadas no que realmente importa</span>
                       </div>
@@ -229,7 +229,7 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                         Se uma tarefa leva menos de 2 minutos, faça IMEDIATAMENTE. Não adicione à lista de "depois". 
                         Isso inclui: responder um e-mail rápido, assinar um documento, confirmar um agendamento.
                       </p>
-                      <div className="flex items-start gap-2 text-sm text-emerald-400">
+                      <div className="flex items-start gap-2 text-sm text-brand-400">
                         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <span>Evita acúmulo de "mini-tarefas" que viram montanha no fim do dia</span>
                       </div>
@@ -254,19 +254,19 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
                     </p>
                     <ul className="space-y-2 text-zinc-300 mb-4">
                       <li className="flex items-start gap-3">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-400 mt-1 flex-shrink-0" />
                         <span>Passou a usar VoicePen para transcrição automática</span>
                       </li>
                       <li className="flex items-start gap-3">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-400 mt-1 flex-shrink-0" />
                         <span>Criou questionário pré-consulta no Google Forms</span>
                       </li>
                       <li className="flex items-start gap-3">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-400 mt-1 flex-shrink-0" />
                         <span>Delegou renovação de receitas crônicas para enfermeira</span>
                       </li>
                       <li className="flex items-start gap-3">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-brand-400 mt-1 flex-shrink-0" />
                         <span>Implementou time blocking para WhatsApp (10h, 14h, 18h)</span>
                       </li>
                     </ul>
@@ -279,15 +279,15 @@ export default function ProductivityArticleModal({ isOpen, onClose }: Productivi
 
                 {/* Action Plan */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                    <Calendar className="w-8 h-8 text-green-400" />
+                    <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Calendar className="w-8 h-8 text-brand-400" />
                     Plano de Ação: Primeiros 30 Dias
                   </h2>
                   
                   <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-green-500/10 to-transparent rounded-xl p-4 border-l-4 border-green-500">
+                    <div className="bg-gradient-to-r from-brand-50 to-transparent rounded-xl p-4 border-l-4 border-brand">
                       <div className="flex items-start gap-3">
-                        <span className="text-green-400 font-bold mt-1">Semana 1:</span>
+                        <span className="text-brand-400 font-bold mt-1">Semana 1:</span>
                         <span className="text-zinc-300">Implemente automação de prontuários (VoicePen ou similar)</span>
                       </div>
                     </div>

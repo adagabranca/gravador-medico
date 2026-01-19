@@ -87,8 +87,8 @@ const features: Feature[] = [
       'Útil para reuniões com múltiplos profissionais',
       'Transcrições mais organizadas'
     ],
-    color: 'from-teal-500 to-cyan-600',
-    gradient: 'bg-gradient-to-br from-teal-500/20 to-cyan-600/20'
+  color: 'from-brand-500 to-brand-600',
+  gradient: 'bg-gradient-to-br from-brand-500/20 to-brand-600/20'
   },
   {
     id: 'offline',
@@ -102,8 +102,8 @@ const features: Feature[] = [
       'Perfeito para áreas rurais',
       'Nunca perca uma consulta'
     ],
-    color: 'from-green-500 to-emerald-600',
-    gradient: 'bg-gradient-to-br from-green-500/20 to-emerald-600/20'
+  color: 'from-brand-500 to-brand-600',
+  gradient: 'bg-gradient-to-br from-brand-500/20 to-brand-600/20'
   },
   {
     id: 'styles',
@@ -162,8 +162,8 @@ const features: Feature[] = [
       'Dados sempre disponíveis',
       'Comece no celular, termine no computador'
     ],
-    color: 'from-cyan-500 to-teal-600',
-    gradient: 'bg-gradient-to-br from-cyan-500/20 to-teal-600/20'
+  color: 'from-cyan-500 to-brand-600',
+  gradient: 'bg-gradient-to-br from-cyan-500/20 to-brand-600/20'
   },
   {
     id: 'private',

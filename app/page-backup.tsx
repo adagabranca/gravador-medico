@@ -46,20 +46,20 @@ export default function LandingPage() {
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-7xl">
           <div className="flex items-center gap-2">
-            <Smartphone className="w-8 h-8 text-emerald-600" />
+            <Smartphone className="w-8 h-8 text-brand-600" />
             <span className="text-xl font-black text-gray-900">Gravador Médico</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#beneficios" className="text-gray-600 hover:text-emerald-600 font-medium transition-colors">Benefícios</a>
-            <a href="#como-funciona" className="text-gray-600 hover:text-emerald-600 font-medium transition-colors">Como Funciona</a>
-            <a href="#bonus" className="text-gray-600 hover:text-emerald-600 font-medium transition-colors">Bônus</a>
-            <a href="#garantia" className="text-gray-600 hover:text-emerald-600 font-medium transition-colors">Garantia</a>
+            <a href="#beneficios" className="text-gray-600 hover:text-brand-600 font-medium transition-colors">Benefícios</a>
+            <a href="#como-funciona" className="text-gray-600 hover:text-brand-600 font-medium transition-colors">Como Funciona</a>
+            <a href="#bonus" className="text-gray-600 hover:text-brand-600 font-medium transition-colors">Bônus</a>
+            <a href="#garantia" className="text-gray-600 hover:text-brand-600 font-medium transition-colors">Garantia</a>
           </nav>
 
           <Link
             href="/dashboard"
-            className="hidden md:inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-700 transition-colors"
+            className="hidden md:inline-flex items-center gap-2 bg-brand-600 text-white px-6 py-3 rounded-full font-bold hover:bg-brand-700 transition-colors"
           >
             Começar Agora
             <ArrowRight className="w-4 h-4" />
@@ -76,8 +76,8 @@ export default function LandingPage() {
 
       {/* PRIMEIRA DOBRA - HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center px-4 pt-32 pb-20 overflow-hidden">
-        {/* Background com gradiente sutil */}
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/50 via-white to-white" />
+  {/* Background com gradiente sutil */}
+  <div className="absolute inset-0 bg-gradient-to-b from-brand-50/50 via-white to-white" />
         
         {/* Grid decorativo */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
@@ -94,7 +94,7 @@ export default function LandingPage() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-gray-900 leading-tight px-4">
                 Grave com 1 Toque,<br />
                 Gere Prontuários Automáticos<br />
-                <span className="text-emerald-600">e Pare de Perder Tempo Digitando</span>
+                <span className="text-brand-600">e Pare de Perder Tempo Digitando</span>
               </h1>
             </motion.div>
 
@@ -115,7 +115,7 @@ export default function LandingPage() {
               transition={{ delay: 0.4 }}
               className="my-8 md:my-12 px-4"
             >
-              <div className="bg-gradient-to-br from-emerald-600 to-green-600 rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-2xl max-w-3xl mx-auto">
+              <div className="bg-gradient-to-br from-brand-600 to-brand-600 rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-2xl max-w-3xl mx-auto">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-white/20">
                   <div className="flex items-center justify-center gap-2 md:gap-4 mb-4 md:mb-6">
                     <Smartphone className="w-10 h-10 md:w-16 md:h-16 text-white" />
@@ -135,17 +135,17 @@ export default function LandingPage() {
               transition={{ delay: 0.6 }}
               className="space-y-6 px-4"
             >
-              <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-2xl mx-auto border-4 border-emerald-600">
+                <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-w-2xl mx-auto border-4 border-brand-600">
                 <p className="text-gray-600 text-base md:text-lg line-through mb-2">De R$ 497,00</p>
                 <div className="flex items-baseline justify-center gap-2 mb-4">
                   <span className="text-lg md:text-2xl text-gray-600">Por apenas</span>
-                  <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-emerald-600">R$ 37</span>
+                  <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-brand-600">R$ 37</span>
                 </div>
                 <p className="text-gray-600 text-sm md:text-lg font-semibold mb-6">Pagamento único • Acesso vitalício • Sem mensalidade</p>
                 
                 <Link
                   href="#checkpoints"
-                  className="group inline-flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 sm:px-8 md:px-12 py-4 md:py-6 rounded-full text-base sm:text-lg md:text-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full"
+                  className="group inline-flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-brand-600 to-brand-600 text-white px-6 sm:px-8 md:px-12 py-4 md:py-6 rounded-full text-base sm:text-lg md:text-2xl font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105 w-full"
                 >
                   <span className="text-center leading-tight">QUERO COMEÇAR AGORA</span>
                   <ArrowRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
@@ -214,10 +214,10 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-emerald-100"
+                className="bg-white rounded-xl md:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-100"
               >
                 <div className="flex items-start gap-3 sm:gap-4 md:gap-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center flex-shrink-0">
                     <checkpoint.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                   </div>
                   <div>
@@ -236,7 +236,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto"
           >
-            <div className="bg-gradient-to-br from-green-800 to-emerald-900 rounded-3xl p-12 shadow-2xl">
+            <div className="bg-gradient-to-br from-brand-800 to-brand-900 rounded-3xl p-12 shadow-2xl">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-10 border-2 border-white/20">
                 <div className="grid md:grid-cols-3 gap-8 text-center">
                   <div>
@@ -274,7 +274,7 @@ export default function LandingPage() {
               Como Você Vai Receber o Método
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Passo a passo em <span className="font-bold text-emerald-600">videoaulas + PDF + modelos prontos</span>
+              Passo a passo em <span className="font-bold text-brand-600">videoaulas + PDF + modelos prontos</span>
             </p>
           </motion.div>
 
@@ -302,9 +302,9 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-8 text-center border-2 border-emerald-100"
+                className="bg-gradient-to-br from-brand-50 to-brand-50 rounded-2xl p-8 text-center border-2 border-brand-100"
               >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <item.icon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
@@ -384,10 +384,10 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.03 }}
-                  className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100"
+                  className="bg-gradient-to-br from-brand-50 to-brand-50 rounded-xl p-4 border border-brand-100"
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-600 flex-shrink-0" />
                     <span className="text-gray-900 font-semibold">{specialty}</span>
                   </div>
                 </motion.div>
@@ -446,7 +446,7 @@ export default function LandingPage() {
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-gray-100"
               >
                 <div className="mb-6">
-                  <svg className="w-10 h-10 text-emerald-600 opacity-40" fill="currentColor" viewBox="0 0 32 32">
+                  <svg className="w-10 h-10 text-brand-600 opacity-40" fill="currentColor" viewBox="0 0 32 32">
                     <path d="M10 8c-3.3 0-6 2.7-6 6v10h8V14h-4c0-2.2 1.8-4 4-4V8zm14 0c-3.3 0-6 2.7-6 6v10h8V14h-4c0-2.2 1.8-4 4-4V8z" />
                   </svg>
                 </div>
@@ -455,7 +455,7 @@ export default function LandingPage() {
                 </p>
                 <div>
                   <p className="font-bold text-gray-900">{testimonial.author}</p>
-                  <p className="text-emerald-600 text-sm">{testimonial.specialty}</p>
+                  <p className="text-brand-600 text-sm">{testimonial.specialty}</p>
                 </div>
               </motion.div>
             ))}
@@ -509,16 +509,16 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 shadow-lg border-2 border-emerald-100 hover:border-emerald-300 transition-all"
+                className="bg-white rounded-2xl p-8 shadow-lg border-2 border-brand-100 hover:border-brand-300 transition-all"
               >
                 <div className="flex flex-col md:flex-row items-start gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                     <bonus.icon className="w-8 h-8 text-white" />
                   </div>
                   <div className="flex-1">
                     <div className="mb-3">
                       <h3 className="text-2xl font-bold text-gray-900">{bonus.title}</h3>
-                      <p className="text-emerald-600 font-semibold text-sm mt-1">{bonus.subtitle}</p>
+                      <p className="text-brand-600 font-semibold text-sm mt-1">{bonus.subtitle}</p>
                     </div>
                     <p className="text-gray-600 text-lg leading-relaxed">{bonus.description}</p>
                   </div>
@@ -538,7 +538,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-green-800 to-emerald-900 rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl"
+            className="bg-gradient-to-br from-brand-800 to-brand-900 rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl"
           >
             {/* Grid background */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
@@ -607,36 +607,36 @@ export default function LandingPage() {
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div>
                   <span className="text-gray-600">+ Prontuários com Seu Nome</span>
-                  <span className="ml-2 text-xs text-emerald-600 font-semibold">(Bônus Exclusivo)</span>
+                  <span className="ml-2 text-xs text-brand-600 font-semibold">(Bônus Exclusivo)</span>
                 </div>
-                <span className="text-emerald-600 font-bold">INCLUSO</span>
+                <span className="text-brand-600 font-bold">INCLUSO</span>
               </div>
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div>
                   <span className="text-gray-600">+ Uso Além da Consulta</span>
-                  <span className="ml-2 text-xs text-emerald-600 font-semibold">(Bônus Produtividade)</span>
+                  <span className="ml-2 text-xs text-brand-600 font-semibold">(Bônus Produtividade)</span>
                 </div>
-                <span className="text-emerald-600 font-bold">INCLUSO</span>
+                <span className="text-brand-600 font-bold">INCLUSO</span>
               </div>
               <div className="flex items-center justify-between py-4 border-b-2 border-gray-300">
                 <div>
                   <span className="text-gray-600">+ Backup Profissional</span>
-                  <span className="ml-2 text-xs text-emerald-600 font-semibold">(Bônus Segurança)</span>
+                  <span className="ml-2 text-xs text-brand-600 font-semibold">(Bônus Segurança)</span>
                 </div>
-                <span className="text-emerald-600 font-bold">INCLUSO</span>
+                <span className="text-brand-600 font-bold">INCLUSO</span>
               </div>
               <div className="flex items-center justify-between pt-6">
                 <span className="text-3xl font-black text-gray-900">INVESTIMENTO TOTAL:</span>
                 <div className="text-right">
                   <div className="text-gray-400 line-through text-xl mb-1">R$ 497</div>
-                  <div className="text-5xl font-black text-emerald-600">R$ 37</div>
+                  <div className="text-5xl font-black text-brand-600">R$ 37</div>
                 </div>
               </div>
             </div>
 
             <Link
               href="#checkout"
-              className="w-full group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 sm:px-8 md:px-12 py-4 md:py-6 rounded-full text-base sm:text-lg md:text-xl font-bold shadow-2xl hover:shadow-emerald-500/50 transition-all hover:scale-105"
+              className="w-full group relative inline-flex items-center justify-center gap-3 bg-gradient-to-r from-brand-600 to-brand-600 text-white px-6 sm:px-8 md:px-12 py-4 md:py-6 rounded-full text-base sm:text-lg md:text-xl font-bold shadow-2xl hover:shadow-brand-500/50 transition-all hover:scale-105"
             >
               <span>BAIXAR O MÉTODO AGORA</span>
               <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -667,7 +667,7 @@ export default function LandingPage() {
       <footer className="py-12 px-4 bg-gray-900 text-white">
         <div className="container mx-auto max-w-6xl text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <Smartphone className="w-8 h-8 text-emerald-500" />
+            <Smartphone className="w-8 h-8 text-brand-500" />
             <span className="text-2xl font-black">Gravador Médico</span>
           </div>
           <p className="text-gray-400 mb-8">

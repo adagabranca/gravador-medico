@@ -18,14 +18,14 @@ export default function DashboardLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} antialiased bg-[#030303] overflow-x-hidden`}>
+      <body className={`${inter.className} antialiased bg-white overflow-x-hidden`}>
         <ToastProvider>
           {/* Aurora Gradients Background */}
           <div className="fixed inset-0 pointer-events-none overflow-hidden">
             {/* Blue Aurora */}
-            <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px]" />
+            <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-blue-50 rounded-full blur-[120px]" />
             {/* Purple Aurora */}
-            <div className="absolute bottom-0 right-1/4 w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-0 right-1/4 w-[800px] h-[800px] bg-brand-50 rounded-full blur-[120px]" />
           </div>
 
           {/* Dock Sidebar */}

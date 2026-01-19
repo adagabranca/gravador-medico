@@ -14,34 +14,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao fazer login")
-      }
-
-      // Salvar token no localStorage
-      localStorage.setItem("auth_token", data.token)
-      
-      // Redirecionar para dashboard
-      router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.")
-    } finally {
-      setLoading(false)
-    }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    window.location.href = "https://gravador-medico.lovable.app";
   }
 
   return (

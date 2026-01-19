@@ -76,7 +76,7 @@ export default function PremiumUnlockModal({
             {/* Benefícios */}
             <div>
               <h4 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <CheckCircle className="w-5 h-5 text-brand-600" />
                 O que está incluído:
               </h4>
               
@@ -89,7 +89,7 @@ export default function PremiumUnlockModal({
                     transition={{ delay: 0.1 + index * 0.1 }}
                     className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200"
                   >
-                    <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-slate-700">{benefit}</span>
                   </motion.div>
                 ))}
@@ -143,14 +143,14 @@ export default function PremiumUnlockModal({
             </motion.div>
             
             {/* Garantia */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h5 className="font-semibold text-emerald-900 text-sm mb-1">
+                  <h5 className="font-semibold text-brand-900 text-sm mb-1">
                     Garantia de 7 dias
                   </h5>
-                  <p className="text-xs text-emerald-800">
+                  <p className="text-xs text-brand-800">
                     Se não ficar satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas.
                   </p>
                 </div>

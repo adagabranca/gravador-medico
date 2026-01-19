@@ -32,10 +32,10 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
             >
               <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
                 {/* Header */}
-                <div className="p-8 border-b border-white/10 bg-gradient-to-r from-emerald-900/20 to-teal-900/20">
+                <div className="p-8 border-b border-white/10 bg-gradient-to-r from-brand-600/20 to-brand-700/20">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                      <span className="px-3 py-1 rounded-full bg-brand/20 text-brand-500 text-xs font-bold border border-brand/30">
                         Conformidade
                       </span>
                       <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -71,7 +71,7 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                         lidamos com <strong className="text-white">dados sensíveis</strong> sobre a saúde dos pacientes.
                       </p>
                       <p>
-                        O não cumprimento da LGPD pode resultar em multas de até <strong className="text-emerald-400">R$ 50 milhões</strong> 
+                        O não cumprimento da LGPD pode resultar em multas de até <strong className="text-brand-400">R$ 50 milhões</strong> 
                         ou 2% do faturamento anual da empresa, além de danos irreparáveis à reputação profissional.
                       </p>
                     </section>
@@ -80,9 +80,9 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                       <h3 className="text-2xl font-bold text-white mb-4">Os 5 Pilares da LGPD na Prática Médica</h3>
                       
                       <div className="space-y-4">
-                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="p-4 rounded-xl bg-brand-50 border border-brand-50">
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-brand-400 flex-shrink-0 mt-1" />
                             <div>
                               <h4 className="text-lg font-bold text-white mb-1">1. Consentimento Claro</h4>
                               <p className="text-sm text-gray-400">
@@ -93,9 +93,9 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                           </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="p-4 rounded-xl bg-brand-50 border border-brand-50">
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-brand-400 flex-shrink-0 mt-1" />
                             <div>
                               <h4 className="text-lg font-bold text-white mb-1">2. Minimização de Dados</h4>
                               <p className="text-sm text-gray-400">
@@ -106,9 +106,9 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                           </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="p-4 rounded-xl bg-brand-50 border border-brand-50">
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-brand-400 flex-shrink-0 mt-1" />
                             <div>
                               <h4 className="text-lg font-bold text-white mb-1">3. Segurança da Informação</h4>
                               <p className="text-sm text-gray-400">
@@ -119,9 +119,9 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                           </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="p-4 rounded-xl bg-brand-50 border border-brand-50">
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-brand-400 flex-shrink-0 mt-1" />
                             <div>
                               <h4 className="text-lg font-bold text-white mb-1">4. Direitos do Titular</h4>
                               <p className="text-sm text-gray-400">
@@ -132,9 +132,9 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                           </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
                           <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-1" />
+                            <CheckCircle2 className="w-5 h-5 text-brand-400 flex-shrink-0 mt-1" />
                             <div>
                               <h4 className="text-lg font-bold text-white mb-1">5. Transparência e Responsabilidade</h4>
                               <p className="text-sm text-gray-400">
@@ -147,34 +147,34 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                       </div>
                     </section>
 
-                    <section className="p-6 rounded-2xl bg-gradient-to-br from-emerald-900/20 to-teal-900/20 border border-emerald-500/20">
+                    <section className="p-6 rounded-2xl bg-gradient-to-br from-brand-600/20 to-brand-700/20 border border-brand-50">
                       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-emerald-400" />
+                        <Shield className="w-6 h-6 text-brand-500" />
                         Checklist de Conformidade LGPD
                       </h3>
                       <ul className="space-y-2 text-sm text-gray-300">
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-500 mt-1">✓</span>
                           <span>Termo de Consentimento LGPD assinado por todos os pacientes</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-400 mt-1">✓</span>
                           <span>Política de Privacidade visível no consultório e site</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-400 mt-1">✓</span>
                           <span>Sistema de prontuário eletrônico com criptografia</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-400 mt-1">✓</span>
                           <span>Contratos com fornecedores incluindo cláusulas LGPD</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-400 mt-1">✓</span>
                           <span>Processo para exclusão de dados após o período legal</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-1">✓</span>
+                          <span className="text-brand-400 mt-1">✓</span>
                           <span>Treinamento periódico da equipe sobre LGPD</span>
                         </li>
                       </ul>
@@ -187,8 +187,8 @@ export default function LGPDArticleModal({ isOpen, onClose }: ArticleModalProps)
                         com seus pacientes. Ao implementar essas práticas, você protege sua clínica e constrói uma relação de confiança 
                         sólida.
                       </p>
-                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                        <p className="text-emerald-400 font-semibold">
+                      <div className="p-4 rounded-xl bg-brand-50 border border-brand-50">
+                        <p className="text-brand-500 font-semibold">
                           💡 Dica: Use o método VoicePen com criptografia end-to-end e exclusão automática de áudios para estar 100% 
                           em conformidade com a LGPD.
                         </p>

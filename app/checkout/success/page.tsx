@@ -35,7 +35,7 @@ export default function CheckoutSuccessPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
-            className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full mb-6"
+            className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full mb-6"
           >
             <CheckCircle2 className="w-14 h-14 text-white" />
           </motion.div>
@@ -66,9 +66,9 @@ export default function CheckoutSuccessPage() {
               </div>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-left">
+            <div className="bg-brand-50 border-2 border-brand-200 rounded-2xl p-6 text-left">
               <div className="flex items-start gap-4">
-                <Download className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+                <Download className="w-6 h-6 text-brand-600 flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-bold text-gray-900 mb-2">
                     Instalação em 5 Minutos
@@ -90,8 +90,8 @@ export default function CheckoutSuccessPage() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-green-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
-                <div className="relative bg-gradient-to-r from-brand-600 to-green-600 text-white px-8 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-brand-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-gradient-to-r from-brand-600 to-brand-600 text-white px-8 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
                   ACESSAR ÁREA DE MEMBROS
                   <ArrowRight className="w-5 h-5" />
                 </div>

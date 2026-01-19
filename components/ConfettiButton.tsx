@@ -64,7 +64,7 @@ export default function ConfettiButton({ promptText }: ConfettiButtonProps) {
         whileTap={{ scale: 0.95 }}
         className={`relative px-8 py-4 rounded-2xl font-bold text-lg transition-all overflow-hidden ${
           copied
-            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/50"
+            ? "bg-brand-500 text-white shadow-lg shadow-brand-500/50"
             : "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/50"
         }`}
       >
@@ -104,7 +104,7 @@ export default function ConfettiButton({ promptText }: ConfettiButtonProps) {
             initial={{ scale: 1, opacity: 1 }}
             animate={{ scale: 2, opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className="absolute inset-0 rounded-2xl bg-emerald-500"
+            className="absolute inset-0 rounded-2xl bg-brand-500"
           />
         )}
       </motion.button>

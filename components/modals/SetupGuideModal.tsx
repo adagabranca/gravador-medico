@@ -101,7 +101,7 @@ export default function SetupGuideModal({ open, onOpenChange }: SetupGuideModalP
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border-2 border-emerald-200"
+                className="bg-gradient-to-br from-brand-50 to-brand-100 rounded-xl p-6 border-2 border-brand-200"
               >
                 <div className="flex items-center justify-center mb-4">
                   <div className="bg-white rounded-full p-3 shadow-md">
@@ -250,15 +250,15 @@ export default function SetupGuideModal({ open, onOpenChange }: SetupGuideModalP
                       <h4 className="font-semibold text-slate-900 mb-3">Próximos passos:</h4>
                       <ul className="text-sm text-left space-y-2 text-slate-700">
                         <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-brand-600 mt-0.5 flex-shrink-0" />
                           <span>Copie o Prompt Mestre no dashboard</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-brand-600 mt-0.5 flex-shrink-0" />
                           <span>Cole o prompt nas configurações do gravador</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-brand-600 mt-0.5 flex-shrink-0" />
                           <span>Faça sua primeira gravação de teste</span>
                         </li>
                       </ul>
@@ -286,12 +286,12 @@ export default function SetupGuideModal({ open, onOpenChange }: SetupGuideModalP
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                        className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg"
+                        className="w-24 h-24 bg-brand-500 rounded-full flex items-center justify-center shadow-lg"
                       >
                         <CheckCircle className="w-12 h-12 text-white" />
                       </motion.div>
                     </div>
-                    <h3 className="text-2xl font-bold text-emerald-600">
+                    <h3 className="text-2xl font-bold text-brand-600">
                       Configuração Concluída! 🎉
                     </h3>
                   </motion.div>

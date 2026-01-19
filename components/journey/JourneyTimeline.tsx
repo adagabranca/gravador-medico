@@ -106,7 +106,7 @@ function TimelineStep({
                   transition={{ delay: 0.5 + index * 0.1 }}
                   className="flex items-start gap-3"
                 >
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center mt-0.5">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-slate-700 font-medium">{feature}</span>
@@ -134,7 +134,7 @@ function TimelineStep({
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="absolute top-8 right-8 w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg"
+              className="absolute top-8 right-8 w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center shadow-lg"
             >
               <Check className="w-8 h-8 text-white" />
             </motion.div>

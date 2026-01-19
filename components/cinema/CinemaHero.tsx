@@ -153,7 +153,7 @@ export default function CinemaHero({ onWatchGuide }: CinemaHeroProps) {
           className="mt-16 flex flex-wrap items-center justify-center gap-12 text-white/60"
         >
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
             <span className="text-sm">+5.000 médicos ativos</span>
           </div>
           <div className="flex items-center gap-2">

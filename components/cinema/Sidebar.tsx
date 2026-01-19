@@ -180,7 +180,7 @@ export default function Sidebar() {
               className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer"
             >
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 ring-white/20">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center ring-2 ring-white/20">
                 <User className="w-5 h-5 text-white" />
               </div>
 

@@ -158,14 +158,14 @@ export default function ClinicExpansion({
   onUnlockConsultancy,
 }: ClinicExpansionProps) {
   const cards: UpsellCard[] = [
-    {
+      {
       id: "whatsapp",
       icon: <MessageSquare className="w-8 h-8 text-white" />,
       title: "Fidelização Automática",
       subtitle: "COMUNICAÇÃO",
       description: "Mensagens profissionais prontas para engajar seus pacientes via WhatsApp.",
       price: "R$ 47",
-      gradient: "from-emerald-500 to-teal-600",
+      gradient: "from-brand-500 to-brand-600",
       benefits: [
         "50+ templates de mensagens",
         "Confirmações automáticas",
@@ -270,7 +270,7 @@ export default function ClinicExpansion({
                 </h4>
                 <p className="text-sm text-white/60">
                   Adquira os 3 pacotes e ganhe{" "}
-                  <span className="text-emerald-400 font-bold">30% de desconto</span>
+                  <span className="text-brand-400 font-bold">30% de desconto</span>
                 </p>
               </div>
             </div>

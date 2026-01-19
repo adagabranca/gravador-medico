@@ -101,7 +101,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       id: "digitacao",
       title: "O Fim da Digitação",
       description: "Descubra como médicos economizam +2 horas por dia",
-      gradient: "from-green-800 to-emerald-900",
+  gradient: "from-brand-800 to-brand-900",
       image: "/images/fim-digitacao.png",
       content: (
         <>
@@ -119,7 +119,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
             <li>✅ Recebe o prontuário estruturado em segundos</li>
             <li>✅ Recupera até 10 horas por semana</li>
           </ul>
-          <div className="mt-6 p-4 rounded-xl bg-emerald-600 border border-emerald-700">
+          <div className="mt-6 p-4 rounded-xl bg-brand-600 border border-brand-700">
             <p className="text-gray-900 text-sm">
               <strong>Dados Reais:</strong> Cardiologistas que adotaram este método reduziram em 67% o tempo de documentação.
             </p>
@@ -131,7 +131,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       id: "prompt",
       title: "O Que é um Prompt?",
       description: "Entenda o 'Residente Digital' que trabalha para você",
-      gradient: "from-green-800 to-emerald-900",
+  gradient: "from-brand-800 to-brand-900",
       image: "/images/cavador-medico.png",
       content: (
         <>
@@ -149,7 +149,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
             <li>🔍 Preserva detalhes clínicos importantes</li>
             <li>⚡ Gera prontuários em 30 segundos</li>
           </ul>
-          <div className="mt-6 p-4 rounded-xl bg-green-600 border border-green-700">
+          <div className="mt-6 p-4 rounded-xl bg-brand-600 border border-brand-700">
             <p className="text-gray-900 text-sm">
               <strong>Analogia:</strong> Se o gravador é o estetoscópio digital, o Prompt é o protocolo clínico que ele segue.
             </p>
@@ -161,7 +161,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       id: "seguranca",
       title: "Segurança & Ética",
       description: "LGPD, consentimento e boas práticas",
-      gradient: "from-emerald-600 to-teal-600",
+  gradient: "from-brand-600 to-brand-600",
       image: "/images/seguranca-etica.png",
       content: (
         <>
@@ -177,7 +177,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
             <li>🗑️ <strong className="text-gray-900">Exclusão:</strong> Delete áudios após transcrição</li>
             <li>📜 <strong className="text-gray-900">Anonimização:</strong> Remova dados pessoais desnecessários</li>
           </ul>
-          <div className="mt-6 p-4 rounded-xl bg-emerald-600 border border-emerald-700">
+          <div className="mt-6 p-4 rounded-xl bg-brand-600 border border-brand-700">
             <p className="text-gray-900 text-sm">
               <strong>Termo Sugerido:</strong> "Doutor(a), permito a gravação desta consulta para fins de registro médico, 
               conforme a LGPD. Compreendo que o áudio será excluído após a transcrição."
@@ -194,7 +194,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       title: "Gerador WhatsApp Pós-Consulta",
       description: "Fidelize pacientes em 1 clique. 50+ templates profissionais para engajamento.",
       icon: <MessageSquare className="w-7 h-7 text-gray-900" />,
-      gradient: "from-emerald-500 to-teal-600",
+  gradient: "from-brand-500 to-brand-600",
       badge: "LIBERADO",
       locked: false,
     },
@@ -203,7 +203,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       title: "Marketing Médico Express",
       description: "Transforme consultas em Posts. Crie conteúdo educativo para redes sociais automaticamente.",
       icon: <TrendingUp className="w-7 h-7 text-gray-900" />,
-      gradient: "from-emerald-500 to-green-600",
+  gradient: "from-brand-500 to-brand-600",
       badge: "R$ 37,00",
       locked: true,
       price: "R$ 37",
@@ -213,7 +213,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
       title: "Auditor Clínico IA",
       description: "Valide prontuários contra diretrizes médicas. Detecte inconsistências antes de finalizar.",
       icon: <FileCheck className="w-7 h-7 text-gray-900" />,
-      gradient: "from-purple-500 to-emerald-600",
+  gradient: "from-purple-500 to-brand-600",
       badge: "R$ 29,00",
       locked: true,
       price: "R$ 29",
@@ -251,7 +251,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 shadow-lg"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-600 shadow-lg"
             >
               <Sparkles className="w-4 h-4 text-white" />
               <span className="text-sm font-bold text-white">Método Gravador Médico</span>
@@ -260,16 +260,16 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-gray-900 leading-tight px-2">
               Recupere seu{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-600">
                 Tempo
               </span>
               , Doutor.
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed px-4">
-              Grave consultas com <span className="font-bold text-emerald-600">1 toque no iPhone</span> e receba{" "}
-              <span className="font-bold text-emerald-600">prontuários completos</span> automaticamente.
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed px-4">
+              Grave consultas com <span className="font-bold text-brand-600">1 toque no iPhone</span> e receba{" "}
+              <span className="font-bold text-brand-600">prontuários completos</span> automaticamente.
             </p>
 
             {/* CTA Button */}
@@ -279,7 +279,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-base sm:text-lg font-bold shadow-lg shadow-emerald-500/50 overflow-hidden group"
+              className="relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-brand-600 text-white text-base sm:text-lg font-bold shadow-lg shadow-brand-500/50 overflow-hidden group"
             >
               {/* Pulse Animation */}
               <motion.div
@@ -291,7 +291,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                   duration: 2,
                   repeat: Infinity,
                 }}
-                className="absolute inset-0 bg-emerald-400 rounded-2xl"
+                className="absolute inset-0 bg-brand-400 rounded-2xl"
               />
               
               <Play className="w-6 h-6 relative z-10" />
@@ -306,19 +306,19 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 pt-8 px-4"
             >
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600" />
                 <span className="text-gray-600 text-xs sm:text-sm">
                   <strong className="text-gray-900">+2h/dia</strong> economizadas
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600" />
                 <span className="text-gray-600 text-xs sm:text-sm">
                   <strong className="text-gray-900">500+</strong> médicos ativos
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600" />
                 <span className="text-gray-600 text-xs sm:text-sm">
                   <strong className="text-gray-900">67%</strong> menos tempo digitando
                 </span>
@@ -421,10 +421,10 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               onClick={() => setShowSetupWizard(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-8 rounded-2xl bg-gradient-to-br from-green-800 to-emerald-900 border-2 border-green-700 hover:border-green-600 hover:shadow-xl transition-all group"
+              className="p-8 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-900 border-2 border-brand-700 hover:border-brand-600 hover:shadow-xl transition-all group"
             >
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-green-700 group-hover:bg-green-600 transition-colors shadow-lg">
+                <div className="p-3 rounded-xl bg-brand-700 group-hover:bg-brand-600 transition-colors shadow-lg">
                   <Smartphone className="w-8 h-8 text-white" />
                 </div>
                 <div className="text-left flex-1">
@@ -432,7 +432,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                   <p className="text-sm text-gray-200 mb-4 font-medium">
                     Instalação completa do VoicePen com tutorial passo a passo
                   </p>
-                  <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-brand-300 font-bold text-sm">
                     Começar agora
                     <Play className="w-4 h-4" />
                   </div>
@@ -444,10 +444,10 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               onClick={() => setShowProfileWizard(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-8 rounded-2xl bg-gradient-to-br from-green-800 to-emerald-900 border-2 border-green-700 hover:border-green-600 hover:shadow-xl transition-all group"
+              className="p-8 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-900 border-2 border-brand-700 hover:border-brand-600 hover:shadow-xl transition-all group"
             >
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-green-700 group-hover:bg-green-600 transition-colors shadow-lg">
+                <div className="p-3 rounded-xl bg-brand-700 group-hover:bg-brand-600 transition-colors shadow-lg">
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
                 <div className="text-left flex-1">
@@ -455,7 +455,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                   <p className="text-sm text-gray-200 mb-4 font-medium">
                     IA cria prompt único baseado na sua especialidade e perfil
                   </p>
-                  <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-brand-300 font-bold text-sm">
                     Criar meu prompt
                     <Sparkles className="w-4 h-4" />
                   </div>
@@ -467,10 +467,10 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               onClick={() => setShowShortcutTutorial(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-8 rounded-2xl bg-gradient-to-br from-green-800 to-emerald-900 border-2 border-green-700 hover:border-green-600 hover:shadow-xl transition-all group"
+              className="p-8 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-900 border-2 border-brand-700 hover:border-brand-600 hover:shadow-xl transition-all group"
             >
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-green-700 group-hover:bg-green-600 transition-colors shadow-lg">
+                <div className="p-3 rounded-xl bg-brand-700 group-hover:bg-brand-600 transition-colors shadow-lg">
                   <Brain className="w-8 h-8 text-white" />
                 </div>
                 <div className="text-left flex-1">
@@ -478,7 +478,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                   <p className="text-sm text-gray-200 mb-4 font-medium">
                     Grave consultas com 1 toque - tutorial completo
                   </p>
-                  <div className="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-brand-300 font-bold text-sm">
                     Ver tutorial
                     <Play className="w-4 h-4" />
                   </div>
@@ -495,12 +495,12 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               viewport={{ once: true }}
               className="flex items-start gap-6"
             >
-              <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-green-800 to-emerald-900 flex items-center justify-center shadow-lg">
+              <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-900 flex items-center justify-center shadow-lg">
                 <Smartphone className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="px-3 py-1 rounded-full bg-green-700 text-white text-xs shadow-md font-bold">PASSO 1</span>
+                  <span className="px-3 py-1 rounded-full bg-brand-700 text-white text-xs shadow-md font-bold">PASSO 1</span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Instalar o App</h3>
                 <p className="text-gray-600 mb-4 leading-relaxed">
@@ -512,7 +512,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                     href="https://apps.apple.com/us/app/ai-note-taker-voicepen/id6462815872"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold"
+                    className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-700 font-semibold"
                   >
                     Baixar VoicePen na App Store →
                   </a>
@@ -532,15 +532,15 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="relative p-8 rounded-3xl bg-gradient-to-br from-green-800 to-emerald-900 border border-green-600"
+              className="relative p-8 rounded-3xl bg-gradient-to-br from-brand-800 to-brand-900 border border-brand-600"
             >
               <div className="flex items-start gap-6">
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-green-700 flex items-center justify-center shadow-lg">
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-brand-700 flex items-center justify-center shadow-lg">
                   <Brain className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs shadow-md font-bold">PASSO 2 - O GRANDE MOMENTO</span>
+                    <span className="px-3 py-1 rounded-full bg-brand-600 text-white text-xs shadow-md font-bold">PASSO 2 - O GRANDE MOMENTO</span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">Ativar a Inteligência</h3>
                   <p className="text-gray-200 mb-6 leading-relaxed">
@@ -549,7 +549,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                   </p>
 
                   {/* Prompt Display */}
-                  <div className="relative mb-6 p-6 rounded-2xl bg-green-950/60 border border-green-700 backdrop-blur-sm">
+                  <div className="relative mb-6 p-6 rounded-2xl bg-brand-950/60 border border-brand-700 backdrop-blur-sm">
                     <div className="max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                       <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
                         {promptMestre.substring(0, 300)}...
@@ -577,12 +577,12 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               viewport={{ once: true }}
               className="flex items-start gap-6"
             >
-              <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-green-700 flex items-center justify-center shadow-lg">
+              <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-brand-700 flex items-center justify-center shadow-lg">
                 <Mic className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="px-3 py-1 rounded-full bg-green-700 text-white text-xs shadow-md font-bold">PASSO 3</span>
+                  <span className="px-3 py-1 rounded-full bg-brand-700 text-white text-xs shadow-md font-bold">PASSO 3</span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Teste Real</h3>
                 <p className="text-gray-600 mb-4 leading-relaxed">
@@ -591,7 +591,7 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
                 </p>
                 <button
                   onClick={() => setShowShortcutTutorial(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-700 text-gray-900 font-semibold transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-500/20 hover:bg-brand-700 text-gray-900 font-semibold transition-colors"
                 >
                   Ver Tutorial Completo
                 </button>
@@ -628,19 +628,19 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               className="group cursor-pointer"
               onClick={() => setShowLGPDArticle(true)}
             >
-              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-green-800 to-emerald-900 border border-green-600">
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-brand-800 to-brand-900 border border-brand-600">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Shield className="w-16 h-16 text-white" />
                 </div>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-emerald-600 text-gray-900 text-xs shadow-md font-bold border border-emerald-500/30">
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-brand-600 text-gray-900 text-xs shadow-md font-bold border border-brand-500/30">
                   Em Alta
                 </div>
               </div>
               <div className="space-y-2">
-                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">
                   Conformidade
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors">
                   LGPD na Medicina: Proteja os Dados dos Seus Pacientes
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -663,16 +663,16 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               className="group cursor-pointer"
               onClick={() => setShowAICardioArticle(true)}
             >
-              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-green-800 to-emerald-900 border border-white/10">
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-brand-800 to-brand-900 border border-white/10">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Brain className="w-16 h-16 text-white" />
                 </div>
               </div>
               <div className="space-y-2">
-                <span className="text-xs font-bold text-green-600 uppercase tracking-wider">
+                <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">
                   Inteligência Artificial
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors">
                   IA na Cardiologia: O Futuro Já Chegou
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -695,16 +695,16 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
               className="group cursor-pointer"
               onClick={() => setShowProductivityArticle(true)}
             >
-              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-green-800 to-emerald-900 border border-green-600">
+              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-brand-800 to-brand-900 border border-brand-600">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <TrendingUp className="w-16 h-16 text-white" />
                 </div>
               </div>
               <div className="space-y-2">
-                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">
                   Produtividade
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors">
                   Gestão de Tempo: Atenda Mais Sem Trabalhar Mais
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -724,11 +724,11 @@ Prontuário estruturado em seções SOAP, pronto para ser arquivado no sistema d
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5 }}
-            className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-green-800 to-emerald-900 border border-green-600"
+            className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-brand-800 to-brand-900 border border-brand-600"
           >
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-green-700 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-brand-700 flex items-center justify-center flex-shrink-0">
                   <BookOpen className="w-7 h-7 text-white" />
                 </div>
                 <div>

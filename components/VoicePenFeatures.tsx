@@ -35,7 +35,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Gravações até 2 horas',
       subtitle: 'Recording power',
       description: 'Perfeito para reuniões longas, palestras e entrevistas',
-      gradient: 'from-red-500 to-pink-500',
+  gradient: 'from-primary to-secondary',
       details: [
         'Grave consultas completas sem limite de tempo',
         'Qualidade de áudio profissional',
@@ -50,7 +50,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Transcrição Rápida',
       subtitle: 'Fast transcription',
       description: 'Transcreva 1 hora de áudio em 30 segundos',
-      gradient: 'from-yellow-500 to-orange-500',
+  gradient: 'from-accent to-warning',
       details: [
         'IA de última geração para precisão máxima',
         'Processamento em tempo recorde',
@@ -65,7 +65,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Chat com suas Notas',
       subtitle: 'Interactive assistant',
       description: 'Transforme notas em assistente inteligente',
-      gradient: 'from-purple-500 to-indigo-500',
+  gradient: 'from-secondary to-tertiary',
       details: [
         'Faça perguntas sobre qualquer transcrição',
         'Extraia insights instantaneamente',
@@ -80,7 +80,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Separação de Falantes',
       subtitle: 'Speaker separation',
       description: 'Identifica automaticamente quem disse o quê',
-      gradient: 'from-blue-500 to-cyan-500',
+  gradient: 'from-info to-success',
       details: [
         'Ideal para consultas médico-paciente',
         'Labels automáticos (Médico, Paciente)',
@@ -95,7 +95,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Gravação Offline',
       subtitle: 'Always available',
       description: 'Nunca perca um momento, mesmo sem internet',
-      gradient: 'from-green-500 to-emerald-500',
+  gradient: 'from-success to-success-dark',
       details: [
         'Funciona 100% offline no iPhone',
         'Sincroniza automaticamente quando online',
@@ -110,7 +110,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: '25+ Estilos de IA',
       subtitle: 'Rewrite options',
       description: 'Transforme transcrições em qualquer formato',
-      gradient: 'from-pink-500 to-rose-500',
+  gradient: 'from-secondary to-danger',
       details: [
         'SOAP, Evolução, Retorno profissionais',
         'Sumário executivo automático',
@@ -125,7 +125,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Upload de Qualquer Coisa',
       subtitle: 'Universal input',
       description: 'Arquivos, vídeos, podcasts e muito mais',
-      gradient: 'from-violet-500 to-purple-500',
+  gradient: 'from-tertiary to-secondary',
       details: [
         'Importa áudio/vídeo do celular',
         'Transcreve reuniões do Zoom gravadas',
@@ -140,7 +140,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Compartilhar & Exportar',
       subtitle: 'Flexible output',
       description: 'PDF, DOC ou texto editável',
-      gradient: 'from-teal-500 to-cyan-500',
+  gradient: 'from-success-dark to-success',
       details: [
         'Exporte para PDF profissional',
         'Gere DOC editável no Word',
@@ -155,7 +155,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Acesso em Qualquer Lugar',
       subtitle: 'Cross-platform',
       description: 'iPhone, iPad, Mac - sempre sincronizado',
-      gradient: 'from-gray-600 to-gray-800',
+  gradient: 'from-muted to-muted-dark',
       details: [
         'App nativo para iOS/macOS',
         'Sincronização automática iCloud',
@@ -170,7 +170,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: 'Privacidade Total',
       subtitle: 'Your data, your control',
       description: 'iCloud próprio - nada em nossos servidores',
-      gradient: 'from-yellow-600 to-amber-600',
+  gradient: 'from-warning-dark to-warning',
       details: [
         'Dados salvos apenas no SEU iCloud',
         'Criptografia de ponta a ponta',
@@ -185,7 +185,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
       title: '80+ Idiomas',
       subtitle: 'Global reach',
       description: 'Comunique em múltiplos idiomas',
-      gradient: 'from-blue-600 to-indigo-600',
+  gradient: 'from-info-dark to-tertiary',
       details: [
         'Português brasileiro nativo',
         'Inglês, Espanhol, Francês e mais',
@@ -238,7 +238,7 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-xl z-40"
+            className="fixed inset-0 bg-muted/90 backdrop-blur-xl z-40"
             onClick={onClose}
           />
 
@@ -251,23 +251,23 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-7xl max-h-[90vh] overflow-hidden"
             >
-              <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="bg-gradient-to-br from-muted via-muted to-muted-dark rounded-3xl border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="p-6 border-b border-white/10 bg-gradient-to-r from-blue-900/20 to-purple-900/20">
+              <div className="p-6 border-b border-border bg-gradient-to-r from-brand-50 to-brand-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">
+                    <h2 className="text-3xl font-bold text-foreground mb-2">
                       Funcionalidades do VoicePen
                     </h2>
-                    <p className="text-gray-400">
+                    <p className="text-muted-foreground">
                       O app de transcrição médica mais poderoso do mercado
                     </p>
                   </div>
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                    className="p-2 hover:bg-border/10 rounded-xl transition-colors"
                   >
-                    <X className="w-6 h-6 text-gray-400" />
+                    <X className="w-6 h-6 text-muted-foreground" />
                   </button>
                 </div>
               </div>
@@ -280,13 +280,13 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center mb-12"
                 >
-                  <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 mb-6">
+                  <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 mb-6">
                     <div className="text-6xl">🎯</div>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">
+                  <h3 className="text-2xl font-bold text-foreground mb-3">
                     Como o VoicePen pode te ajudar
                   </h3>
-                  <p className="text-gray-400 max-w-2xl mx-auto">
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
                     Transforme reuniões, palestras, memos, vídeos e podcasts em transcrições,
                     notas e resumos precisos com IA
                   </p>
@@ -300,19 +300,19 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="p-6 rounded-xl bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all"
+                      className="p-6 rounded-xl bg-background border border-border hover:border-brand/30 transition-all"
                     >
                       <div className="text-4xl mb-3">{useCase.icon}</div>
-                      <h4 className="text-white font-semibold mb-2">{useCase.title}</h4>
-                      <p className="text-sm text-gray-400">{useCase.description}</p>
+                      <h4 className="text-foreground font-semibold mb-2">{useCase.title}</h4>
+                      <p className="text-sm text-muted-foreground">{useCase.description}</p>
                     </motion.div>
                   ))}
                 </div>
 
                 {/* Features Grid */}
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-6 text-center">
-                    <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
+                    <span className="bg-gradient-to-r from-brand to-brand-600 bg-clip-text text-transparent">
                       Features
                     </span>
                   </h3>
@@ -331,16 +331,16 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                           className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 ${
                             isSelected
                               ? 'bg-gradient-to-br ' + feature.gradient + ' shadow-lg scale-105'
-                              : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                              : 'bg-background hover:bg-border/10 border border-border'
                           }`}
                         >
                           <div className="text-4xl mb-4">{feature.image}</div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Icon className="w-5 h-5 text-white" />
-                            <h4 className="font-bold text-white">{feature.title}</h4>
+                            <Icon className="w-5 h-5 text-foreground" />
+                            <h4 className="font-bold text-foreground">{feature.title}</h4>
                           </div>
-                          <p className="text-xs text-gray-300 mb-3">{feature.subtitle}</p>
-                          <p className="text-sm text-gray-200 mb-4">{feature.description}</p>
+                          <p className="text-xs text-muted-foreground mb-3">{feature.subtitle}</p>
+                          <p className="text-sm text-muted-foreground mb-4">{feature.description}</p>
 
                           <AnimatePresence>
                             {isSelected && (
@@ -348,19 +348,19 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="space-y-2 pt-4 border-t border-white/20"
+                                className="space-y-2 pt-4 border-t border-border/20"
                               >
                                 {feature.details.map((detail, i) => (
                                   <div key={i} className="flex items-start gap-2">
-                                    <Check className="w-4 h-4 text-white flex-shrink-0 mt-0.5" />
-                                    <p className="text-xs text-white">{detail}</p>
+                                    <Check className="w-4 h-4 text-foreground flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-foreground">{detail}</p>
                                   </div>
                                 ))}
                               </motion.div>
                             )}
                           </AnimatePresence>
 
-                          <button className="mt-4 text-sm text-white/70 hover:text-white flex items-center gap-1">
+                          <button className="mt-4 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                             {isSelected ? 'Ver menos' : 'Ver mais'}
                             <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
                           </button>
@@ -374,12 +374,12 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-center"
+                  className="mt-12 p-8 rounded-2xl bg-gradient-to-r from-brand-700 to-brand-600 text-center"
                 >
-                  <h3 className="text-2xl font-bold text-white mb-4">
+                  <h3 className="text-2xl font-bold text-foreground mb-4">
                     Pronto para transformar sua prática médica?
                   </h3>
-                  <p className="text-white/90 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     Baixe o VoicePen gratuitamente e experimente todas as funcionalidades
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -387,14 +387,14 @@ export default function VoicePenFeatures({ isOpen, onClose }: VoicePenFeaturesPr
                       href="https://apps.apple.com/us/app/ai-note-taker-voicepen/id6462815872"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-gray-100 transition-all"
+                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-background text-brand rounded-xl font-bold hover:bg-muted transition-all"
                     >
                       <Download className="w-5 h-5" />
                       Baixar na App Store
                     </a>
                     <button
                       onClick={onClose}
-                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white rounded-xl font-bold hover:bg-white/20 transition-all border border-white/20"
+                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-border/10 text-foreground rounded-xl font-bold hover:bg-border/20 transition-all border border-border/20"
                     >
                       Continuar Explorando
                     </button>

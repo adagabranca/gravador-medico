@@ -128,8 +128,8 @@ IMPORTANTE:
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-purple-500/20">
-                <Sparkles className="w-6 h-6 text-teal-400" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-brand-500/20 to-purple-500/20">
+                <Sparkles className="w-6 h-6 text-brand-400" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Seu Prompt Personalizado</h2>
@@ -152,7 +152,7 @@ IMPORTANTE:
           {isGenerating ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="relative mb-6">
-                <Loader2 className="w-16 h-16 text-teal-400 animate-spin" />
+                <Loader2 className="w-16 h-16 text-brand-400 animate-spin" />
                 <Sparkles className="w-8 h-8 text-purple-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Gerando seu prompt...</h3>
@@ -167,13 +167,13 @@ IMPORTANTE:
               className="space-y-4"
             >
               {/* Profile Summary */}
-              <div className="p-4 bg-gradient-to-br from-teal-500/10 to-blue-500/10 rounded-xl border border-teal-500/20">
+              <div className="p-4 bg-gradient-to-br from-brand-50 to-blue-500/10 rounded-xl border border-brand-50">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-white">Dr(a). {profile.name}</h3>
                     <p className="text-sm text-gray-400">{profile.crm} • {profile.specialty}</p>
                   </div>
-                  <span className="px-3 py-1 bg-teal-500/20 text-teal-300 text-xs rounded-full">
+                  <span className="px-3 py-1 bg-brand-500/20 text-brand-300 text-xs rounded-full">
                     Personalizado
                   </span>
                 </div>
@@ -199,7 +199,7 @@ IMPORTANTE:
                     className="p-2 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-lg transition-all duration-300 border border-white/10"
                   >
                     {isCopied ? (
-                      <Check className="w-4 h-4 text-teal-400" />
+                      <Check className="w-4 h-4 text-brand-400" />
                     ) : (
                       <Copy className="w-4 h-4 text-gray-400" />
                     )}
@@ -213,20 +213,20 @@ IMPORTANTE:
               {/* Tips */}
               <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                 <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-teal-400" />
+                  <Sparkles className="w-4 h-4 text-brand-400" />
                   Como usar
                 </h4>
                 <ul className="space-y-2 text-sm text-gray-400">
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-400 mt-0.5">1.</span>
+                    <li className="flex items-start gap-2">
+                    <span className="text-brand-400 mt-0.5">1.</span>
                     <span>Copie este prompt e cole no VoicePen</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-400 mt-0.5">2.</span>
+                    <li className="flex items-start gap-2">
+                    <span className="text-brand-400 mt-0.5">2.</span>
                     <span>Faça sua gravação normalmente</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-teal-400 mt-0.5">3.</span>
+                    <li className="flex items-start gap-2">
+                    <span className="text-brand-400 mt-0.5">3.</span>
                     <span>O prontuário será estruturado automaticamente</span>
                   </li>
                 </ul>
@@ -247,7 +247,7 @@ IMPORTANTE:
             </button>
             <button
               onClick={copyToClipboard}
-              className="flex items-center justify-center gap-2 flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition-all duration-300"
+              className="flex items-center justify-center gap-2 flex-1 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-all duration-300"
             >
               {isCopied ? (
                 <>

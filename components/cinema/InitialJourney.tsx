@@ -90,8 +90,8 @@ function EpisodeCard({ episode, index }: EpisodeCardProps) {
             <span className="text-xs font-bold text-white/60">
               EPISÓDIO {episode.number}
             </span>
-            {!episode.locked && (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-semibold">
+              {!episode.locked && (
+              <span className="px-2 py-0.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-400 text-xs font-semibold">
                 DISPONÍVEL
               </span>
             )}
@@ -164,7 +164,7 @@ export default function InitialJourney({
       title: "O Primeiro Teste",
       subtitle: "Grave sua primeira consulta guiada",
       icon: <Mic className="w-32 h-32 text-white" />,
-      gradient: "from-emerald-600 to-teal-600",
+  gradient: "from-brand-600 to-brand-600",
       image: "/images/mic.jpg",
       onClick: onEpisode3Click,
     },

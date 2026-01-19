@@ -94,7 +94,7 @@ export default function CartPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
+          <div className="inline-flex items-center gap-2 bg-brand-100 text-brand-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
             <ShoppingCart className="w-4 h-4" />
             Revise seu Pedido
           </div>
@@ -119,7 +119,7 @@ export default function CartPage() {
             >
               <div className="flex items-start gap-6">
                 {/* Product Image */}
-                <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-brand-500 to-green-600 rounded-xl flex items-center justify-center overflow-hidden">
+                <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center overflow-hidden">
                   {/* Substitua pelo seu mockup real */}
                   <div className="text-white text-center p-4">
                     <ShoppingCart className="w-16 h-16 mx-auto mb-2" />
@@ -196,7 +196,7 @@ export default function CartPage() {
                     onClick={() => toggleOrderBump(index)}
                     className={`w-full text-left transition-all ${
                       selectedOrderBumps.includes(index)
-                        ? "bg-gradient-to-br from-green-50 to-brand-50 border-2 border-brand-500 shadow-xl ring-4 ring-brand-200"
+                        ? "bg-gradient-to-br from-brand-50 to-brand-50 border-2 border-brand-500 shadow-xl ring-4 ring-brand-200"
                         : "bg-white border-2 border-gray-200 hover:border-brand-300 shadow-md hover:shadow-lg"
                     } rounded-2xl overflow-hidden`}
                   >
@@ -288,7 +288,7 @@ export default function CartPage() {
                               animate={{ opacity: 1, height: "auto" }}
                               className="mt-3 pt-3 border-t border-brand-200"
                             >
-                              <div className="flex items-center gap-2 text-sm text-green-700 font-bold">
+                              <div className="flex items-center gap-2 text-sm text-brand-700 font-bold">
                                 <Check className="w-4 h-4" />
                                 Adicionado ao seu pedido
                               </div>
@@ -376,8 +376,8 @@ export default function CartPage() {
                     whileTap={{ scale: 0.98 }}
                     className="w-full relative group mb-4"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-green-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative bg-gradient-to-r from-brand-600 to-green-600 text-white px-6 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative bg-gradient-to-r from-brand-600 to-brand-600 text-white px-6 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
                       IR PARA PAGAMENTO
                       <ArrowRight className="w-5 h-5" />
                     </div>
@@ -394,13 +394,13 @@ export default function CartPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center"
+                className="mt-6 bg-brand-50 border-2 border-brand-200 rounded-xl p-4 text-center"
               >
-                <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <div className="font-bold text-green-900 mb-1">
+                <Shield className="w-8 h-8 text-brand-600 mx-auto mb-2" />
+                <div className="font-bold text-brand-900 mb-1">
                   Garantia de 7 Dias
                 </div>
-                <p className="text-xs text-green-700">
+                <p className="text-xs text-brand-700">
                   100% do seu dinheiro de volta se não gostar
                 </p>
               </motion.div>
@@ -416,11 +416,11 @@ export default function CartPage() {
           className="mt-12 text-center"
         >
           <div className="flex items-center justify-center gap-2 text-gray-600">
-            <div className="flex -space-x-2">
+                  <div className="flex -space-x-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-green-500 border-2 border-white flex items-center justify-center"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 border-2 border-white flex items-center justify-center"
                 >
                   <Star className="w-5 h-5 text-white fill-white" />
                 </div>

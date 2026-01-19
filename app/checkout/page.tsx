@@ -110,7 +110,7 @@ export default function CheckoutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
+            <div className="inline-flex items-center gap-2 bg-brand-50 text-brand-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
               <Shield className="w-4 h-4" />
               Pagamento 100% Seguro
             </div>
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
                 className="bg-white rounded-2xl shadow-lg p-6 border-2 border-brand-200"
               >
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-24 h-24 bg-gradient-to-br from-brand-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <div className="flex-shrink-0 w-24 h-24 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center">
                     <Sparkles className="w-12 h-12 text-white" />
                   </div>
                   <div className="flex-1">
@@ -189,7 +189,7 @@ export default function CheckoutPage() {
                       onClick={() => toggleOrderBump(index)}
                       className={`w-full text-left transition-all ${
                         selectedOrderBumps.includes(index)
-                          ? "bg-gradient-to-br from-brand-50 to-green-50 border-2 border-brand-400 shadow-lg"
+                          ? "bg-gradient-to-br from-brand-50 to-brand-50 border-2 border-brand-400 shadow-lg"
                           : "bg-white border-2 border-gray-200 hover:border-brand-300"
                       } rounded-2xl p-6 relative overflow-hidden`}
                     >
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
                     ))}
                     
                     {pixDiscount > 0 && (
-                      <div className="flex justify-between text-green-600 font-bold">
+                      <div className="flex justify-between text-brand-600 font-bold">
                         <span>Desconto PIX (5%)</span>
                         <span>-R$ {pixDiscount}</span>
                       </div>
@@ -333,7 +333,7 @@ export default function CheckoutPage() {
                             : "border-gray-200 hover:border-brand-300"
                         }`}
                       >
-                        <div className="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                        <div className="absolute -top-2 -right-2 bg-brand-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
                           -5%
                         </div>
                         <div className="w-6 h-6 mx-auto mb-2 bg-brand-600 rounded flex items-center justify-center">
@@ -424,8 +424,8 @@ export default function CheckoutPage() {
                     whileTap={{ scale: 0.98 }}
                     className="w-full relative group"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-green-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative bg-gradient-to-r from-brand-600 to-green-600 text-white px-6 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-500 to-brand-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative bg-gradient-to-r from-brand-600 to-brand-600 text-white px-6 py-4 rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2">
                       <Lock className="w-5 h-5" />
                       {paymentMethod === "pix" ? "GERAR PIX" : "FINALIZAR COMPRA"}
                       <ChevronRight className="w-5 h-5" />
@@ -442,13 +442,13 @@ export default function CheckoutPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center"
+                  className="mt-6 bg-brand-50 border-2 border-brand-200 rounded-xl p-4 text-center"
                 >
-                  <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="font-bold text-green-900 mb-1">
+                  <Shield className="w-8 h-8 text-brand-600 mx-auto mb-2" />
+                  <div className="font-bold text-brand-900 mb-1">
                     Garantia de 7 Dias
                   </div>
-                  <p className="text-xs text-green-700">
+                  <p className="text-xs text-brand-700">
                     Se não gostar, devolvemos 100% do seu dinheiro
                   </p>
                 </motion.div>
@@ -468,7 +468,7 @@ export default function CheckoutPage() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-green-500 border-2 border-white"
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-500 border-2 border-white"
                   />
                 ))}
               </div>

@@ -76,7 +76,7 @@ function ArticleCard({ article, index, onClick }: ArticleCardProps) {
                   duration: 2,
                   repeat: Infinity,
                 }}
-                className="px-3 py-1.5 rounded-full bg-emerald-500/90 backdrop-blur-sm flex items-center gap-2"
+                className="px-3 py-1.5 rounded-full bg-brand-500/90 backdrop-blur-sm flex items-center gap-2"
               >
                 <TrendingUp className="w-4 h-4 text-white" />
                 <span className="text-xs font-bold text-white">Em Alta</span>
@@ -148,7 +148,7 @@ export default function KnowledgeHub({ onArticleClick }: KnowledgeHubProps) {
         "Entenda as obrigações legais e boas práticas para manter sua clínica 100% conforme com a Lei Geral de Proteção de Dados.",
       readTime: "5 min",
       thumbnail: <Shield className="w-20 h-20 text-white" />,
-      gradient: "from-emerald-500 to-teal-600",
+  gradient: "from-brand-500 to-brand-600",
       trending: true,
     },
     {
@@ -209,7 +209,7 @@ export default function KnowledgeHub({ onArticleClick }: KnowledgeHubProps) {
             repeat: Infinity,
             ease: "linear",
           }}
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-r from-emerald-600/5 to-cyan-600/5 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-r from-brand-600/5 to-cyan-600/5 rounded-full blur-3xl"
         />
       </div>
 

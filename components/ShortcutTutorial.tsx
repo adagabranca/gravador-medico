@@ -311,7 +311,7 @@ export default function ShortcutTutorial({ isOpen, onClose }: ShortcutTutorialPr
                 ) : (
                   <button
                     onClick={onClose}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all duration-300"
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-semibold transition-all duration-300"
                   >
                     <Check className="w-5 h-5" />
                     Concluído!

@@ -24,12 +24,12 @@ interface ToolDetailModalProps {
 
 export default function ToolDetailModal({ isOpen, onClose, toolId }: ToolDetailModalProps) {
   const tools: Record<string, any> = {
-    whatsapp: {
+  whatsapp: {
       icon: MessageSquare,
       title: 'Gerador WhatsApp Pós-Consulta',
       subtitle: 'Fidelize pacientes automaticamente',
       price: 'GRÁTIS',
-      gradient: 'from-emerald-500 to-teal-600',
+  gradient: 'from-brand-500 to-brand-600',
       description: 'Transforme cada consulta em uma oportunidade de fidelização. Envie mensagens personalizadas profissionais em 1 clique.',
       features: [
         {
@@ -320,10 +320,10 @@ export default function ToolDetailModal({ isOpen, onClose, toolId }: ToolDetailM
                 {/* Benefits */}
                 <div className="mb-12">
                   <h3 className="text-2xl font-bold text-white mb-6">Benefícios:</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {tool.benefits.map((benefit: string, index: number) => (
-                      <div key={index} className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                        <Check className="w-6 h-6 text-green-400 flex-shrink-0" />
+                      <div key={index} className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-brand-500/10 to-brand-500/10 border border-brand-500/20">
+                        <Check className="w-6 h-6 text-brand-400 flex-shrink-0" />
                         <span className="text-white font-medium">{benefit}</span>
                       </div>
                     ))}
@@ -345,8 +345,8 @@ export default function ToolDetailModal({ isOpen, onClose, toolId }: ToolDetailM
                 </div>
 
                 {/* Guarantee */}
-                <div className="p-6 rounded-xl bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-500/30 text-center">
-                  <Sparkles className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <div className="p-6 rounded-xl bg-gradient-to-r from-brand-900/20 to-brand-900/20 border border-brand-500/30 text-center">
+                  <Sparkles className="w-12 h-12 text-brand-400 mx-auto mb-3" />
                   <h4 className="font-bold text-white mb-2">Garantia de 7 dias</h4>
                   <p className="text-gray-400">
                     Não gostou? Devolvemos 100% do seu dinheiro, sem perguntas

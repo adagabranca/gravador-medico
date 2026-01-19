@@ -240,8 +240,8 @@ Linguagem objetiva e direta. Máximo 200 palavras.`,
                           <ChevronRight className="w-8 h-8 text-white/30" />
 
                           <div className="text-center">
-                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center mb-2">
-                              <Check className="w-8 h-8 text-emerald-400" />
+                            <div className="w-16 h-16 rounded-full bg-brand-500/20 backdrop-blur-sm flex items-center justify-center mb-2">
+                              <Check className="w-8 h-8 text-brand-400" />
                             </div>
                             <span className="text-sm text-white/50">Prontuário</span>
                           </div>
@@ -331,10 +331,10 @@ Linguagem objetiva e direta. Máximo 200 palavras.`,
                             onClick={handleCopy}
                             className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors flex items-center gap-2 group"
                           >
-                            {copied ? (
+                                {copied ? (
                               <>
-                                <Check className="w-4 h-4 text-emerald-400" />
-                                <span className="text-sm font-semibold text-emerald-400">
+                                <Check className="w-4 h-4 text-brand-400" />
+                                <span className="text-sm font-semibold text-brand-400">
                                   Copiado!
                                 </span>
                               </>

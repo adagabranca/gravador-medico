@@ -281,7 +281,7 @@ export default function MedicalArsenal({
               "Respostas automáticas personalizáveis",
               "Lembretes de consulta pré-formatados",
             ]}
-            gradient="from-emerald-500 to-teal-600"
+            gradient="from-brand-500 to-brand-600"
             onUnlock={onUnlockWhatsApp}
           />
 
@@ -322,9 +322,9 @@ export default function MedicalArsenal({
           transition={{ delay: 0.5 }}
           className="text-center mt-16"
         >
-          <p className="text-slate-600 text-lg">
+            <p className="text-slate-600 text-lg">
             💡 <strong>Dica:</strong> Adquira os 3 pacotes juntos e ganhe{" "}
-            <span className="text-emerald-600 font-bold">30% de desconto</span>
+            <span className="text-brand-600 font-bold">30% de desconto</span>
           </p>
         </motion.div>
       </div>

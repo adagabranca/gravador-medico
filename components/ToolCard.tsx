@@ -41,10 +41,10 @@ export default function ToolCard({
       <motion.div
         whileHover={{ scale: 1.03, y: -5 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="relative h-full rounded-2xl bg-gradient-to-br from-green-900 to-emerald-950 backdrop-blur-xl border border-green-700 overflow-hidden"
+  className="relative h-full rounded-2xl bg-gradient-to-br from-brand-700 to-brand backdrop-blur-xl border border-brand overflow-hidden"
       >
         {/* Gradient Background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10`} />
+  <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10`} />
 
         {/* Glow Effect on Hover */}
         <motion.div
@@ -63,7 +63,7 @@ export default function ToolCard({
           }}
           className="absolute inset-0 rounded-2xl"
           style={{
-            boxShadow: isHovered ? `0 0 40px rgba(59, 130, 246, 0.4)` : "none",
+            boxShadow: isHovered ? `0 0 40px rgba(16, 185, 129, 0.4)` : "none",
           }}
         />
 
@@ -79,10 +79,10 @@ export default function ToolCard({
             {/* Badge */}
             <div
               className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${
-                locked
-                  ? "bg-white text-gray-900 border-2 border-gray-300"
-                  : "bg-emerald-600 text-white border-2 border-emerald-700"
-              }`}
+                    locked
+                      ? "bg-background text-foreground border-2 border-border"
+                      : "bg-brand text-white border-2 border-brand-700"
+                  }`}
             >
               {badge}
             </div>
@@ -90,24 +90,24 @@ export default function ToolCard({
 
           {/* Title & Description */}
           <div className="mb-6 min-h-[120px]">
-            <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{title}</h3>
-            <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">{description}</p>
+            <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">{title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{description}</p>
           </div>
 
           {/* Bottom Section */}
           <div className="flex items-center justify-between">
             {locked ? (
               <>
-                <div className="text-2xl font-bold text-white">{price || "R$ 0"}</div>
-                <div className="w-10 h-10 rounded-full bg-red-900/80 backdrop-blur-sm flex items-center justify-center border border-red-700">
-                  <Lock className="w-5 h-5 text-white" />
+                      <div className="text-2xl font-bold text-foreground">{price || "R$ 0"}</div>
+                      <div className="w-10 h-10 rounded-full bg-danger/80 backdrop-blur-sm flex items-center justify-center border border-danger">
+                        <Lock className="w-5 h-5 text-white" />
                 </div>
               </>
             ) : (
               <>
-                <div className="text-emerald-400 font-semibold text-sm">Desbloqueado</div>
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 backdrop-blur-sm flex items-center justify-center border border-emerald-500/30">
-                  <Check className="w-5 h-5 text-emerald-400" />
+                <div className="text-brand font-semibold text-sm">Desbloqueado</div>
+                <div className="w-10 h-10 rounded-full bg-brand/20 backdrop-blur-sm flex items-center justify-center border border-brand-700/30">
+                  <Check className="w-5 h-5 text-brand" />
                 </div>
               </>
             )}
@@ -121,7 +121,7 @@ export default function ToolCard({
               opacity: isHovered ? 1 : 0,
               scale: isHovered ? 1 : 0.8,
             }}
-            className="absolute top-4 right-4 w-3 h-3 bg-emerald-400 rounded-full blur-sm"
+            className="absolute top-4 right-4 w-3 h-3 bg-brand rounded-full blur-sm"
           />
         )}
       </motion.div>

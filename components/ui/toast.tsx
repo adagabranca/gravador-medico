@@ -47,7 +47,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-lg border border-slate-200 animate-in slide-in-from-right-full"
           >
             {t.type === "success" && (
-              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <CheckCircle className="h-5 w-5 text-brand-600 flex-shrink-0" />
             )}
             <p className="text-sm font-medium text-slate-900">{t.message}</p>
             <button
