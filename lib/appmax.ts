@@ -128,12 +128,21 @@ export async function createAppmaxOrder(data: AppmaxOrderRequest): Promise<Appma
       throw new Error('Resposta inválida da API Appmax ao criar cliente')
     }
     
-    // A API retorna { success: true, data: { id: 123 } }
-    const customerId = customerResult.data?.id || customerResult.customer_id || customerResult.id
+    // Log completo da resposta para debug
+    console.log('📥 Resposta completa da API (customer):', JSON.stringify(customerResult, null, 2))
+    
+    // A API pode retornar em vários formatos:
+    // { success: true, data: { id: 123 } }
+    // { customer_id: 123 }
+    // { id: 123 }
+    const customerId = customerResult.data?.id || 
+                       customerResult.data?.customer_id ||
+                       customerResult.customer_id || 
+                       customerResult.id
 
     if (!customerId) {
-      console.error('❌ customer_id não retornado:', customerResult)
-      throw new Error('API Appmax não retornou customer_id')
+      console.error('❌ customer_id não retornado. Resposta:', JSON.stringify(customerResult))
+      throw new Error(`API Appmax não retornou customer_id. Resposta: ${JSON.stringify(customerResult).substring(0, 200)}`)
     }
 
     console.log('✅ Cliente criado:', customerId)
@@ -184,13 +193,35 @@ export async function createAppmaxOrder(data: AppmaxOrderRequest): Promise<Appma
       }),
     })
 
+    const orderResponseText = await orderResponse.text()
+    console.log('📥 Resposta completa da API (order):', orderResponseText.substring(0, 500))
+
     if (!orderResponse.ok) {
-      const error = await orderResponse.json()
-      throw new Error(error.message || 'Erro ao criar pedido na Appmax')
+      console.error('❌ Erro ao criar pedido:', orderResponseText)
+      try {
+        const error = JSON.parse(orderResponseText)
+        throw new Error(error.message || 'Erro ao criar pedido na Appmax')
+      } catch (e) {
+        throw new Error(`Erro ao criar pedido: ${orderResponse.status} - ${orderResponseText.substring(0, 200)}`)
+      }
     }
 
-    const orderResult = await orderResponse.json()
-    const orderId = orderResult.order_id
+    let orderResult
+    try {
+      orderResult = JSON.parse(orderResponseText)
+    } catch (e) {
+      console.error('❌ Resposta order não é JSON:', orderResponseText)
+      throw new Error('Resposta inválida da API Appmax ao criar pedido')
+    }
+
+    const orderId = orderResult.data?.id || orderResult.order_id || orderResult.id
+    
+    if (!orderId) {
+      console.error('❌ order_id não retornado:', orderResult)
+      throw new Error('API Appmax não retornou order_id')
+    }
+
+    console.log('✅ Pedido criado:', orderId)
 
     // ETAPA 3: Processar Pagamento
     let paymentResponse
