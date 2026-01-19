@@ -296,14 +296,19 @@ export default function LandingPage() {
           </motion.a>
           
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            {["Benefícios", "Como Funciona", "Bônus", "Garantia"].map((item) => (
+            {[
+              { label: "Benefícios", id: "beneficios" },
+              { label: "Como Funciona", id: "como-funciona" },
+              { label: "Bônus", id: "bonus" },
+              { label: "Garantia", id: "garantia" }
+            ].map((item) => (
               <motion.a
-                key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                key={item.id}
+                href={`#${item.id}`}
                 className="text-gray-700 hover:text-brand-600 font-medium transition-colors relative group text-sm lg:text-base"
                 whileHover={{ scale: 1.05 }}
               >
-                {item}
+                {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-500 to-brand-500 group-hover:w-full transition-all duration-300" />
               </motion.a>
             ))}
@@ -396,14 +401,19 @@ export default function LandingPage() {
                 {/* Menu Items */}
                 <nav className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-2">
-                    {["Benefícios", "Como Funciona", "Bônus", "Garantia"].map((item) => (
+                    {[
+                      { label: "Benefícios", id: "beneficios" },
+                      { label: "Como Funciona", id: "como-funciona" },
+                      { label: "Bônus", id: "bonus" },
+                      { label: "Garantia", id: "garantia" }
+                    ].map((item) => (
                       <a
-                        key={item}
-                        href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                        key={item.id}
+                        href={`#${item.id}`}
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-brand-50 hover:text-brand-600 rounded-lg font-medium transition-all"
                       >
-                        {item}
+                        {item.label}
                       </a>
                     ))}
                   </div>
@@ -526,13 +536,13 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="space-y-4 md:space-y-6"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight px-2">
+              <h1 className="text-[2.5rem] sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.1] px-2">
                 <span className="inline-block text-gray-900">
-                  Seu prontuário pronto
+                  Prontuário pronto
                 </span>
                 <br />
                 <span className="inline-block bg-gradient-to-r from-brand-600 via-brand-500 to-brand-600 bg-clip-text text-transparent animate-gradient">
-                  enquanto você conversa
+                  enquanto conversa
                 </span>
               </h1>
             </motion.div>
@@ -722,7 +732,7 @@ export default function LandingPage() {
                         {/* Mockup */}
                         <div className="relative z-10">
                           <Image 
-                            src="/images/MOCKUP-GRAVADOR-MEDICO-FUNDO-BRANCO.png?v=2"
+                            src="/images/MOCKUP FINAL - METODO GRAVADOR MEDICO.png"
                             alt="Método Gravador Médico"
                             width={600}
                             height={500}
@@ -1345,7 +1355,7 @@ export default function LandingPage() {
       </section>
 
       {/* SEÇÃO FEATURES PREMIUM EM PORTUGUÊS */}
-      <section className="relative py-12 md:py-20 lg:py-24 px-4 bg-brand-500">
+      <section id="como-funciona" className="relative py-12 md:py-20 lg:py-24 px-4 bg-brand-500">
         <div className="container mx-auto max-w-7xl">
           
           <motion.div
