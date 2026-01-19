@@ -215,19 +215,19 @@ export default function LandingPage() {
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
 
-  // Função para ir ao checkout do AppMax (apenas no botão do card de preço)
+  // Função para ir ao checkout customizado
   const handleCheckout = () => {
     // Capturar UTM params se existirem
     const urlParams = new URLSearchParams(window.location.search)
-    const utmParams = {
-      utm_source: urlParams.get('utm_source') || undefined,
-      utm_medium: urlParams.get('utm_medium') || undefined,
-      utm_campaign: urlParams.get('utm_campaign') || undefined,
-    }
+    const utmParams = new URLSearchParams()
     
-    const checkoutUrl = generateCheckoutLink(utmParams)
-    // Abrir em nova aba
-    window.open(checkoutUrl, '_blank')
+    if (urlParams.get('utm_source')) utmParams.set('utm_source', urlParams.get('utm_source')!)
+    if (urlParams.get('utm_medium')) utmParams.set('utm_medium', urlParams.get('utm_medium')!)
+    if (urlParams.get('utm_campaign')) utmParams.set('utm_campaign', urlParams.get('utm_campaign')!)
+    
+    // Redirecionar para nosso checkout customizado
+    const checkoutUrl = `/checkout${utmParams.toString() ? '?' + utmParams.toString() : ''}`
+    window.location.href = checkoutUrl
   }
 
   // Função para scroll suave até a seção de preço
