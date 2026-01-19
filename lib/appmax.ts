@@ -128,7 +128,8 @@ export async function createAppmaxOrder(data: AppmaxOrderRequest): Promise<Appma
       throw new Error('Resposta inválida da API Appmax ao criar cliente')
     }
     
-    const customerId = customerResult.customer_id
+    // A API retorna { success: true, data: { id: 123 } }
+    const customerId = customerResult.data?.id || customerResult.customer_id || customerResult.id
 
     if (!customerId) {
       console.error('❌ customer_id não retornado:', customerResult)

@@ -230,11 +230,23 @@ export default function CheckoutPage() {
         throw new Error(result.error || 'Erro ao processar pagamento')
       }
 
-      // Redireciona para o checkout Appmax (solução híbrida)
-      if (result.success && result.redirectUrl) {
-        window.location.href = result.redirectUrl
+      // Processa resposta da API
+      if (result.success) {
+        if (paymentMethod === 'pix' && result.pix_qr_code) {
+          // Mostra PIX no próprio site
+          window.location.href = `/success/pix?order_id=${result.order_id}&qr_code=${encodeURIComponent(result.pix_qr_code)}`
+        } else if (paymentMethod === 'credit') {
+          // Mostra resultado do cartão
+          window.location.href = `/success/credit?order_id=${result.order_id}&status=${result.status}`
+        } else if (result.redirectUrl) {
+          // Fallback: redireciona para Appmax
+          window.location.href = result.redirectUrl
+        } else {
+          throw new Error('Resposta inválida da API')
+        }
       }
     } catch (error: any) {
+      console.error('Erro no checkout:', error)
       alert(error.message || 'Erro ao processar pagamento')
       setLoading(false)
     }
