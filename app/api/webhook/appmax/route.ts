@@ -105,8 +105,12 @@ export async function POST(request: NextRequest) {
     const customerCpf = customer.cpf || body.cpf || null
 
     // Status e Valores
+    // Se o evento for de pagamento confirmado, sempre marca como approved
+    const eventType = body.event || ''
     const rawStatus = data.status || body.status || 'pending'
-    const orderStatus = mapStatusToDatabase(rawStatus)
+    const orderStatus = (eventType.toLowerCase().includes('paid') || eventType.toLowerCase().includes('authorized'))
+      ? 'approved' 
+      : mapStatusToDatabase(rawStatus)
     
     const totalAmount = parseFloat(data.total || data.full_payment_amount || body.total || body.amount || 0)
     const discount = parseFloat(data.discount || body.discount || 0)
@@ -117,9 +121,11 @@ export async function POST(request: NextRequest) {
 
     console.log('📋 Dados extraídos:', {
       orderId,
+      event: body.event,
       email: customerEmail,
       name: customerName,
-      status: orderStatus,
+      rawStatus,
+      finalStatus: orderStatus,
       total: totalAmount,
       payment: paymentMethod,
       products: products.length,
