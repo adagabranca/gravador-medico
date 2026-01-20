@@ -79,15 +79,34 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.visits - a.visits)
         .slice(0, 5)
 
-      // 5. Fontes de tráfego
-      const sourceCount = (visits || []).reduce((acc, visit) => {
-        const source = visit.utm_source || visit.referrer || 'direto'
-        acc[source] = (acc[source] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      // 5. Fontes de tráfego CATEGORIZADAS
+      const sourceCount: Record<string, number> = {
+        'Facebook': 0,
+        'Instagram': 0,
+        'Google': 0,
+        'Direto': 0,
+        'Outros': 0
+      }
+
+      ;(visits || []).forEach(visit => {
+        const source = (visit.utm_source || visit.referrer || '').toLowerCase()
+        
+        if (source.includes('facebook') || source.includes('fb.com') || source.includes('m.facebook')) {
+          sourceCount['Facebook']++
+        } else if (source.includes('instagram') || source.includes('ig.me')) {
+          sourceCount['Instagram']++
+        } else if (source.includes('google')) {
+          sourceCount['Google']++
+        } else if (!source || source === 'direto' || source === '') {
+          sourceCount['Direto']++
+        } else {
+          sourceCount['Outros']++
+        }
+      })
 
       const trafficSources = Object.entries(sourceCount)
-        .map(([source, count]) => ({ source, count: count as number }))
+        .map(([source, count]) => ({ source, count }))
+        .filter(item => item.count > 0)
         .sort((a, b) => b.count - a.count)
 
       // 6. Visitas e vendas por dia
@@ -155,8 +174,8 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-600 mt-1">Visão geral do desempenho do site</p>
+          <h1 className="text-3xl font-bold text-white">Analytics</h1>
+          <p className="text-gray-300 mt-1">Visão geral do desempenho do site</p>
         </div>
         
         <select
@@ -179,8 +198,8 @@ export default function AnalyticsPage() {
               <Eye className="w-6 h-6 text-violet-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total de Visitas</p>
-              <p className="text-2xl font-bold text-gray-900">{data?.totalVisits || 0}</p>
+              <p className="text-sm text-gray-400">Total de Visitas</p>
+              <p className="text-2xl font-bold text-white">{data?.totalVisits || 0}</p>
             </div>
           </div>
         </Card>
@@ -191,8 +210,8 @@ export default function AnalyticsPage() {
               <Users className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Sessões Únicas</p>
-              <p className="text-2xl font-bold text-gray-900">{data?.uniqueSessions || 0}</p>
+              <p className="text-sm text-gray-400">Sessões Únicas</p>
+              <p className="text-2xl font-bold text-white">{data?.uniqueSessions || 0}</p>
             </div>
           </div>
         </Card>
@@ -203,8 +222,8 @@ export default function AnalyticsPage() {
               <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Taxa de Conversão</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-gray-400">Taxa de Conversão</p>
+              <p className="text-2xl font-bold text-white">
                 {data?.conversionRate.toFixed(1)}%
               </p>
             </div>
@@ -217,8 +236,8 @@ export default function AnalyticsPage() {
               <MousePointerClick className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Vendas</p>
-              <p className="text-2xl font-bold text-gray-900">{data?.totalSales || 0}</p>
+              <p className="text-sm text-gray-400">Vendas</p>
+              <p className="text-2xl font-bold text-white">{data?.totalSales || 0}</p>
             </div>
           </div>
         </Card>
@@ -226,7 +245,7 @@ export default function AnalyticsPage() {
 
       {/* Gráfico de visitas e vendas por dia */}
       <Card className="p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5" />
           Visitas e Vendas ao Longo do Tempo
         </h2>
@@ -246,7 +265,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Páginas mais visitadas */}
         <Card className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Páginas Mais Visitadas</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Páginas Mais Visitadas</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data?.topPages || []}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -260,7 +279,7 @@ export default function AnalyticsPage() {
 
         {/* Fontes de tráfego */}
         <Card className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Fontes de Tráfego</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Fontes de Tráfego</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie

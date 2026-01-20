@@ -128,8 +128,8 @@ export default function AbandonedCartsPage() {
     <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Carrinhos Abandonados</h1>
-        <p className="text-gray-600 mt-1">Recupere vendas e entre em contato com clientes</p>
+        <h1 className="text-3xl font-bold text-white">Carrinhos Abandonados</h1>
+        <p className="text-gray-300 mt-1">Recupere vendas e entre em contato com clientes</p>
       </div>
 
       {/* Stats Cards */}
@@ -140,8 +140,8 @@ export default function AbandonedCartsPage() {
               <ShoppingCart className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Carrinhos Abandonados</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.abandoned}</p>
+              <p className="text-sm text-gray-400">Carrinhos Abandonados</p>
+              <p className="text-2xl font-bold text-white">{stats.abandoned}</p>
             </div>
           </div>
         </Card>
@@ -152,8 +152,8 @@ export default function AbandonedCartsPage() {
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Carrinhos Recuperados</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.recovered}</p>
+              <p className="text-sm text-gray-400">Carrinhos Recuperados</p>
+              <p className="text-2xl font-bold text-white">{stats.recovered}</p>
             </div>
           </div>
         </Card>
@@ -164,8 +164,8 @@ export default function AbandonedCartsPage() {
               <DollarSign className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Receita Perdida</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-gray-400">Receita Perdida</p>
+              <p className="text-2xl font-bold text-white">
                 R$ {stats.lostRevenue.toFixed(2)}
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function AbandonedCartsPage() {
                 <div className="flex-1 space-y-3">
                   {/* Nome e Status */}
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-gray-900">
+                    <h3 className="text-lg font-bold text-white">
                       {cart.customer_name || 'Nome não informado'}
                     </h3>
                     {cart.status === 'recovered' ? (
@@ -238,7 +238,7 @@ export default function AbandonedCartsPage() {
                   </div>
 
                   {/* Contatos */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                     {cart.customer_email && (
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
@@ -254,7 +254,7 @@ export default function AbandonedCartsPage() {
                   </div>
 
                   {/* Info adicional */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       <span className="font-semibold">R$ {cart.cart_value?.toFixed(2) || '0.00'}</span>
