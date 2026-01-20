@@ -23,8 +23,12 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'totalSpent' | 'orderCount' | 'lastPurchase'>('totalSpent')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  
+  // Inicializar com datas válidas (últimos 30 dias)
+  const defaultEnd = new Date()
+  const defaultStart = subDays(defaultEnd, 30)
+  const [startDate, setStartDate] = useState(format(defaultStart, 'yyyy-MM-dd'))
+  const [endDate, setEndDate] = useState(format(defaultEnd, 'yyyy-MM-dd'))
   const [filterType, setFilterType] = useState<'quick' | 'custom'>('quick')
   const [period, setPeriod] = useState(30)
 
@@ -39,11 +43,12 @@ export default function CustomersPage() {
   }
 
   useEffect(() => {
-    // Inicializar com últimos 30 dias
-    setQuickPeriod(30)
+    // Carregar dados na montagem inicial com valores padrão já definidos
+    loadCustomers()
   }, [])
 
   useEffect(() => {
+    // Recarregar quando os filtros mudarem
     if (startDate && endDate) {
       loadCustomers()
     }

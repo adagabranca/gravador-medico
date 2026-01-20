@@ -68,8 +68,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [period, setPeriod] = useState(7) // 7, 14 ou 30 dias
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  
+  // Inicializar com datas válidas (últimos 7 dias)
+  const defaultEnd = new Date()
+  const defaultStart = subDays(defaultEnd, 7)
+  const [startDate, setStartDate] = useState(format(defaultStart, 'yyyy-MM-dd'))
+  const [endDate, setEndDate] = useState(format(defaultEnd, 'yyyy-MM-dd'))
   const [filterType, setFilterType] = useState<'quick' | 'custom'>('quick')
 
   // Função para definir período rápido
@@ -83,11 +87,12 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    // Inicializar com últimos 7 dias
-    setQuickPeriod(7)
+    // Carregar dados na montagem inicial com valores padrão já definidos
+    loadDashboardData()
   }, [])
 
   useEffect(() => {
+    // Recarregar quando os filtros mudarem (mas não na montagem inicial)
     if (startDate && endDate) {
       loadDashboardData()
     }

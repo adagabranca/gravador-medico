@@ -42,8 +42,12 @@ export default function SalesPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  
+  // Inicializar com datas válidas (últimos 30 dias)
+  const defaultEnd = new Date()
+  const defaultStart = subDays(defaultEnd, 30)
+  const [startDate, setStartDate] = useState(format(defaultStart, 'yyyy-MM-dd'))
+  const [endDate, setEndDate] = useState(format(defaultEnd, 'yyyy-MM-dd'))
   const [filterType, setFilterType] = useState<'quick' | 'custom'>('quick')
   const [period, setPeriod] = useState(30)
   
@@ -62,34 +66,35 @@ export default function SalesPage() {
   }
 
   useEffect(() => {
-    // Inicializar com últimos 30 dias
-    setQuickPeriod(30)
+    // Carregar dados na montagem inicial com valores padrão já definidos
+    loadSales()
+    
+    // 🔴 REALTIME: Escutar novas vendas
+    const channel = supabase
+      .channel('sales-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sales',
+        },
+        (payload) => {
+          console.log('🔔 Nova venda detectada:', payload)
+          loadSales() // Recarrega a lista automaticamente
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   useEffect(() => {
+    // Recarregar quando os filtros mudarem
     if (startDate && endDate) {
       loadSales()
-      
-      // 🔴 REALTIME: Escutar novas vendas
-      const channel = supabase
-        .channel('sales-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'sales',
-          },
-          (payload) => {
-            console.log('🔔 Nova venda detectada:', payload)
-            loadSales() // Recarrega a lista automaticamente
-          }
-        )
-        .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel)
-      }
     }
   }, [startDate, endDate])
 
