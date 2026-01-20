@@ -65,6 +65,8 @@ export default function ReportsPage() {
       const start = startOfDay(new Date(startDate))
       const end = endOfDay(new Date(endDate))
 
+      console.log('🔍 Gerando relatório:', { start: start.toISOString(), end: end.toISOString() })
+
       // Buscar vendas do período
       const { data: sales, error } = await supabase
         .from('sales')
@@ -74,12 +76,17 @@ export default function ReportsPage() {
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('Erro ao buscar vendas:', error)
+        console.error('❌ Erro ao buscar vendas:', error)
+        setLoading(false)
         return
       }
 
+      console.log('✅ Vendas carregadas:', sales?.length || 0)
+
       // Filtrar apenas aprovadas
       const approvedSales = sales?.filter((s) => s.status === 'approved') || []
+
+      console.log('✅ Vendas aprovadas:', approvedSales.length)
 
       // Calcular métricas
       const totalRevenue = approvedSales.reduce((sum, s) => sum + Number(s.total_amount), 0)
@@ -96,11 +103,11 @@ export default function ReportsPage() {
         sale.sales_items?.forEach((item: any) => {
           const existing = productMap.get(item.product_name)
           if (existing) {
-            existing.revenue += Number(item.total_price)
+            existing.revenue += Number(item.price) * item.quantity
             existing.quantity += item.quantity
           } else {
             productMap.set(item.product_name, {
-              revenue: Number(item.total_price),
+              revenue: Number(item.price) * item.quantity,
               quantity: item.quantity,
             })
           }
