@@ -58,6 +58,9 @@ export default function CheckoutPage() {
     cvv: "",
     installments: 1,
   })
+  
+  // Estado para iframe PIX
+  const [pixIframeUrl, setPixIframeUrl] = useState<string | null>(null)
 
   // Depoimentos carousel
   const [emblaRef] = useEmblaCarousel(
@@ -291,11 +294,11 @@ export default function CheckoutPage() {
       // Processa resposta da API
       if (result.success) {
         if (paymentMethod === 'pix') {
-          // Se a API retornou uma URL de redirecionamento (comportamento padrão Appmax)
-          // redireciona diretamente para a página de pagamento PIX da Appmax
+          // Mostra o iframe do PIX na nossa própria página
           if (result.redirect_url) {
-            console.log('🔗 Redirecionando para página PIX Appmax:', result.redirect_url)
-            window.location.href = result.redirect_url
+            console.log('🔗 Carregando PIX em iframe:', result.redirect_url)
+            setPixIframeUrl(result.redirect_url)
+            setLoading(false)
             return
           }
           
@@ -1018,6 +1021,72 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal PIX com Iframe */}
+      <AnimatePresence>
+        {pixIframeUrl && (
+          <div className="fixed inset-0 bg-gradient-to-br from-brand-50 via-white to-brand-50 z-50 overflow-y-auto">
+            <div className="min-h-screen py-8 px-4">
+              <div className="container mx-auto max-w-5xl">
+                {/* Header com identidade */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center mb-8"
+                >
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white px-6 py-3 rounded-full text-lg font-bold mb-4 shadow-lg">
+                    <CheckCircle2 className="w-6 h-6" />
+                    <span>Pedido Reservado!</span>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
+                    Complete seu Pagamento
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    Seu pedido foi reservado. Efetue o pagamento via PIX para confirmar.
+                  </p>
+                </motion.div>
+
+                {/* Iframe da Appmax */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-brand-100"
+                >
+                  <iframe
+                    src={pixIframeUrl}
+                    className="w-full h-[600px] md:h-[700px]"
+                    frameBorder="0"
+                    title="Pagamento PIX"
+                  />
+                </motion.div>
+
+                {/* Footer com informações */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-8 text-center space-y-4"
+                >
+                  <div className="flex items-center justify-center gap-6 flex-wrap text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-brand-600" />
+                      <span>Pagamento 100% Seguro</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-brand-600" />
+                      <span>Acesso Imediato</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-brand-600" />
+                      <span>Dados Protegidos</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
           </div>
         )}
       </AnimatePresence>
