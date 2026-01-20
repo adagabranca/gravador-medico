@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
+import { saveAbandonedCart, markCartAsRecovered } from '@/lib/abandonedCart'
 import {
   Check,
   Clock,
@@ -326,6 +327,30 @@ export default function CheckoutPage() {
     )
   }
 
+  // 🎯 CARRINHO ABANDONADO: Salva automaticamente quando usuário preenche dados
+  const handleSaveAbandonedCart = async () => {
+    // Só salva se tiver pelo menos email preenchido
+    if (!formData.email || formData.email.length < 5) return
+
+    const selectedBumpProducts = selectedOrderBumps.map(index => ({
+      product_id: orderBumps[index].id,
+      name: orderBumps[index].title,
+      price: orderBumps[index].price
+    }))
+
+    await saveAbandonedCart({
+      customer_name: formData.name || undefined,
+      customer_email: formData.email,
+      customer_phone: formData.phone || undefined,
+      customer_cpf: formData.cpf || undefined,
+      step: currentStep === 1 ? 'form_filled' : currentStep === 3 ? 'payment_started' : 'form_filled',
+      product_id: process.env.NEXT_PUBLIC_APPMAX_PRODUCT_ID || '32991339',
+      order_bumps: selectedBumpProducts,
+      discount_code: appliedCupom || undefined,
+      cart_value: total,
+    })
+  }
+
   // Checkout
   const handleCheckout = async () => {
     setLoading(true)
@@ -378,6 +403,10 @@ export default function CheckoutPage() {
           // Armazena dados do PIX para exibir nativamente
           if (result.pix_qr_code && result.pix_emv) {
             console.log('✅ PIX gerado com sucesso')
+            
+            // 🎯 Marcar carrinho como recuperado
+            await markCartAsRecovered(result.order_id)
+            
             setPixData({
               qrCode: result.pix_qr_code,
               emv: result.pix_emv,
@@ -391,6 +420,9 @@ export default function CheckoutPage() {
           console.error('❌ Resposta da API:', result)
           throw new Error('API não retornou dados do PIX')
         } else if (paymentMethod === 'credit') {
+          // 🎯 Marcar carrinho como recuperado
+          await markCartAsRecovered(result.order_id)
+          
           // Mostra resultado do cartão
           window.location.href = `/success/credit?order_id=${result.order_id}&status=${result.status}`
         } else {
@@ -572,6 +604,7 @@ export default function CheckoutPage() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onBlur={handleSaveAbandonedCart}
                         className="w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors text-sm md:text-base box-border"
                         placeholder="seu@email.com"
                         required
@@ -587,6 +620,7 @@ export default function CheckoutPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                          onBlur={handleSaveAbandonedCart}
                           className="w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors text-sm md:text-base box-border"
                           placeholder="(11) 99999-9999"
                           maxLength={15}

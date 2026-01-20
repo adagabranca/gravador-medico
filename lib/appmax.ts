@@ -220,23 +220,25 @@ export async function createAppmaxOrder(data: AppmaxOrderRequest): Promise<Appma
 
     // Aplica desconto se houver
     const discount = data.discount || 0
-    const orderTotal = cartTotal - discount
     
     if (discount > 0) {
       console.log(`💰 Desconto aplicado: R$ ${discount}`)
-      console.log(`💰 Total original: R$ ${cartTotal} → Total com desconto: R$ ${orderTotal}`)
+      console.log(`💰 Total original (subtotal): R$ ${cartTotal}`)
+      console.log(`💰 Total final: R$ ${cartTotal - discount}`)
     }
 
-    // IMPORTANTE: NÃO enviar campo "discount" separado!
-    // A Appmax faria: total - discount = valor NEGATIVO
-    // Solução: Enviar apenas o total JÁ com desconto aplicado
+    // ✅ CORREÇÃO: Enviar produtos com PREÇO CHEIO + discount separado
+    // Isso faz aparecer no painel Appmax:
+    // - Valor original riscado (R$ 36,00)
+    // - Desconto: R$ 35,00
+    // - Total: R$ 1,00
     const orderPayload = {
       'access-token': APPMAX_API_TOKEN,
-      total: orderTotal, // Total final (já com desconto embutido)
+      total: cartTotal, // TOTAL ORIGINAL (antes do desconto)
       products,
       customer_id: customerId,
       shipping: 0,
-      discount: 0, // Sempre 0 - desconto já está no total
+      discount: discount, // DESCONTO APLICADO (será mostrado no painel)
       freight_type: 'Sedex',
     }
     

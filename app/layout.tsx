@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
+import { Suspense } from 'react'
+import AnalyticsTracker from '@/components/AnalyticsTracker'
 
 export const metadata: Metadata = {
   title: "Gravador Médico",
@@ -60,7 +62,13 @@ export default function RootLayout({
         </noscript>
         {/* End Meta Pixel Code */}
       </head>
-      <body className="bg-white">{children}</body>
+      <body className="bg-white">
+        {/* Analytics Tracker - rastreia visitas automaticamente */}
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
+        {children}
+      </body>
     </html>
   )
 }
