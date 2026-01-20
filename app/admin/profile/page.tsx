@@ -196,7 +196,7 @@ export default function ProfilePage() {
       {/* Card de Informações do Perfil */}
       <Card className="p-6 bg-gray-800 border-gray-700">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <User className="w-5 h-5" />
+          <User className="w-5 h-5 text-gray-400" />
           Informações do Perfil
         </h2>
 
@@ -204,7 +204,7 @@ export default function ProfilePage() {
           {/* Avatar */}
           <div className="flex items-center gap-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-gray-600">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -213,7 +213,7 @@ export default function ProfilePage() {
               </div>
               <label 
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 p-2 bg-brand-600 rounded-full cursor-pointer hover:bg-brand-700 transition"
+                className="absolute bottom-0 right-0 p-2 bg-brand-600 rounded-full cursor-pointer hover:bg-brand-700 transition shadow-lg"
               >
                 <Camera className="w-4 h-4 text-white" />
               </label>
@@ -226,8 +226,9 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <h3 className="text-white font-semibold">{profile.name || 'Nome não definido'}</h3>
+              <h3 className="text-white font-semibold text-lg">{profile.name || 'Nome não definido'}</h3>
               <p className="text-gray-400 text-sm">{profile.email}</p>
+              <p className="text-gray-500 text-xs mt-1">Administrador</p>
             </div>
           </div>
 
@@ -240,7 +241,7 @@ export default function ProfilePage() {
               type="text"
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-gray-500"
               placeholder="Seu nome completo"
             />
           </div>
@@ -271,7 +272,7 @@ export default function ProfilePage() {
       {/* Card de Alteração de Senha */}
       <Card className="p-6 bg-gray-800 border-gray-700">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Lock className="w-5 h-5" />
+          <Lock className="w-5 h-5 text-gray-400" />
           Alterar Senha
         </h2>
 
@@ -284,7 +285,7 @@ export default function ProfilePage() {
               type="password"
               value={passwordData.newPassword}
               onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-gray-500"
               placeholder="Digite a nova senha"
             />
           </div>
@@ -297,7 +298,7 @@ export default function ProfilePage() {
               type="password"
               value={passwordData.confirmPassword}
               onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-gray-500"
               placeholder="Confirme a nova senha"
             />
           </div>
