@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle, Mail, MessageCircle, ArrowRight, Sparkles, Gift } from 'lucide-react'
 import Link from 'next/link'
 
-export default function ObrigadoPage() {
+function ObrigadoContent() {
   const searchParams = useSearchParams()
   const email = searchParams?.get('email') || 'seu email'
   const orderId = searchParams?.get('order_id')
@@ -205,5 +205,20 @@ export default function ObrigadoPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ObrigadoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    }>
+      <ObrigadoContent />
+    </Suspense>
   )
 }
