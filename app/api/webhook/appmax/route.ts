@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendPurchaseEvent } from '@/lib/meta-capi'
 
 /**
- * Webhook da APPMAX - VERSÃO 3.0 BLINDADA
+ * Webhook da APPMAX - VERSÃO 3.0 BLINDADA + META CAPI
  * 
  * ✅ Usa Service Role Key para ignorar RLS
  * ✅ Trata todos os eventos: OrderCreated, OrderPaid, PaymentAuthorized
  * ✅ UPSERT para evitar duplicatas
  * ✅ Extração segura (funciona mesmo se customer vier null)
  * ✅ Logs detalhados para debug
+ * ✅ 🆕 Envia eventos de conversão para Meta CAPI
  * 
  * URL: https://www.gravadormedico.com.br/api/webhook/appmax
  */
@@ -207,6 +209,55 @@ export async function POST(request: NextRequest) {
           processed_at: new Date().toISOString(),
         })
         .eq('id', webhookLog.id)
+    }
+
+    // 6️⃣ 🚀 ENVIAR EVENTO PARA META CAPI (Se venda aprovada)
+    if (orderStatus === 'approved' && totalAmount > 0) {
+      console.log('🚀 Enviando conversão para Meta CAPI...')
+      
+      // Buscar dados de tracking (fbp, fbc, session_id) do analytics
+      let trackingData = { fbc: null, fbp: null, ipAddress, userAgent: null }
+      
+      if (customerEmail) {
+        const { data: visits } = await supabaseAdmin!
+          .from('analytics_visits')
+          .select('fbc, fbp, ip_address, user_agent, session_id')
+          .ilike('referrer', `%${customerEmail}%`) // Tentar encontrar por email no referrer
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        
+        if (visits) {
+          trackingData = {
+            fbc: visits.fbc,
+            fbp: visits.fbp,
+            ipAddress: visits.ip_address || ipAddress,
+            userAgent: visits.user_agent
+          }
+        }
+      }
+
+      const metaResult = await sendPurchaseEvent({
+        orderId: orderId,
+        customerEmail: customerEmail !== 'email@naoinformado.com' ? customerEmail : undefined,
+        customerPhone: customerPhone || undefined,
+        customerName: customerName !== 'Cliente Desconhecido' ? customerName : undefined,
+        totalAmount: totalAmount,
+        currency: 'BRL',
+        productName: products[0]?.name || 'Gravador Médico',
+        productIds: products.map((p: any) => p.sku || p.id?.toString()).filter(Boolean),
+        fbc: trackingData.fbc || undefined,
+        fbp: trackingData.fbp || undefined,
+        ipAddress: trackingData.ipAddress || undefined,
+        userAgent: trackingData.userAgent || undefined,
+        eventSourceUrl: 'https://www.gravadormedico.com.br'
+      })
+
+      if (metaResult.success) {
+        console.log('✅ Conversão enviada para Meta CAPI:', metaResult.fbTraceId)
+      } else {
+        console.error('⚠️ Falha ao enviar para Meta CAPI:', metaResult.error)
+      }
     }
 
     console.log(`✅ Webhook processado em ${Date.now() - startTime}ms`)
