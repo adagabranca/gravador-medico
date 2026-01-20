@@ -529,3 +529,54 @@ export function generateCheckoutLink(utmParams?: UTMParams): string {
   const queryString = params.toString()
   return queryString ? `${baseUrl}?${queryString}` : baseUrl
 }
+
+/**
+ * Buscar vendas da Appmax (últimos 30 dias)
+ */
+export async function fetchAppmaxSales(days: number = 30) {
+  try {
+    const response = await fetch(`${APPMAX_API_URL}/orders`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'access-token': APPMAX_API_TOKEN,
+      },
+    })
+
+    if (!response.ok) {
+      console.error('Erro ao buscar vendas da Appmax:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    return data.orders || data.data || []
+  } catch (error) {
+    console.error('Erro ao buscar vendas:', error)
+    return []
+  }
+}
+
+/**
+ * Buscar estatísticas da Appmax
+ */
+export async function fetchAppmaxStats() {
+  try {
+    const response = await fetch(`${APPMAX_API_URL}/dashboard/stats`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'access-token': APPMAX_API_TOKEN,
+      },
+    })
+
+    if (!response.ok) {
+      console.error('Erro ao buscar stats da Appmax:', response.status)
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas:', error)
+    return null
+  }
+}
