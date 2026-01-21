@@ -1,373 +1,743 @@
-"use client"
+'use client';"use client"
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Users, Search, Mail, Phone, Calendar, DollarSign, 
-  ShoppingBag, Filter, Download, RefreshCw, Eye, TrendingUp 
-} from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { format, subDays } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { fetchCustomersWithMetrics } from '@/lib/dashboard-queries'
 
-interface Customer {
-  customer_id: string
-  name: string
-  email: string
-  phone: string | null
-  segment: string | null
+
+import React, { useState, useEffect } from 'react';import { useState, useEffect } from 'react'
+
+import { Search, Crown, Zap, Moon, AlertTriangle, Users, TrendingUp, DollarSign } from 'lucide-react';import { motion } from 'framer-motion'
+
+import { Input } from '@/components/ui/input';import { 
+
+import { Badge } from '@/components/ui/badge';  Users, Search, Mail, Phone, Calendar, DollarSign, 
+
+import { Button } from '@/components/ui/button';  ShoppingBag, Filter, Download, RefreshCw, Eye, TrendingUp 
+
+import {} from 'lucide-react'
+
+  Table,import { supabase } from '@/lib/supabase'
+
+  TableBody,import { format, subDays } from 'date-fns'
+
+  TableCell,import { ptBR } from 'date-fns/locale'
+
+  TableHead,import { fetchCustomersWithMetrics } from '@/lib/dashboard-queries'
+
+  TableHeader,
+
+  TableRow,interface Customer {
+
+} from '@/components/ui/table';  customer_id: string
+
+import { Card } from '@/components/ui/card';  name: string
+
+import { Skeleton } from '@/components/ui/skeleton';  email: string
+
+import CustomerDrawer from '@/components/CustomerDrawer';  phone: string | null
+
+import { Customer } from '@/app/api/admin/customers/route';  segment: string | null
+
   status: string
-  total_orders: number
-  total_spent: number
-  average_order_value: number
+
+// Debounce hook  total_orders: number
+
+function useDebounce<T>(value: T, delay: number): T {  total_spent: number
+
+  const [debouncedValue, setDebouncedValue] = useState(value);  average_order_value: number
+
   last_purchase_at: string
-  first_purchase_at: string
-}
 
-export default function CustomersPage() {
+  useEffect(() => {  first_purchase_at: string
+
+    const handler = setTimeout(() => {}
+
+      setDebouncedValue(value);
+
+    }, delay);export default function CustomersPage() {
+
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+
+    return () => {  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
+
+      clearTimeout(handler);  const [loading, setLoading] = useState(true)
+
+    };  const [refreshing, setRefreshing] = useState(false)
+
+  }, [value, delay]);  const [searchTerm, setSearchTerm] = useState('')
+
   const [sortBy, setSortBy] = useState<'total_spent' | 'total_orders' | 'last_purchase_at'>('total_spent')
-  const [filterSegment, setFilterSegment] = useState<'all' | 'vip' | 'regular' | 'new'>('all')
-  
+
+  return debouncedValue;  const [filterSegment, setFilterSegment] = useState<'all' | 'vip' | 'regular' | 'new'>('all')
+
+}  
+
   // Filtros de data
-  const today = new Date()
-  const thirtyDaysAgo = subDays(today, 30)
-  const [startDate, setStartDate] = useState(format(thirtyDaysAgo, 'yyyy-MM-dd'))
-  const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'))
-  const [period, setPeriod] = useState(30)
 
-  // Função para definir período rápido
+// Função para gerar avatar com iniciais  const today = new Date()
+
+function getInitials(name: string): string {  const thirtyDaysAgo = subDays(today, 30)
+
+  if (!name) return '??';  const [startDate, setStartDate] = useState(format(thirtyDaysAgo, 'yyyy-MM-dd'))
+
+  const parts = name.trim().split(' ');  const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'))
+
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();  const [period, setPeriod] = useState(30)
+
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+
+}  // Função para definir período rápido
+
   const setQuickPeriod = (days: number) => {
-    setPeriod(days)
-    const end = new Date()
-    const start = subDays(end, days)
-    setStartDate(format(start, 'yyyy-MM-dd'))
-    setEndDate(format(end, 'yyyy-MM-dd'))
-  }
 
-  useEffect(() => {
-    loadCustomers()
+// Função para gerar cor baseada em hash    setPeriod(days)
+
+function getColorFromString(str: string): string {    const end = new Date()
+
+  let hash = 0;    const start = subDays(end, days)
+
+  for (let i = 0; i < str.length; i++) {    setStartDate(format(start, 'yyyy-MM-dd'))
+
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);    setEndDate(format(end, 'yyyy-MM-dd'))
+
+  }  }
+
+  const hue = hash % 360;
+
+  return `hsl(${hue}, 65%, 55%)`;  useEffect(() => {
+
+}    loadCustomers()
+
   }, [startDate, endDate])
 
-  useEffect(() => {
-    filterAndSortCustomers()
-  }, [searchTerm, sortBy, filterSegment, customers])
+// Componente de Avatar
 
-  const loadCustomers = async () => {
-    try {
-      setRefreshing(true)
+function CustomerAvatar({ name, email }: { name: string; email: string }) {  useEffect(() => {
 
-      console.log('📊 Carregando clientes:', { startDate, endDate })
+  const initials = getInitials(name);    filterAndSortCustomers()
 
-      // Usar helper de queries
-      const { data, error } = await fetchCustomersWithMetrics(
-        supabase,
+  const color = getColorFromString(email);  }, [searchTerm, sortBy, filterSegment, customers])
+
+  
+
+  return (  const loadCustomers = async () => {
+
+    <div    try {
+
+      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"      setRefreshing(true)
+
+      style={{ backgroundColor: color }}
+
+    >      console.log('📊 Carregando clientes:', { startDate, endDate })
+
+      {initials}
+
+    </div>      // Usar helper de queries
+
+  );      const { data, error } = await fetchCustomersWithMetrics(
+
+}        supabase,
+
         startDate,
-        endDate
-      )
 
-      if (error) {
-        console.error('❌ Erro ao buscar clientes:', error)
-        return
-      }
+// Badge de Segmento        endDate
 
-      console.log('✅ Clientes carregados:', data?.length || 0)
-      setCustomers(data || [])
+function SegmentBadge({ segment }: { segment: Customer['segment'] }) {      )
 
-    } catch (error) {
-      console.error('❌ Erro:', error)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+  const config = {
 
-  const filterAndSortCustomers = () => {
-    let filtered = [...customers]
+    VIP: { icon: Crown, color: 'bg-gradient-to-r from-yellow-500 to-amber-600 text-white', label: '👑 VIP' },      if (error) {
 
-    // Filtrar por busca
-    if (searchTerm) {
-      filtered = filtered.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    New: { icon: Zap, color: 'bg-gradient-to-r from-green-500 to-emerald-600 text-white', label: '🔥 Novo' },        console.error('❌ Erro ao buscar clientes:', error)
+
+    Dormant: { icon: Moon, color: 'bg-gradient-to-r from-gray-500 to-slate-600 text-white', label: '💤 Ausente' },        return
+
+    'Churn Risk': { icon: AlertTriangle, color: 'bg-gradient-to-r from-orange-500 to-red-600 text-white', label: '⚠️ Churn' },      }
+
+    Regular: { icon: Users, color: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white', label: 'Regular' },
+
+  };      console.log('✅ Clientes carregados:', data?.length || 0)
+
+        setCustomers(data || [])
+
+  const { color, label } = config[segment] || config.Regular;
+
+      } catch (error) {
+
+  return (      console.error('❌ Erro:', error)
+
+    <Badge className={`${color} border-0 font-semibold px-3 py-1`}>    } finally {
+
+      {label}      setLoading(false)
+
+    </Badge>      setRefreshing(false)
+
+  );    }
+
+}  }
+
+
+
+// Formatter de moeda  const filterAndSortCustomers = () => {
+
+const formatCurrency = (value: number | null) => {    let filtered = [...customers]
+
+  if (!value) return 'R$ 0,00';
+
+  return new Intl.NumberFormat('pt-BR', {    // Filtrar por busca
+
+    style: 'currency',    if (searchTerm) {
+
+    currency: 'BRL',      filtered = filtered.filter(c =>
+
+  }).format(value);        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+
+};        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+
         c.phone?.includes(searchTerm)
-      )
-    }
 
-    // Filtrar por segmento
-    if (filterSegment !== 'all') {
-      filtered = filtered.filter(c => c.segment === filterSegment)
-    }
+// Formatter de data relativa      )
 
-    // Ordenar
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'total_spent':
-          return b.total_spent - a.total_spent
-        case 'total_orders':
-          return b.total_orders - a.total_orders
-        case 'last_purchase_at':
-          return new Date(b.last_purchase_at).getTime() - new Date(a.last_purchase_at).getTime()
-        default:
-          return 0
+function getRelativeTime(date: string): string {    }
+
+  const now = new Date();
+
+  const past = new Date(date);    // Filtrar por segmento
+
+  const diffMs = now.getTime() - past.getTime();    if (filterSegment !== 'all') {
+
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));      filtered = filtered.filter(c => c.segment === filterSegment)
+
       }
-    })
 
-    setFilteredCustomers(filtered)
-  }
+  if (diffDays === 0) return 'Hoje';
 
-  // Métricas totais
-  const totalCustomers = customers.length
-  const totalRevenue = customers.reduce((sum, c) => sum + c.total_spent, 0)
-  const avgOrderValue = customers.reduce((sum, c) => sum + c.average_order_value, 0) / (customers.length || 1)
-  const totalOrders = customers.reduce((sum, c) => sum + c.total_orders, 0)
+  if (diffDays === 1) return 'Ontem';    // Ordenar
+
+  if (diffDays < 7) return `${diffDays} dias atrás`;    filtered.sort((a, b) => {
+
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} semanas atrás`;      switch (sortBy) {
+
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} meses atrás`;        case 'total_spent':
+
+  return `${Math.floor(diffDays / 365)} anos atrás`;          return b.total_spent - a.total_spent
+
+}        case 'total_orders':
+
+          return b.total_orders - a.total_orders
+
+export default function CustomersPage() {        case 'last_purchase_at':
+
+  const [customers, setCustomers] = useState<Customer[]>([]);          return new Date(b.last_purchase_at).getTime() - new Date(a.last_purchase_at).getTime()
+
+  const [loading, setLoading] = useState(true);        default:
+
+  const [search, setSearch] = useState('');          return 0
+
+  const [selectedSegment, setSelectedSegment] = useState('');      }
+
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);    })
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [page, setPage] = useState(1);    setFilteredCustomers(filtered)
+
+  const [totalPages, setTotalPages] = useState(1);  }
+
+  const [stats, setStats] = useState({
+
+    total_customers: 0,  // Métricas totais
+
+    vip_count: 0,  const totalCustomers = customers.length
+
+    dormant_count: 0,  const totalRevenue = customers.reduce((sum, c) => sum + c.total_spent, 0)
+
+    total_ltv: 0,  const avgOrderValue = customers.reduce((sum, c) => sum + c.average_order_value, 0) / (customers.length || 1)
+
+    avg_ltv: 0,  const totalOrders = customers.reduce((sum, c) => sum + c.total_orders, 0)
+
+  });
 
   // Segmentos
-  const vipCount = customers.filter(c => c.segment === 'vip').length
-  const regularCount = customers.filter(c => c.segment === 'regular').length
-  const newCount = customers.filter(c => c.segment === 'new').length
 
-  const MetricCard = ({ title, value, icon: Icon, color, prefix = '', suffix = '' }: any) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700/50"
-    >
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <p className="text-gray-400 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-white">
-            {prefix}{typeof value === 'number' ? value.toLocaleString('pt-BR', {
-              minimumFractionDigits: prefix === 'R$ ' ? 2 : 0,
-              maximumFractionDigits: prefix === 'R$ ' ? 2 : 0,
-            }) : value}{suffix}
-          </p>
-        </div>
-      </div>
-    </motion.div>
-  )
+  const debouncedSearch = useDebounce(search, 500);  const vipCount = customers.filter(c => c.segment === 'vip').length
+
+  const regularCount = customers.filter(c => c.segment === 'regular').length
+
+  // Fetch customers  const newCount = customers.filter(c => c.segment === 'new').length
+
+  const fetchCustomers = async () => {
+
+    setLoading(true);  const MetricCard = ({ title, value, icon: Icon, color, prefix = '', suffix = '' }: any) => (
+
+    try {    <motion.div
+
+      const params = new URLSearchParams({      initial={{ opacity: 0, y: 20 }}
+
+        page: page.toString(),      animate={{ opacity: 1, y: 0 }}
+
+        limit: '20',      className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700/50"
+
+        search: debouncedSearch,    >
+
+        segment: selectedSegment,      <div className="flex items-center gap-4">
+
+        sortBy: 'ltv',        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center`}>
+
+        sortOrder: 'desc',          <Icon className="w-6 h-6 text-white" />
+
+      });        </div>
+
+              <div>
+
+      const response = await fetch(`/api/admin/customers?${params}`);          <p className="text-gray-400 text-sm font-medium">{title}</p>
+
+      const data = await response.json();          <p className="text-2xl font-bold text-white">
+
+                  {prefix}{typeof value === 'number' ? value.toLocaleString('pt-BR', {
+
+      setCustomers(data.customers || []);              minimumFractionDigits: prefix === 'R$ ' ? 2 : 0,
+
+      setTotalPages(data.pagination?.totalPages || 1);              maximumFractionDigits: prefix === 'R$ ' ? 2 : 0,
+
+      setStats(data.stats || stats);            }) : value}{suffix}
+
+    } catch (error) {          </p>
+
+      console.error('Error fetching customers:', error);        </div>
+
+    } finally {      </div>
+
+      setLoading(false);    </motion.div>
+
+    }  )
+
+  };
 
   const SegmentBadge = ({ segment }: { segment: string | null }) => {
-    const styles = {
-      vip: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      regular: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+
+  useEffect(() => {    const styles = {
+
+    fetchCustomers();      vip: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+
+  }, [debouncedSearch, selectedSegment, page]);      regular: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+
       new: 'bg-green-500/20 text-green-400 border-green-500/30',
-    }
 
-    const labels = {
-      vip: '⭐ VIP',
-      regular: '👤 Regular',
+  // Abrir drawer    }
+
+  const handleRowClick = (customer: Customer) => {
+
+    setSelectedCustomer(customer);    const labels = {
+
+    setDrawerOpen(true);      vip: '⭐ VIP',
+
+  };      regular: '👤 Regular',
+
       new: '🆕 Novo',
-    }
 
-    const seg = segment || 'new'
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[seg as keyof typeof styles]}`}>
-        {labels[seg as keyof typeof labels]}
-      </span>
-    )
-  }
+  return (    }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
+    <div className="min-h-screen bg-[#0A0A0A] p-6 space-y-6">
+
+      {/* Header */}    const seg = segment || 'new'
+
+      <div className="flex items-center justify-between">    return (
+
+        <div>      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[seg as keyof typeof styles]}`}>
+
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">        {labels[seg as keyof typeof labels]}
+
+            <Users className="w-8 h-8 text-purple-400" />      </span>
+
+            Clientes    )
+
+          </h1>  }
+
+          <p className="text-gray-400 mt-1">
+
+            Mini-CRM: Identifique VIPs, recupere Churns e acompanhe LTV  if (loading) {
+
+          </p>    return (
+
+        </div>      <div className="flex items-center justify-center h-96">
+
+      </div>        <div className="text-center">
+
           <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400 font-medium">Carregando clientes...</p>
-        </div>
-      </div>
-    )
-  }
 
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
+      {/* Stats Cards */}          <p className="text-gray-400 font-medium">Carregando clientes...</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">        </div>
+
+        <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-700/30 p-6">      </div>
+
+          <div className="flex items-center justify-between">    )
+
+            <div>  }
+
+              <p className="text-gray-400 text-sm font-medium">Total de Clientes</p>
+
+              <p className="text-3xl font-bold text-white mt-1">{stats.total_customers}</p>  return (
+
+            </div>    <div className="space-y-8">
+
+            <Users className="w-10 h-10 text-purple-400" />      {/* Header */}
+
+          </div>      <div className="flex items-center justify-between flex-wrap gap-4">
+
+        </Card>        <div>
+
           <h1 className="text-3xl font-black text-white">Clientes</h1>
-          <p className="text-gray-400 mt-1">Gerencie sua base de clientes</p>
-        </div>
 
-        <div className="flex gap-3 flex-wrap">
-          {/* Filtros Rápidos */}
-          <div className="flex gap-2 bg-gray-800 border border-gray-700 rounded-xl p-1">
-            {[7, 14, 30, 90].map((days) => (
-              <button
-                key={days}
+        <Card className="bg-gradient-to-br from-yellow-900/30 to-amber-800/20 border-yellow-700/30 p-6">          <p className="text-gray-400 mt-1">Gerencie sua base de clientes</p>
+
+          <div className="flex items-center justify-between">        </div>
+
+            <div>
+
+              <p className="text-gray-400 text-sm font-medium">VIPs</p>        <div className="flex gap-3 flex-wrap">
+
+              <p className="text-3xl font-bold text-white mt-1">{stats.vip_count}</p>          {/* Filtros Rápidos */}
+
+            </div>          <div className="flex gap-2 bg-gray-800 border border-gray-700 rounded-xl p-1">
+
+            <Crown className="w-10 h-10 text-yellow-400" />            {[7, 14, 30, 90].map((days) => (
+
+          </div>              <button
+
+        </Card>                key={days}
+
                 onClick={() => setQuickPeriod(days)}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                  period === days
-                    ? 'bg-brand-500 text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {days} dias
-              </button>
-            ))}
+
+        <Card className="bg-gradient-to-br from-green-900/30 to-emerald-800/20 border-green-700/30 p-6">                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+
+          <div className="flex items-center justify-between">                  period === days
+
+            <div>                    ? 'bg-brand-500 text-white shadow-lg'
+
+              <p className="text-gray-400 text-sm font-medium">LTV Total</p>                    : 'text-gray-400 hover:text-white'
+
+              <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats.total_ltv)}</p>                }`}
+
+            </div>              >
+
+            <DollarSign className="w-10 h-10 text-green-400" />                {days} dias
+
+          </div>              </button>
+
+        </Card>            ))}
+
           </div>
 
-          <button
-            onClick={loadCustomers}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 text-white transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Atualizar
-          </button>
-        </div>
+        <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-800/20 border-blue-700/30 p-6">
+
+          <div className="flex items-center justify-between">          <button
+
+            <div>            onClick={loadCustomers}
+
+              <p className="text-gray-400 text-sm font-medium">LTV Médio</p>            disabled={refreshing}
+
+              <p className="text-2xl font-bold text-white mt-1">{formatCurrency(stats.avg_ltv)}</p>            className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 text-white transition-colors"
+
+            </div>          >
+
+            <TrendingUp className="w-10 h-10 text-blue-400" />            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+
+          </div>            Atualizar
+
+        </Card>          </button>
+
+      </div>        </div>
+
       </div>
 
-      {/* Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total de Clientes"
-          value={totalCustomers}
-          icon={Users}
-          color="from-blue-500 to-cyan-600"
-        />
-        <MetricCard
-          title="Receita Total"
-          value={totalRevenue}
-          icon={DollarSign}
+      {/* Filters */}
+
+      <Card className="bg-[#111111] border-gray-800 p-6">      {/* Métricas */}
+
+        <div className="flex flex-col md:flex-row gap-4">      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          {/* Search */}        <MetricCard
+
+          <div className="flex-1 relative">          title="Total de Clientes"
+
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />          value={totalCustomers}
+
+            <Input          icon={Users}
+
+              placeholder="Buscar por nome ou email..."          color="from-blue-500 to-cyan-600"
+
+              value={search}        />
+
+              onChange={(e) => setSearch(e.target.value)}        <MetricCard
+
+              className="pl-10 bg-[#1A1A1A] border-gray-700 text-white placeholder:text-gray-500"          title="Receita Total"
+
+            />          value={totalRevenue}
+
+          </div>          icon={DollarSign}
+
           color="from-green-500 to-emerald-600"
-          prefix="R$ "
-        />
-        <MetricCard
-          title="Ticket Médio"
-          value={avgOrderValue}
-          icon={ShoppingBag}
-          color="from-orange-500 to-red-600"
-          prefix="R$ "
-        />
-        <MetricCard
-          title="Total de Pedidos"
-          value={totalOrders}
-          icon={TrendingUp}
-          color="from-purple-500 to-pink-600"
-        />
-      </div>
 
-      {/* Filtros e Busca */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700/50">
-        <div className="flex flex-wrap gap-4">
-          {/* Busca */}
-          <div className="flex-1 min-w-[300px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Buscar por nome, email ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-            </div>
+          {/* Segment Filter */}          prefix="R$ "
+
+          <div className="flex gap-2 flex-wrap">        />
+
+            {['', 'VIP', 'New', 'Dormant', 'Churn Risk', 'Regular'].map((segment) => (        <MetricCard
+
+              <Button          title="Ticket Médio"
+
+                key={segment || 'all'}          value={avgOrderValue}
+
+                variant={selectedSegment === segment ? 'default' : 'outline'}          icon={ShoppingBag}
+
+                onClick={() => setSelectedSegment(segment)}          color="from-orange-500 to-red-600"
+
+                className={`${          prefix="R$ "
+
+                  selectedSegment === segment        />
+
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'        <MetricCard
+
+                    : 'bg-[#1A1A1A] border-gray-700 text-gray-300 hover:bg-[#222222]'          title="Total de Pedidos"
+
+                }`}          value={totalOrders}
+
+              >          icon={TrendingUp}
+
+                {segment || 'Todos'}          color="from-purple-500 to-pink-600"
+
+              </Button>        />
+
+            ))}      </div>
+
           </div>
 
-          {/* Filtro Segmento */}
-          <select
-            value={filterSegment}
-            onChange={(e) => setFilterSegment(e.target.value as any)}
-            className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="all">Todos os Segmentos</option>
-            <option value="vip">⭐ VIP ({vipCount})</option>
-            <option value="regular">👤 Regular ({regularCount})</option>
-            <option value="new">🆕 Novo ({newCount})</option>
-          </select>
+        </div>      {/* Filtros e Busca */}
 
-          {/* Ordenar por */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="total_spent">Maior Gasto</option>
-            <option value="total_orders">Mais Pedidos</option>
-            <option value="last_purchase_at">Última Compra</option>
-          </select>
+      </Card>      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700/50">
 
-          <button className="flex items-center gap-2 px-4 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors">
-            <Download className="w-4 h-4" />
-            Exportar
-          </button>
-        </div>
-      </div>
+        <div className="flex flex-wrap gap-4">
 
-      {/* Tabela de Clientes */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-900/50 border-b border-gray-700">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Cliente</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Segmento</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Total Gasto</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Pedidos</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Ticket Médio</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Última Compra</th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.customer_id} className="hover:bg-gray-700/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="font-semibold text-white">{customer.name}</div>
-                      <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
-                        <Mail className="w-3 h-3" />
-                        {customer.email}
-                      </div>
-                      {customer.phone && (
-                        <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
-                          <Phone className="w-3 h-3" />
+      {/* Table */}          {/* Busca */}
+
+      <Card className="bg-[#111111] border-gray-800">          <div className="flex-1 min-w-[300px]">
+
+        <Table>            <div className="relative">
+
+          <TableHeader>              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+
+            <TableRow className="border-gray-800 hover:bg-transparent">              <input
+
+              <TableHead className="text-gray-400 font-semibold">Cliente</TableHead>                type="text"
+
+              <TableHead className="text-gray-400 font-semibold">Segmento</TableHead>                placeholder="Buscar por nome, email ou telefone..."
+
+              <TableHead className="text-gray-400 font-semibold text-right">LTV</TableHead>                value={searchTerm}
+
+              <TableHead className="text-gray-400 font-semibold text-right">Pedidos</TableHead>                onChange={(e) => setSearchTerm(e.target.value)}
+
+              <TableHead className="text-gray-400 font-semibold text-right">Ticket Médio</TableHead>                className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+
+              <TableHead className="text-gray-400 font-semibold">Última Compra</TableHead>              />
+
+              <TableHead className="text-gray-400 font-semibold text-center">Score</TableHead>            </div>
+
+            </TableRow>          </div>
+
+          </TableHeader>
+
+          <TableBody>          {/* Filtro Segmento */}
+
+            {loading ? (          <select
+
+              Array.from({ length: 5 }).map((_, i) => (            value={filterSegment}
+
+                <TableRow key={i} className="border-gray-800">            onChange={(e) => setFilterSegment(e.target.value as any)}
+
+                  <TableCell colSpan={7}>            className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+
+                    <Skeleton className="h-12 w-full bg-gray-800" />          >
+
+                  </TableCell>            <option value="all">Todos os Segmentos</option>
+
+                </TableRow>            <option value="vip">⭐ VIP ({vipCount})</option>
+
+              ))            <option value="regular">👤 Regular ({regularCount})</option>
+
+            ) : customers.length === 0 ? (            <option value="new">🆕 Novo ({newCount})</option>
+
+              <TableRow className="border-gray-800">          </select>
+
+                <TableCell colSpan={7} className="text-center text-gray-500 py-12">
+
+                  Nenhum cliente encontrado          {/* Ordenar por */}
+
+                </TableCell>          <select
+
+              </TableRow>            value={sortBy}
+
+            ) : (            onChange={(e) => setSortBy(e.target.value as any)}
+
+              customers.map((customer) => (            className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+
+                <TableRow          >
+
+                  key={customer.email}            <option value="total_spent">Maior Gasto</option>
+
+                  onClick={() => handleRowClick(customer)}            <option value="total_orders">Mais Pedidos</option>
+
+                  className="border-gray-800 hover:bg-[#1A1A1A] cursor-pointer transition-colors"            <option value="last_purchase_at">Última Compra</option>
+
+                >          </select>
+
+                  <TableCell>
+
+                    <div className="flex items-center gap-3">          <button className="flex items-center gap-2 px-4 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors">
+
+                      <CustomerAvatar name={customer.name} email={customer.email} />            <Download className="w-4 h-4" />
+
+                      <div>            Exportar
+
+                        <p className="font-medium text-white">{customer.name || 'Sem nome'}</p>          </button>
+
+                        <p className="text-sm text-gray-500">{customer.email}</p>        </div>
+
+                      </div>      </div>
+
+                    </div>
+
+                  </TableCell>      {/* Tabela de Clientes */}
+
+                  <TableCell>      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden">
+
+                    <SegmentBadge segment={customer.segment} />        <div className="overflow-x-auto">
+
+                  </TableCell>          <table className="w-full">
+
+                  <TableCell className="text-right">            <thead className="bg-gray-900/50 border-b border-gray-700">
+
+                    <span className="font-bold text-green-400">{formatCurrency(customer.ltv)}</span>              <tr>
+
+                  </TableCell>                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Cliente</th>
+
+                  <TableCell className="text-right text-white">                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Segmento</th>
+
+                    {customer.paid_orders}/{customer.total_orders}                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Total Gasto</th>
+
+                  </TableCell>                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Pedidos</th>
+
+                  <TableCell className="text-right text-gray-300">                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Ticket Médio</th>
+
+                    {formatCurrency(customer.aov)}                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Última Compra</th>
+
+                  </TableCell>                <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase">Ações</th>
+
+                  <TableCell>              </tr>
+
+                    <span className="text-gray-400 text-sm">            </thead>
+
+                      {customer.last_purchase ? getRelativeTime(customer.last_purchase) : 'Nunca'}            <tbody className="divide-y divide-gray-700">
+
+                    </span>              {filteredCustomers.map((customer) => (
+
+                  </TableCell>                <tr key={customer.customer_id} className="hover:bg-gray-700/30 transition-colors">
+
+                  <TableCell className="text-center">                  <td className="px-6 py-4">
+
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600">                    <div>
+
+                      <span className="text-white font-bold text-sm">{customer.engagement_score}</span>                      <div className="font-semibold text-white">{customer.name}</div>
+
+                    </div>                      <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
+
+                  </TableCell>                        <Mail className="w-3 h-3" />
+
+                </TableRow>                        {customer.email}
+
+              ))                      </div>
+
+            )}                      {customer.phone && (
+
+          </TableBody>                        <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
+
+        </Table>                          <Phone className="w-3 h-3" />
+
                           {customer.phone}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <SegmentBadge segment={customer.segment} />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-green-400">
-                      R$ {customer.total_spent.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <ShoppingBag className="w-4 h-4 text-blue-400" />
-                      <span className="font-semibold text-white">{customer.total_orders}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-gray-300">
-                      R$ {customer.average_order_value.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
+
+        {/* Pagination */}                        </div>
+
+        {totalPages > 1 && (                      )}
+
+          <div className="flex items-center justify-between p-4 border-t border-gray-800">                    </div>
+
+            <Button                  </td>
+
+              variant="outline"                  <td className="px-6 py-4">
+
+              onClick={() => setPage(Math.max(1, page - 1))}                    <SegmentBadge segment={customer.segment} />
+
+              disabled={page === 1}                  </td>
+
+              className="bg-[#1A1A1A] border-gray-700 text-white hover:bg-[#222222] disabled:opacity-50"                  <td className="px-6 py-4">
+
+            >                    <div className="font-bold text-green-400">
+
+              Anterior                      R$ {customer.total_spent.toFixed(2)}
+
+            </Button>                    </div>
+
+            <span className="text-gray-400">                  </td>
+
+              Página {page} de {totalPages}                  <td className="px-6 py-4">
+
+            </span>                    <div className="flex items-center gap-2">
+
+            <Button                      <ShoppingBag className="w-4 h-4 text-blue-400" />
+
+              variant="outline"                      <span className="font-semibold text-white">{customer.total_orders}</span>
+
+              onClick={() => setPage(Math.min(totalPages, page + 1))}                    </div>
+
+              disabled={page === totalPages}                  </td>
+
+              className="bg-[#1A1A1A] border-gray-700 text-white hover:bg-[#222222] disabled:opacity-50"                  <td className="px-6 py-4">
+
+            >                    <div className="text-gray-300">
+
+              Próxima                      R$ {customer.average_order_value.toFixed(2)}
+
+            </Button>                    </div>
+
+          </div>                  </td>
+
+        )}                  <td className="px-6 py-4">
+
+      </Card>                    <div className="flex items-center gap-2 text-sm text-gray-400">
+
                       <Calendar className="w-4 h-4" />
-                      {format(new Date(customer.last_purchase_at), 'dd/MM/yyyy', { locale: ptBR })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-brand-400 hover:text-brand-300 font-semibold text-sm transition-colors">
-                      <Eye className="w-5 h-5 inline" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+
+      {/* Customer Drawer */}                      {format(new Date(customer.last_purchase_at), 'dd/MM/yyyy', { locale: ptBR })}
+
+      {selectedCustomer && (                    </div>
+
+        <CustomerDrawer                  </td>
+
+          customer={selectedCustomer}                  <td className="px-6 py-4 text-right">
+
+          open={drawerOpen}                    <button className="text-brand-400 hover:text-brand-300 font-semibold text-sm transition-colors">
+
+          onClose={() => setDrawerOpen(false)}                      <Eye className="w-5 h-5 inline" />
+
+        />                    </button>
+
+      )}                  </td>
+
+    </div>                </tr>
+
+  );              ))}
+
+}            </tbody>
+
           </table>
         </div>
 

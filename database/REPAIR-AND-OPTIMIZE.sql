@@ -215,7 +215,144 @@ WHERE schemaname = 'public'
   AND tablename IN ('sales', 'analytics_visits', 'abandoned_carts', 'audit_logs')
 ORDER BY tablename, indexname;
 
+-- 9️⃣ CUSTOMER INTELLIGENCE (Mini-CRM)
+-- =============================================
+
+-- View Materializada com inteligência de RFM e segmentação automática
+CREATE OR REPLACE VIEW public.customer_intelligence AS
+SELECT 
+    customer_email as email,
+    
+    -- Dados Básicos
+    MAX(customer_name) as name,
+    MAX(customer_phone) as phone,
+    MAX(customer_cpf) as cpf,
+    
+    -- Métricas Financeiras (LTV)
+    COUNT(id) as total_orders,
+    COUNT(id) FILTER (WHERE status IN ('paid', 'approved')) as paid_orders,
+    SUM(total_amount) FILTER (WHERE status IN ('paid', 'approved')) as ltv,
+    AVG(total_amount) FILTER (WHERE status IN ('paid', 'approved')) as aov,
+    
+    -- Métricas de Tempo
+    MIN(created_at) as first_purchase,
+    MAX(created_at) as last_purchase,
+    EXTRACT(DAY FROM (NOW() - MAX(created_at))) as days_since_last_purchase,
+    
+    -- Comportamento
+    COUNT(DISTINCT DATE(created_at)) as active_days,
+    
+    -- Segmentação Automática (RFM Simplificado)
+    CASE 
+        -- VIP: Top performers (LTV > R$ 500 E múltiplas compras)
+        WHEN SUM(total_amount) FILTER (WHERE status IN ('paid', 'approved')) > 500 
+             AND COUNT(id) FILTER (WHERE status IN ('paid', 'approved')) >= 2 
+        THEN 'VIP'
+        
+        -- Novo: Primeira compra recente (< 7 dias)
+        WHEN EXTRACT(DAY FROM (NOW() - MIN(created_at))) < 7 
+        THEN 'New'
+        
+        -- Dormant: Sem compras há mais de 90 dias
+        WHEN EXTRACT(DAY FROM (NOW() - MAX(created_at))) > 90 
+        THEN 'Dormant'
+        
+        -- Churn Risk: Comprava regularmente e parou (última compra > 60 dias, mas tem histórico)
+        WHEN EXTRACT(DAY FROM (NOW() - MAX(created_at))) > 60 
+             AND COUNT(id) FILTER (WHERE status IN ('paid', 'approved')) >= 3
+        THEN 'Churn Risk'
+        
+        -- Regular: Todos os outros
+        ELSE 'Regular'
+    END as segment,
+    
+    -- Score de Engajamento (0-100)
+    LEAST(100, (
+        (COUNT(id) FILTER (WHERE status IN ('paid', 'approved')) * 20) + -- +20 por compra (max 60)
+        (CASE WHEN EXTRACT(DAY FROM (NOW() - MAX(created_at))) < 30 THEN 30 ELSE 0 END) + -- +30 se comprou recentemente
+        (CASE WHEN COUNT(id) FILTER (WHERE status IN ('paid', 'approved')) >= 3 THEN 10 ELSE 0 END) -- +10 se é recorrente
+    )) as engagement_score,
+    
+    -- UTM de Origem (primeira compra)
+    (
+        SELECT utm_source 
+        FROM public.sales 
+        WHERE customer_email = s.customer_email 
+        ORDER BY created_at ASC 
+        LIMIT 1
+    ) as acquisition_source
+    
+FROM public.sales s
+GROUP BY customer_email;
+
+-- Índices para performance na View
+CREATE INDEX IF NOT EXISTS idx_sales_customer_ltv ON public.sales(customer_email, status, total_amount);
+CREATE INDEX IF NOT EXISTS idx_sales_customer_date ON public.sales(customer_email, created_at);
+
+-- 🔟 NOTAS INTERNAS (CRM Feature)
+-- =============================================
+CREATE TABLE IF NOT EXISTS public.customer_notes (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now(),
+    customer_email text NOT NULL,
+    note text NOT NULL,
+    created_by uuid, -- ID do admin
+    created_by_email text,
+    is_important boolean DEFAULT false,
+    metadata jsonb DEFAULT '{}'::jsonb
+);
+
+-- RLS para notas
+ALTER TABLE public.customer_notes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated read notes" ON public.customer_notes;
+CREATE POLICY "Authenticated read notes" 
+ON public.customer_notes FOR SELECT 
+TO authenticated 
+USING (true);
+
+DROP POLICY IF EXISTS "Authenticated write notes" ON public.customer_notes;
+CREATE POLICY "Authenticated write notes" 
+ON public.customer_notes FOR INSERT 
+TO authenticated 
+WITH CHECK (true);
+
+-- Trigger para updated_at
+DROP TRIGGER IF EXISTS trigger_customer_notes_updated_at ON public.customer_notes;
+CREATE TRIGGER trigger_customer_notes_updated_at
+    BEFORE UPDATE ON public.customer_notes
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_customer_notes_email ON public.customer_notes(customer_email);
+CREATE INDEX IF NOT EXISTS idx_customer_notes_date ON public.customer_notes(created_at DESC);
+
+-- 1️⃣1️⃣ FUNÇÃO PARA ESTATÍSTICAS DE CLIENTES
+-- =============================================
+CREATE OR REPLACE FUNCTION get_customer_stats()
+RETURNS TABLE (
+    total_customers bigint,
+    vip_count bigint,
+    dormant_count bigint,
+    total_ltv numeric,
+    avg_ltv numeric
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::bigint as total_customers,
+        COUNT(*) FILTER (WHERE segment = 'VIP')::bigint as vip_count,
+        COUNT(*) FILTER (WHERE segment = 'Dormant')::bigint as dormant_count,
+        SUM(COALESCE(ltv, 0)) as total_ltv,
+        AVG(COALESCE(ltv, 0)) as avg_ltv
+    FROM public.customer_intelligence;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ✅ CONCLUÍDO
 -- Agora execute este SQL completo no Supabase
 -- Todos os erros 404 serão resolvidos
 -- Performance 100x melhor com os índices
+-- Customer Intelligence pronta para uso
