@@ -2,8 +2,9 @@
 -- PRODUCTS INTELLIGENCE - VERSÃO MINIMAL (SEM ERROS)
 -- =====================================================
 -- 
--- 🧹 CLEAN INSTALL: Remove estruturas antigas e recria
--- Esta versão usa DROP CASCADE para forçar recriação
+-- 🔧 REPAIR MODE: Corrige estruturas existentes sem perder dados
+-- Esta versão usa ALTER TABLE para adicionar colunas faltantes
+-- e DROP CASCADE apenas em tabelas derivadas (sales_items, views)
 --
 -- Tempo de execução: ~3 segundos
 -- =====================================================
@@ -11,28 +12,47 @@
 BEGIN; -- Inicia transação segura
 
 -- =====================================================
--- FASE 1: LIMPEZA TOTAL (Remove estruturas antigas)
+-- FASE 1: CORREÇÃO DA TABELA PRODUCTS (ALTER TABLE)
+-- =====================================================
+-- Força a adição das colunas que estão faltando na tabela existente
+-- Não apaga dados, apenas adiciona campos novos
+
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS external_id TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'uncategorized';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS plan_type TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
+
+-- Garante que external_id seja único (necessário para o Sync funcionar)
+-- Remove constraint antiga se existir para evitar erro
+ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_external_id_key;
+
+-- Atualiza IDs nulos existentes para evitar erro na constraint unique
+UPDATE public.products SET external_id = id::text WHERE external_id IS NULL;
+
+-- Adiciona constraint unique
+ALTER TABLE public.products ADD CONSTRAINT products_external_id_key UNIQUE (external_id);
+
+-- =====================================================
+-- FASE 2: LIMPEZA DE VIEWS E FUNÇÕES ANTIGAS
 -- =====================================================
 
--- Remover Views e Funções antigas
 DROP VIEW IF EXISTS public.product_performance CASCADE;
 DROP VIEW IF EXISTS public.product_trends CASCADE;
 DROP FUNCTION IF EXISTS public.discover_products_from_sales() CASCADE;
 
--- Remover tabela sales_items antiga (pode ter estrutura errada)
--- O CASCADE remove todas as dependências automaticamente
-DROP TABLE IF EXISTS public.sales_items CASCADE;
-
--- Remover índices órfãos (se existirem)
-DROP INDEX IF EXISTS public.idx_sales_items_sale_id;
-DROP INDEX IF EXISTS public.idx_sales_items_product_name;
-
 -- =====================================================
--- FASE 2: CRIAÇÃO DAS TABELAS BASE
+-- FASE 3: GARANTIR TABELAS BASE (SEM APAGAR DADOS)
 -- =====================================================
 
 -- =====================================================
 -- FASE 2: CRIAÇÃO DAS TABELAS BASE
+-- =====================================================
+
+-- =====================================================
+-- FASE 3: GARANTIR TABELAS BASE (SEM APAGAR DADOS)
 -- =====================================================
 
 -- 1. Criar tabela de clientes (se não existir)
@@ -45,19 +65,13 @@ CREATE TABLE IF NOT EXISTS public.customers (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. Criar tabela de produtos (catálogo oficial)
+-- 2. Criar tabela de produtos (se não existir)
+-- Nota: As colunas foram adicionadas via ALTER TABLE acima
 CREATE TABLE IF NOT EXISTS public.products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    external_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
-    category TEXT DEFAULT 'uncategorized',
-    image_url TEXT,
-    plan_type TEXT,
-    is_active BOOLEAN DEFAULT true,
-    is_featured BOOLEAN DEFAULT false,
-    metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -68,19 +82,24 @@ CREATE TABLE IF NOT EXISTS public.sales (
     customer_id UUID REFERENCES public.customers(id),
     customer_email TEXT NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'refused', 'refunded', 'chargeback')),
+    status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'refused', 'refunded', 'chargeback', 'paid', 'completed')),
     payment_method TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 4. RECRIAR tabela de itens de venda (FORÇADO - sempre nova)
--- Como demos DROP acima, esta tabela SEMPRE será criada com a estrutura correta
+-- =====================================================
+-- FASE 4: RECRIAR TABELA SALES_ITEMS (DROP CASCADE)
+-- =====================================================
+-- Esta tabela é derivada, então é seguro apagar e recriar
+
+DROP TABLE IF EXISTS public.sales_items CASCADE;
+
 CREATE TABLE public.sales_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
     product_id UUID REFERENCES public.products(id),
-    product_name TEXT NOT NULL, -- ✅ A coluna que estava faltando!
+    product_name TEXT NOT NULL,
     product_sku TEXT,
     price DECIMAL(10,2) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
@@ -94,7 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_sales_created_at ON public.sales(created_at DESC)
 CREATE INDEX IF NOT EXISTS idx_sales_items_sale_id ON public.sales_items(sale_id);
 CREATE INDEX IF NOT EXISTS idx_sales_items_product_name ON public.sales_items(product_name);
 CREATE INDEX IF NOT EXISTS idx_products_external_id ON public.products(external_id);
-CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_is_active ON public.products(is_active) WHERE is_active IS NOT NULL;
 
 -- 6. Criar VIEW de performance de produtos (VERSÃO BLINDADA COM JSONB)
 CREATE OR REPLACE VIEW public.product_performance AS
