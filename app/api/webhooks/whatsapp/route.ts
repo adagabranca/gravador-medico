@@ -23,33 +23,43 @@ async function fetchProfilePicture(remoteJid: string): Promise<string | null> {
       return null
     }
 
-    // Endpoint: /chat/findProfilePicture/{instance}
-    const url = `${EVOLUTION_API_URL}/chat/findProfilePicture/${EVOLUTION_INSTANCE_NAME}`
+    // Endpoint correto: GET /chat/findContact/{instance}
+    const url = `${EVOLUTION_API_URL}/chat/findContact/${EVOLUTION_INSTANCE_NAME}?number=${encodeURIComponent(remoteJid)}`
+    
+    console.log(`📸 Buscando foto de perfil em: ${url}`)
     
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'apikey': EVOLUTION_API_KEY
-      },
-      body: JSON.stringify({
-        number: remoteJid
-      })
+      }
     })
 
     if (!response.ok) {
-      console.warn(`⚠️ Não foi possível buscar foto de perfil para ${remoteJid}`)
+      console.warn(`⚠️ Erro HTTP ${response.status} ao buscar foto de perfil para ${remoteJid}`)
       return null
     }
 
     const data = await response.json()
     
-    // Evolution API retorna { profilePictureUrl: "https://..." }
-    if (data.profilePictureUrl) {
-      console.log(`📸 Foto de perfil encontrada para ${remoteJid}`)
-      return data.profilePictureUrl
+    console.log(`📸 Resposta da API:`, JSON.stringify(data, null, 2))
+    
+    // Evolution API pode retornar diferentes estruturas
+    // Tentar vários formatos possíveis
+    const photoUrl = 
+      data.profilePictureUrl || 
+      data.profilePicUrl || 
+      data.picture || 
+      data.imgUrl ||
+      (data.contact && data.contact.profilePictureUrl) ||
+      null
+
+    if (photoUrl) {
+      console.log(`✅ Foto de perfil encontrada: ${photoUrl}`)
+      return photoUrl
     }
 
+    console.log(`⚠️ Nenhuma foto de perfil encontrada na resposta`)
     return null
   } catch (error) {
     console.error('❌ Erro ao buscar foto de perfil:', error)
