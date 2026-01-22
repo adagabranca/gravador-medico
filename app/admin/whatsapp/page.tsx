@@ -33,6 +33,8 @@ export default function WhatsAppInboxPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [stats, setStats] = useState({ totalContacts: 0, totalMessages: 0, totalUnread: 0 })
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const [newMessage, setNewMessage] = useState('')
+  const [sending, setSending] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { addNotification } = useNotifications()
@@ -226,6 +228,41 @@ export default function WhatsAppInboxPage() {
   const selectedConversation = conversations.find(
     (c) => c.remote_jid === selectedRemoteJid
   )
+
+  // Enviar mensagem
+  async function handleSendMessage() {
+    if (!newMessage.trim() || !selectedRemoteJid || sending) return
+
+    setSending(true)
+    try {
+      const response = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          remoteJid: selectedRemoteJid,
+          message: newMessage.trim()
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erro ao enviar mensagem')
+      }
+
+      // Limpar input
+      setNewMessage('')
+      
+      // Recarregar mensagens
+      await loadMessages(selectedRemoteJid)
+      
+      console.log('✅ Mensagem enviada com sucesso')
+    } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error)
+      alert('Erro ao enviar mensagem. Tente novamente.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   // Aplicar filtros
   let filteredConversations = conversations.filter((c) => {
@@ -439,19 +476,29 @@ export default function WhatsAppInboxPage() {
               <input
                 type="text"
                 placeholder="Escrever uma mensagem"
-                disabled
-                className="flex-1 px-4 py-2 bg-[#2a3942] text-white rounded-lg text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed placeholder-gray-500"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
+                disabled={sending}
+                className="flex-1 px-4 py-2 bg-[#2a3942] text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00a884] disabled:opacity-50 disabled:cursor-not-allowed placeholder-gray-500"
               />
               <button
-                disabled
+                onClick={handleSendMessage}
+                disabled={sending || !newMessage.trim()}
                 className="p-2 bg-[#00a884] text-white rounded-full hover:bg-[#00a884]/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-5 h-5" />
+                {sending ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Recurso de envio em breve
-            </p>
           </div>
         </>
       ) : (
