@@ -9,6 +9,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { upsertWhatsAppMessage, upsertWhatsAppContact, messageExists } from '@/lib/whatsapp-db'
 import type { EvolutionMessagePayload, CreateMessageInput } from '@/lib/types/whatsapp'
 
+// ================================================================
+// Mapear status da Evolution API para nosso schema
+// ================================================================
+function mapEvolutionStatus(evolutionStatus?: string): 'sent' | 'delivered' | 'read' | 'error' | undefined {
+  if (!evolutionStatus) return undefined
+  
+  const status = evolutionStatus.toUpperCase()
+  
+  if (status === 'PENDING' || status === 'SENT') return 'sent'
+  if (status === 'SERVER_ACK' || status === 'DELIVERY_ACK') return 'delivered'
+  if (status === 'READ' || status === 'PLAYED') return 'read'
+  if (status === 'ERROR' || status === 'FAILED') return 'error'
+  
+  return 'sent' // default
+}
+
 /**
  * Busca a foto de perfil do contato usando endpoint correto Evolution v2
  * 
@@ -299,7 +315,7 @@ export async function POST(request: NextRequest) {
       caption,
       from_me: fromMeBoolean,
       timestamp: new Date(messageTimestamp * 1000).toISOString(),
-      status: status as any,
+      status: mapEvolutionStatus(status),
       raw_payload: payload.data
     }
     

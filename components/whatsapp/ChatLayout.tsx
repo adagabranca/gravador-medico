@@ -14,9 +14,9 @@ interface ChatLayoutProps {
 
 export default function ChatLayout({ children, sidebar }: ChatLayoutProps) {
   return (
-    <div className="flex h-screen bg-[#111b21] overflow-hidden">
+    <div className="flex h-[calc(100vh-12rem)] bg-[#111b21] overflow-hidden rounded-lg border border-gray-800">
       {/* Sidebar de conversas */}
-      <div className="w-[400px] bg-[#111b21] border-r border-gray-800 flex flex-col overflow-hidden">
+      <div className="w-[350px] bg-[#111b21] border-r border-gray-800 flex flex-col overflow-hidden">
         {sidebar}
       </div>
 

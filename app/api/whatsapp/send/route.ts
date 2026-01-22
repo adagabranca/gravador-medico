@@ -5,6 +5,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { upsertWhatsAppMessage } from '@/lib/whatsapp-db'
 
+// ================================================================
+// Mapear status da Evolution API para nosso schema
+// ================================================================
+function mapEvolutionStatus(evolutionStatus?: string): 'sent' | 'delivered' | 'read' | 'error' {
+  if (!evolutionStatus) return 'sent'
+  
+  const status = evolutionStatus.toUpperCase()
+  
+  if (status === 'PENDING' || status === 'SENT') return 'sent'
+  if (status === 'SERVER_ACK' || status === 'DELIVERY_ACK') return 'delivered'
+  if (status === 'READ' || status === 'PLAYED') return 'read'
+  if (status === 'ERROR' || status === 'FAILED') return 'error'
+  
+  return 'sent' // default
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { remoteJid, message } = await request.json()
@@ -57,6 +73,9 @@ export async function POST(request: NextRequest) {
     try {
       console.log('💾 Salvando mensagem enviada no banco...')
       
+      // Mapear status da Evolution API
+      const messageStatus = data.status ? mapEvolutionStatus(data.status) : 'sent'
+      
       const savedMessage = await upsertWhatsAppMessage({
         message_id: data.key.id,
         remote_jid: data.key.remoteJid,
@@ -64,11 +83,11 @@ export async function POST(request: NextRequest) {
         message_type: 'text',
         from_me: true,  // ← FORÇAR TRUE para mensagens enviadas
         timestamp: new Date(data.messageTimestamp * 1000).toISOString(),
-        status: data.status || 'PENDING',
+        status: messageStatus,
         raw_payload: data
       })
       
-      console.log('✅ Mensagem salva no banco:', savedMessage.id, 'from_me:', savedMessage.from_me)
+      console.log('✅ Mensagem salva no banco:', savedMessage.id, 'from_me:', savedMessage.from_me, 'status:', savedMessage.status)
     } catch (dbError) {
       console.error('❌ Erro ao salvar no banco (não-fatal):', dbError)
       // Não falha a requisição se houver erro no banco
