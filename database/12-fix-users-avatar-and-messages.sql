@@ -25,7 +25,7 @@ COMMENT ON COLUMN whatsapp_messages.from_me IS 'Indica se a mensagem foi enviada
 
 -- Índice para consultas rápidas
 CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_from_me 
-  ON whatsapp_messages(contact_id, from_me, created_at DESC);
+  ON whatsapp_messages(remote_jid, from_me, timestamp DESC);
 
 -- ================================================================
 -- VERIFICAÇÕES
