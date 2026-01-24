@@ -32,6 +32,7 @@ import {
   Webhook
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
+import { WhatsAppNotificationProvider } from '@/components/WhatsAppNotificationProvider'
 
 const automationItems = [
   { 
@@ -774,7 +775,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Page Content */}
         <main className={`flex-1 min-h-0 ${pathname === '/admin/whatsapp' ? 'p-0 overflow-hidden' : 'p-4 sm:p-6 lg:p-8 overflow-y-auto'}`}>
           <div className={pathname === '/admin/whatsapp' ? 'h-full min-h-0 overflow-hidden' : ''}>
-            {children}
+            <WhatsAppNotificationProvider>
+              {children}
+            </WhatsAppNotificationProvider>
           </div>
         </main>
       </div>

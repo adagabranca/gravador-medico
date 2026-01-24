@@ -19,11 +19,12 @@ import type { WhatsAppConversation, WhatsAppMessage } from '@/lib/types/whatsapp
 import ChatLayout from '@/components/whatsapp/ChatLayout'
 import ContactList from '@/components/whatsapp/ContactList'
 import MessageBubble from '@/components/whatsapp/MessageBubble'
-import { Send, Search, RefreshCw, MessageSquare, Mic, StopCircle, Trash2, Paperclip, X, Image as ImageIcon, FileText, Smile, Sticker } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { Send, Search, RefreshCw, MessageSquare, Mic, StopCircle, Trash2, Paperclip, X, Image as ImageIcon, FileText, Smile, Sticker, MoreVertical, User, Bell, BellOff, Clock, Star, Ban, Flag, Eraser, CheckCheck } from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useNotifications } from '@/components/NotificationProvider'
 import { useSearchParams } from 'next/navigation'
+import { getDisplayContactName } from '@/lib/utils/contact-name-mapper'
 
 type FilterType = 'all' | 'unread' | 'favorites' | 'groups'
 
@@ -61,8 +62,13 @@ export default function WhatsAppInboxPage() {
   const [attachmentAccept, setAttachmentAccept] = useState('')
   const [hasMore, setHasMore] = useState(true)
   const [loadingOlder, setLoadingOlder] = useState(false)
+  const [showChatSearch, setShowChatSearch] = useState(false)
+  const [searchInChat, setSearchInChat] = useState('')
+  const [showChatMenu, setShowChatMenu] = useState(false)
+  const [showScrollButton, setShowScrollButton] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const lastMessageTimestampRef = useRef<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -71,6 +77,7 @@ export default function WhatsAppInboxPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const emojiPickerRef = useRef<HTMLDivElement | null>(null)
   const attachmentMenuRef = useRef<HTMLDivElement | null>(null)
+  const chatMenuRef = useRef<HTMLDivElement | null>(null)
   const { addNotification } = useNotifications()
   const searchParams = useSearchParams()
 
@@ -362,6 +369,35 @@ export default function WhatsAppInboxPage() {
     }
   }, [selectedRemoteJid]) // Re-subscribe quando mudar o chat selecionado
 
+  // Fechar menus ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatMenuRef.current && !chatMenuRef.current.contains(event.target as Node)) {
+        setShowChatMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Detectar scroll para mostrar/ocultar botão de voltar ao final
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+      
+      // Mostrar botão se estiver mais de 300px do final
+      setShowScrollButton(distanceFromBottom > 300)
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [messages, selectedRemoteJid])
+
   async function loadConversations() {
     try {
       const data = await getWhatsAppConversations()
@@ -624,7 +660,7 @@ export default function WhatsAppInboxPage() {
           addSuffix: true,
           locale: ptBR
         })}`
-      : `${messages.length} mensagens`
+      : '' // Removido contador de mensagens
     : ''
 
   const recordingLocked = sending || sendingAudio || sendingMedia || (!!recordedAudio && !isRecording)
@@ -1140,7 +1176,7 @@ export default function WhatsAppInboxPage() {
 
   // Aplicar filtros
   let filteredConversations = conversations.filter((c) => {
-    const name = c.name || c.push_name || c.remote_jid
+    const name = getDisplayContactName(c.push_name, c.remote_jid)
     const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase())
     
     if (!matchesSearch) return false
@@ -1276,7 +1312,7 @@ export default function WhatsAppInboxPage() {
       }
     >
       {selectedConversation ? (
-        <div className="flex flex-col h-full min-h-0">
+        <div className="flex flex-col h-full min-h-0 relative">
           {/* Header do chat - Estilo WhatsApp */}
           <div className="h-[60px] bg-[#202c33] border-b border-gray-700 px-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -1289,16 +1325,14 @@ export default function WhatsAppInboxPage() {
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-[#6b7c85] flex items-center justify-center text-white font-bold text-sm">
-                  {(selectedConversation.name?.[0] || selectedConversation.push_name?.[0] || '?').toUpperCase()}
+                  {(getDisplayContactName(selectedConversation.push_name, selectedConversation.remote_jid)[0] || '?').toUpperCase()}
                 </div>
               )}
               
               {/* Nome e info */}
               <div>
                 <h3 className="font-medium text-white text-[16px]">
-                  {selectedConversation.name ||
-                    selectedConversation.push_name ||
-                    selectedConversation.remote_jid}
+                  {getDisplayContactName(selectedConversation.push_name, selectedConversation.remote_jid)}
                 </h3>
                 <p className="text-xs text-gray-400">
                   {presenceLabel}
@@ -1308,15 +1342,156 @@ export default function WhatsAppInboxPage() {
 
             {/* Ícones de ação */}
             <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-700 rounded-full transition-colors">
+              <button 
+                onClick={() => setShowChatSearch(!showChatSearch)}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                title="Buscar mensagens"
+              >
                 <Search className="w-5 h-5 text-gray-300" />
               </button>
+              
+              {/* Menu de 3 Pontos */}
+              <div className="relative" ref={chatMenuRef}>
+                <button 
+                  onClick={() => setShowChatMenu(!showChatMenu)}
+                  className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                  title="Mais opções"
+                >
+                  <MoreVertical className="w-5 h-5 text-gray-300" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showChatMenu && (
+                  <div className="absolute right-0 top-full mt-1 w-64 bg-[#233138] rounded-md shadow-lg border border-gray-700 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Ver dados do contato
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <User className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Dados do contato</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Selecionar mensagens
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <CheckCheck className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Selecionar mensagens</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Silenciar notificações
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <BellOff className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Silenciar notificações</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Mensagens temporárias
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Clock className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Mensagens temporárias</span>
+                    </button>
+
+                    <div className="h-px bg-gray-700 my-1"></div>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Adicionar aos favoritos
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Star className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Adicionar aos favoritos</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        if (selectedConversation && confirm('Deseja fechar esta conversa?')) {
+                          setSelectedRemoteJid(null)
+                        }
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <X className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-200">Fechar conversa</span>
+                    </button>
+
+                    <div className="h-px bg-gray-700 my-1"></div>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Denunciar
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Flag className="w-5 h-5 text-red-400" />
+                      <span className="text-sm text-red-400">Denunciar</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        // Função futura: Bloquear
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Ban className="w-5 h-5 text-red-400" />
+                      <span className="text-sm text-red-400">Bloquear</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        if (confirm('Deseja limpar todas as mensagens desta conversa? Esta ação não pode ser desfeita.')) {
+                          // Função futura: Limpar conversa
+                        }
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Eraser className="w-5 h-5 text-red-400" />
+                      <span className="text-sm text-red-400">Limpar conversa</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowChatMenu(false)
+                        if (confirm('Deseja apagar esta conversa permanentemente? Esta ação não pode ser desfeita.')) {
+                          // Função futura: Apagar conversa
+                        }
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#2a3942] transition-colors text-left"
+                    >
+                      <Trash2 className="w-5 h-5 text-red-400" />
+                      <span className="text-sm text-red-400">Apagar conversa</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Área de mensagens - Background WhatsApp */}
           <div
-            className="flex-1 overflow-y-auto p-4 bg-[#0b141a] min-h-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/20"
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-4 bg-[#0b141a] min-h-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/20 relative"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='pattern' x='0' y='0' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 20 Q10 10 20 20 T40 20' stroke='%23ffffff' stroke-width='0.3' fill='none' opacity='0.05'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='400' height='400' fill='url(%23pattern)'/%3E%3C/svg%3E")`,
               backgroundRepeat: 'repeat',
@@ -1351,18 +1526,42 @@ export default function WhatsAppInboxPage() {
                   </div>
                 )}
                 {messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    onDelete={handleDeleteMessage}
-                    onEdit={handleEditMessage}
-                    onReply={handleReplyMessage}
-                  />
+                  <div key={msg.id} id={`msg-${msg.id}`}>
+                    <MessageBubble
+                      message={msg}
+                      onDelete={handleDeleteMessage}
+                      onEdit={handleEditMessage}
+                      onReply={handleReplyMessage}
+                    />
+                  </div>
                 ))}
                 <div ref={messagesEndRef} />
               </>
             )}
           </div>
+
+          {/* Botão flutuante para voltar ao final */}
+          {showScrollButton && (
+            <button
+              onClick={scrollToBottom}
+              className="absolute bottom-24 right-4 bg-white hover:bg-gray-100 text-gray-600 p-2.5 rounded-full shadow-lg transition-all duration-200 z-50"
+              title="Ir para o final"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+              </svg>
+            </button>
+          )}
 
           {/* Input de mensagem - Estilo WhatsApp */}
           <div className="bg-[#202c33] border-t border-gray-700 px-4 py-3 flex-shrink-0">
@@ -1489,7 +1688,7 @@ export default function WhatsAppInboxPage() {
                 </button>
                 <textarea
                   rows={1}
-                  placeholder="Escrever uma mensagem (Enter envia, Shift/Ctrl+Enter quebra linha)"
+                  placeholder="Digite uma mensagem"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onPaste={handlePaste}
@@ -1528,6 +1727,127 @@ export default function WhatsAppInboxPage() {
             <p className="text-sm text-gray-500 max-w-md mx-auto">
               Selecione uma conversa à esquerda para visualizar as mensagens
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Painel de Busca - OVERLAY FIXO COMPLETO */}
+      {showChatSearch && selectedConversation && (
+        <div className="fixed inset-0 bg-[#111b21] z-[100] flex flex-col">
+          {/* Header da busca */}
+          <div className="h-[60px] bg-[#202c33] border-b border-gray-700 px-4 flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowChatSearch(false)
+                setSearchInChat('')
+              }}
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+            <h3 className="text-white font-medium">Buscar mensagens</h3>
+          </div>
+
+          {/* Input de busca */}
+          <div className="p-4 border-b border-gray-700">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchInChat}
+                onChange={(e) => setSearchInChat(e.target.value)}
+                placeholder="Buscar mensagens..."
+                className="w-full bg-[#202c33] text-white pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00a884]"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* Resultados */}
+          <div className="flex-1 overflow-y-auto">
+            {searchInChat ? (
+              (() => {
+                // Função de busca inteligente
+                const normalizeText = (text: string) => {
+                  return text
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                }
+                
+                const searchNormalized = normalizeText(searchInChat)
+                const searchWords = searchNormalized.split(/\s+/).filter((w: string) => w.length > 0)
+                
+                const filteredResults = messages.filter((msg) => {
+                  if (!msg.content) return false
+                  const contentNormalized = normalizeText(msg.content)
+                  return searchWords.some((word: string) => contentNormalized.includes(word))
+                })
+
+                if (filteredResults.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
+                      <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
+                      <p className="text-center">Nenhuma mensagem encontrada</p>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="divide-y divide-gray-700">
+                    <div className="px-4 py-2 text-xs text-gray-400 bg-[#0b141a]">
+                      {filteredResults.length} resultado{filteredResults.length !== 1 ? 's' : ''}
+                    </div>
+                    {filteredResults.map((msg) => (
+                      <div
+                        key={msg.id}
+                        onClick={() => {
+                          setShowChatSearch(false)
+                          setTimeout(() => {
+                            const el = document.getElementById(`msg-${msg.id}`)
+                            if (el) {
+                              el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                              el.style.backgroundColor = 'rgba(0, 168, 132, 0.2)'
+                              setTimeout(() => {
+                                el.style.backgroundColor = ''
+                              }, 2000)
+                            }
+                          }, 100)
+                        }}
+                        className="p-4 hover:bg-[#202c33] cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white text-xs font-bold">
+                            {msg.from_me ? 'EU' : (selectedConversation.name?.[0] || '?').toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <span className="text-[#00a884] text-sm font-medium">
+                                {msg.from_me ? 'Você' : selectedConversation.name || 'Cliente'}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {format(new Date(msg.timestamp), 'dd/MM HH:mm')}
+                              </span>
+                            </div>
+                            <p className="text-white text-sm line-clamp-2">
+                              {msg.content}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 px-4">
+                <Search className="w-12 h-12 mb-3 opacity-50" />
+                <p className="text-center font-medium">Digite para buscar</p>
+                <p className="text-xs text-center mt-2 opacity-75">
+                  Busca inteligente - encontra palavras parecidas
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

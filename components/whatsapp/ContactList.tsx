@@ -7,6 +7,7 @@
 import { format, isToday, isYesterday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { WhatsAppConversation } from '@/lib/types/whatsapp'
+import { getDisplayContactName } from '@/lib/utils/contact-name-mapper'
 
 interface ContactListProps {
   conversations: WhatsAppConversation[]
@@ -50,7 +51,7 @@ function ContactItem({
   isSelected: boolean
   onClick: () => void
 }) {
-  const displayName = conversation.name || conversation.push_name || formatPhoneNumber(conversation.remote_jid)
+  const displayName = getDisplayContactName(conversation.push_name, conversation.remote_jid)
   
   // Formatar hora exata (HH:mm ou dd/MM se for mais antigo)
   const lastMessageTime = conversation.last_message_timestamp

@@ -26,6 +26,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // Calcular não lidas
   const unreadCount = notifications.filter(n => !n.read).length
 
+  // Limitar a 25 notificações mais recentes
+  const MAX_NOTIFICATIONS = 25
+
   const normalizeFromMe = (value: unknown) =>
     value === true || value === 'true' || value === 1 || value === '1'
 
@@ -66,7 +69,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       read: false
     }
 
-    setNotifications(prev => [newNotification, ...prev])
+    // Adicionar e limitar a 25 notificações
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev]
+      return updated.slice(0, MAX_NOTIFICATIONS)
+    })
 
     // Toast visual
     const toastTitle = notification.title
@@ -75,6 +82,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     toast.success(toastTitle, {
       description: toastMessage,
       duration: 5000,
+      closeButton: true, // ✅ Adiciona botão X para fechar
       action: notification.metadata ? {
         label: 'Ver',
         onClick: () => {

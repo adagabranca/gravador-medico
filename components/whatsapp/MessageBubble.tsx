@@ -9,7 +9,21 @@ import type { MouseEvent } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { WhatsAppMessage } from '@/lib/types/whatsapp'
-import { CheckCheck, Check, Clock, Pencil, Trash2, Play, Pause, Reply } from 'lucide-react'
+import { 
+  CheckCheck, 
+  Check, 
+  Clock, 
+  Pencil, 
+  Trash2, 
+  Play, 
+  Pause, 
+  Reply, 
+  ChevronDown,
+  Copy,
+  Star,
+  Forward,
+  Smile
+} from 'lucide-react'
 
 const audioCache = new Map<string, string>()
 const mediaCache = new Map<string, string>()
@@ -139,6 +153,28 @@ export default function MessageBubble({ message, onDelete, onEdit, onReply }: Me
     fromMeValue === 1 ||
     fromMeValue === '1'
   
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [reactionsOpen, setReactionsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const reactionsRef = useRef<HTMLDivElement>(null)
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false)
+      }
+      if (reactionsRef.current && !reactionsRef.current.contains(event.target)) {
+        setReactionsOpen(false)
+      }
+    }
+
+    if (dropdownOpen || reactionsOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [dropdownOpen, reactionsOpen])
+  
   // Debug - remover depois
   if (process.env.NODE_ENV === 'development') {
     console.log('🔍 [MessageBubble]', {
@@ -164,17 +200,136 @@ export default function MessageBubble({ message, onDelete, onEdit, onReply }: Me
     message.content &&
     !(message.message_type === 'audio' && message.content === '[Áudio]')
 
+  const handleCopyText = () => {
+    if (message.content) {
+      navigator.clipboard.writeText(message.content)
+      setDropdownOpen(false)
+    }
+  }
+
   return (
     <div
-      className={`group flex mb-2 ${isFromMe ? 'justify-end' : 'justify-start'}`}
+      className={`group flex items-end gap-1 mb-2 ${isFromMe ? 'justify-end' : 'justify-start'}`}
     >
+      {/* Botão de Reações - À ESQUERDA para mensagens ENVIADAS (verde) */}
+      {isFromMe && (
+        <div className="relative" ref={reactionsRef}>
+          <button
+            type="button"
+            onClick={() => setReactionsOpen(!reactionsOpen)}
+            className="mb-1 p-1.5 rounded-full hover:bg-[#202c33] transition-opacity opacity-0 group-hover:opacity-100"
+            title="Reagir"
+          >
+            <Smile className="w-4 h-4 text-gray-400" />
+          </button>
+
+          {/* Popup de Reações - Acima do botão */}
+          {reactionsOpen && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#233138] rounded-full shadow-lg border border-gray-700 px-3 py-2 flex items-center gap-2 z-50">
+              <button onClick={() => { console.log('👍'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">👍</button>
+              <button onClick={() => { console.log('❤️'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">❤️</button>
+              <button onClick={() => { console.log('😂'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😂</button>
+              <button onClick={() => { console.log('😮'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😮</button>
+              <button onClick={() => { console.log('😢'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😢</button>
+              <button onClick={() => { console.log('🙏'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">🙏</button>
+              <button onClick={() => { console.log('+'); setReactionsOpen(false); }} className="text-xl text-gray-400 hover:text-white transition-colors">+</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Balão da Mensagem */}
       <div
-        className={`max-w-[65%] px-2 py-1.5 rounded-md shadow-sm ${
+        className={`relative max-w-[65%] px-3 pt-2 pb-2 rounded-md shadow-sm ${
           isFromMe
             ? 'bg-[#005c4b] text-white rounded-br-sm'
             : 'bg-[#202c33] text-white rounded-bl-sm'
         }`}
       >
+        {/* Dropdown no topo direito (dentro do balão) */}
+        <div className="absolute top-0 right-1 z-10" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className={`p-1 rounded hover:bg-white/10 transition-opacity ${
+              dropdownOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
+            title="Mais opções"
+          >
+            <ChevronDown className="w-3.5 h-3.5 text-gray-300" />
+          </button>
+
+          {/* Menu Dropdown - Abre para CIMA */}
+          {dropdownOpen && (
+            <div className="absolute right-0 bottom-full mb-1 w-48 bg-[#233138] rounded-md shadow-lg border border-gray-700 py-1 z-50">
+              {canReply && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onReply?.(message)
+                    setDropdownOpen(false)
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-3"
+                >
+                  <Reply className="w-4 h-4" />
+                  <span>Responder</span>
+                </button>
+              )}
+              
+              {message.content && (
+                <button
+                  type="button"
+                  onClick={handleCopyText}
+                  className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-3"
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Copiar</span>
+                </button>
+              )}
+              
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(false)}
+                className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-3"
+              >
+                <Star className="w-4 h-4" />
+                <span>Favoritar</span>
+              </button>
+
+              {canEdit && (
+                <>
+                  <div className="h-px bg-gray-700 my-1" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEdit?.(message)
+                      setDropdownOpen(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center gap-3"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    <span>Editar</span>
+                  </button>
+                </>
+              )}
+
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete?.(message)
+                    setDropdownOpen(false)
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-white/10 flex items-center gap-3"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Apagar</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {quotedPreview && (
           <div className="mb-2 rounded-md bg-black/20 px-2 py-1 text-xs text-gray-200">
             <div className="text-[11px] text-emerald-200">Respondendo</div>
@@ -185,19 +340,19 @@ export default function MessageBubble({ message, onDelete, onEdit, onReply }: Me
         {/* Mídia (se houver) */}
         <MessageMedia message={message} />
 
-        {/* Conteúdo de texto */}
+        {/* Conteúdo de texto (WhatsApp style - timestamp na última linha) */}
         {shouldRenderText && (
-          <p
-            className={`text-[14.2px] whitespace-pre-wrap break-words leading-[19px] ${
-              isDeleted ? 'text-gray-300 italic' : ''
-            }`}
-          >
+          <p className={`text-[14.2px] whitespace-pre-wrap break-words leading-[19px] ${
+            isDeleted ? 'text-gray-300 italic' : ''
+          }`}>
             {message.content}
+            {/* Espaço reservado para timestamp (invisível mas ocupa espaço) */}
+            <span className="inline-block w-[65px] h-[16px]" />
           </p>
         )}
 
-        {/* Timestamp + Status */}
-        <div className="flex items-center justify-end gap-1 mt-1">
+        {/* Timestamp posicionado absolutamente no canto inferior direito */}
+        <div className="absolute bottom-1 right-2 flex items-center gap-1">
           <span
             className={`text-[11px] ${
               isFromMe ? 'text-gray-300' : 'text-gray-400'
@@ -205,45 +360,36 @@ export default function MessageBubble({ message, onDelete, onEdit, onReply }: Me
           >
             {format(new Date(message.timestamp), 'HH:mm', { locale: ptBR })}
           </span>
-
-          {(canReply || canEdit || canDelete) && (
-            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-              {canReply && (
-                <button
-                  type="button"
-                  onClick={() => onReply?.(message)}
-                  title="Responder"
-                  className="p-0.5 rounded hover:bg-white/10"
-                >
-                  <Reply className="w-3.5 h-3.5 text-gray-300" />
-                </button>
-              )}
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => onEdit?.(message)}
-                  title="Editar mensagem"
-                  className="p-0.5 rounded hover:bg-white/10"
-                >
-                  <Pencil className="w-3.5 h-3.5 text-gray-300" />
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  type="button"
-                  onClick={() => onDelete?.(message)}
-                  title="Apagar para todos"
-                  className="p-0.5 rounded hover:bg-white/10"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-gray-300" />
-                </button>
-              )}
-            </div>
-          )}
-
           {isFromMe && <MessageStatus status={message.status} />}
         </div>
       </div>
+
+      {/* Botão de Reações - À DIREITA para mensagens RECEBIDAS (cinza) */}
+      {!isFromMe && (
+        <div className="relative" ref={reactionsRef}>
+          <button
+            type="button"
+            onClick={() => setReactionsOpen(!reactionsOpen)}
+            className="mb-1 p-1.5 rounded-full hover:bg-[#202c33] transition-opacity opacity-0 group-hover:opacity-100"
+            title="Reagir"
+          >
+            <Smile className="w-4 h-4 text-gray-400" />
+          </button>
+
+          {/* Popup de Reações - Acima do botão */}
+          {reactionsOpen && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#233138] rounded-full shadow-lg border border-gray-700 px-3 py-2 flex items-center gap-2 z-50">
+              <button onClick={() => { console.log('👍'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">👍</button>
+              <button onClick={() => { console.log('❤️'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">❤️</button>
+              <button onClick={() => { console.log('😂'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😂</button>
+              <button onClick={() => { console.log('😮'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😮</button>
+              <button onClick={() => { console.log('😢'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">😢</button>
+              <button onClick={() => { console.log('🙏'); setReactionsOpen(false); }} className="text-2xl hover:scale-125 transition-transform">🙏</button>
+              <button onClick={() => { console.log('+'); setReactionsOpen(false); }} className="text-xl text-gray-400 hover:text-white transition-colors">+</button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

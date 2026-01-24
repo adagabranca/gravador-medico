@@ -98,7 +98,8 @@ export async function upsertWhatsAppContact(input: UpdateContactInput): Promise<
     .upsert(
       {
         remote_jid: input.remote_jid,
-        name: input.name,
+        // ❌ REMOVIDO: name (não sobrescrever nomes personalizados)
+        // Apenas atualiza push_name que vem do WhatsApp
         push_name: input.push_name,
         profile_picture_url: input.profile_picture_url,
         is_group: input.is_group || false

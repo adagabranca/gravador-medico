@@ -63,11 +63,11 @@ export default function NotificationBell() {
           />
 
           {/* Panel de Notificações */}
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] flex flex-col">
+          <div className="absolute right-0 top-full mt-2 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[600px] flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Notificações
+                Notificações {notifications.length > 0 && `(${notifications.length})`}
               </h3>
               {unreadCount > 0 && (
                 <button
@@ -82,8 +82,8 @@ export default function NotificationBell() {
               )}
             </div>
 
-            {/* Lista de Notificações */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Lista de Notificações com Scroll */}
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                   <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-30" />

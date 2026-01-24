@@ -544,12 +544,25 @@ export async function POST(request: NextRequest) {
     // GARANTIA: Sempre salva o contato, mesmo sem foto
     // ================================================================
     try {
-      await upsertWhatsAppContact({
+      console.log(`🔍 [ANTES UPSERT] Contato: ${normalizedRemoteJid}, push_name: "${pushName}"`)
+      
+      const contactData = {
         remote_jid: normalizedRemoteJid,
         push_name: pushName || undefined,
         profile_picture_url: profilePictureUrl || undefined,
         is_group: normalizedRemoteJid.includes('@g.us')
-      })
+      }
+      
+      console.log(`📤 [ENVIANDO UPSERT]`, JSON.stringify(contactData, null, 2))
+      
+      const savedContact = await upsertWhatsAppContact(contactData)
+      
+      console.log(`📥 [RESULTADO UPSERT]`, JSON.stringify({
+        remote_jid: savedContact.remote_jid,
+        name: savedContact.name,
+        push_name: savedContact.push_name
+      }, null, 2))
+      
       console.log(`✅ Contato salvo: ${normalizedRemoteJid}`)
     } catch (contactError) {
       console.error('❌ Erro ao salvar contato:', contactError)
