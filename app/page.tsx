@@ -62,6 +62,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import CookieBanner from "@/components/CookieBanner"
 
 // Componente de partículas flutuantes (OTIMIZADO)
 const FloatingParticles = () => {
@@ -2661,6 +2662,7 @@ export default function LandingPage() {
         )}
       </AnimatePresence>
       </div>
+      <CookieBanner />
     </>
   )
 }
