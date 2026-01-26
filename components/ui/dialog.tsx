@@ -69,14 +69,14 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         {/* Backdrop */}
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
           onClick={() => context.onOpenChange(false)}
         />
         
         {/* Content */}
         <div
           ref={ref}
-          className={`relative z-50 w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in-0 zoom-in-95 ${className}`}
+          className={`relative z-50 w-full max-w-lg rounded-lg border border-gray-800 bg-gray-900 p-6 shadow-2xl animate-in fade-in-0 zoom-in-95 ${className}`}
           {...props}
         >
           {children}
@@ -105,7 +105,7 @@ const DialogTitle = React.forwardRef<
 >(({ className = "", ...props }, ref) => (
   <h2
     ref={ref}
-    className={`text-lg font-semibold leading-none tracking-tight ${className}`}
+    className={`text-lg font-semibold leading-none tracking-tight text-white ${className}`}
     {...props}
   />
 ))
@@ -117,7 +117,7 @@ const DialogDescription = React.forwardRef<
 >(({ className = "", ...props }, ref) => (
   <p
     ref={ref}
-    className={`text-sm text-slate-500 ${className}`}
+    className={`text-sm text-gray-400 ${className}`}
     {...props}
   />
 ))

@@ -313,12 +313,12 @@ export default function CuponsAdminPage() {
 
       {/* Dialog Criar/Editar */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-800 text-white">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle>
               {editingCoupon ? 'Editar Cupom' : 'Novo Cupom'}
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription>
               {editingCoupon
                 ? 'Atualize as informações do cupom'
                 : 'Preencha os dados para criar um novo cupom'}
