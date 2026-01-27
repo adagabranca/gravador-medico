@@ -147,10 +147,21 @@ export default function CheckoutFormV3({
         return;
       }
 
-      // @ts-ignore
-      const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY);
+      // Garantir que não há espaços na public key
+      const publicKey = (process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || '').trim();
       
-      console.log('🔑 Public Key sendo usada:', process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY?.substring(0, 15) + '...');
+      if (!publicKey) {
+        clearTimeout(timeout);
+        reject(new Error('Public Key do Mercado Pago não configurada'));
+        return;
+      }
+
+      console.log('🔑 Public Key Length:', publicKey.length);
+      console.log('🔑 Public Key Preview:', publicKey.substring(0, 20) + '...');
+
+      // @ts-ignore
+      const mp = new window.MercadoPago(publicKey);
+      
       console.log('🏗️ MercadoPago instância criada:', !!mp);
 
       const [month, year] = formData.cardExpiry.split('/');

@@ -25,11 +25,16 @@ export function useMercadoPago() {
           throw new Error('Mercado Pago SDK não carregou')
         }
 
-        const publicKey = process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
+        // Garantir que não há espaços na chave
+        const publicKey = (process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || '').trim()
+        
         if (!publicKey) {
           throw new Error('Chave pública do Mercado Pago não configurada')
         }
 
+        console.log('🔑 Public Key Length:', publicKey.length)
+        console.log('🔑 Public Key Preview:', publicKey.substring(0, 20) + '...')
+        
         const mercadopago = new window.MercadoPago(publicKey, {
           locale: 'pt-BR'
         })
