@@ -1557,20 +1557,30 @@ export default function CheckoutPage() {
                   transition={{ delay: 0.1 }}
                   className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-brand-100"
                 >
-                  {/* QR Code */}
-                  <div className="flex flex-col items-center mb-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-4">
-                      Escaneie o QR Code
+                  {/* Pix Copia e Cola - PRIMEIRO */}
+                  <div className="mb-8">
+                    <h3 className="text-xl font-black text-gray-900 mb-4 text-center">
+                      Pix Copia e Cola
                     </h3>
-                    <div className="bg-white p-4 rounded-2xl border-4 border-gray-100 shadow-lg">
-                      <img
-                        src={`data:image/png;base64,${pixData.qrCode}`}
-                        alt="QR Code PIX"
-                        className="w-64 h-64 md:w-72 md:h-72"
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={pixData.emv}
+                        readOnly
+                        className="w-full px-4 py-4 pr-12 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-mono text-gray-700 focus:outline-none focus:border-brand-500 transition-colors"
                       />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(pixData.emv)
+                          alert("Código PIX copiado!")
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg transition-colors group"
+                      >
+                        <Copy className="w-5 h-5 text-gray-600 group-hover:text-brand-600" />
+                      </button>
                     </div>
-                    <p className="text-sm text-gray-600 mt-4 text-center">
-                      Abra o app do seu banco e escaneie o código
+                    <p className="text-sm text-gray-600 mt-3 text-center">
+                      Copie o código e cole no app do seu banco
                     </p>
                   </div>
 
@@ -1584,31 +1594,20 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Pix Copia e Cola */}
-                  <div className="mb-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-4 text-center">
-                      Pix Copia e Cola
+                  {/* QR Code - DEPOIS */}
+                  <div className="flex flex-col items-center mb-8">
+                    <h3 className="text-xl font-black text-gray-900 mb-4">
+                      Escaneie o QR Code
                     </h3>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={pixData.emv}
-                        readOnly
-                        className="w-full px-4 py-3 pr-24 border-2 border-gray-200 rounded-xl bg-gray-50 text-sm font-mono text-gray-700 focus:outline-none"
+                    <div className="bg-white p-4 rounded-2xl border-4 border-gray-100 shadow-lg">
+                      <img
+                        src={`data:image/png;base64,${pixData.qrCode}`}
+                        alt="QR Code PIX"
+                        className="w-64 h-64 md:w-72 md:h-72"
                       />
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(pixData.emv)
-                          alert('Código PIX copiado!')
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2"
-                      >
-                        <Copy className="w-4 h-4" />
-                        <span className="hidden sm:inline">Copiar</span>
-                      </button>
                     </div>
-                    <p className="text-xs text-gray-600 mt-2 text-center">
-                      Cole este código no app do seu banco
+                    <p className="text-sm text-gray-600 mt-4 text-center">
+                      Abra o app do seu banco e escaneie o código
                     </p>
                   </div>
 
