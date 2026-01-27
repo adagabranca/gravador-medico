@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Video, Settings, ShoppingBag, Sparkles, Users, Mail, ExternalLink } from "lucide-react"
+import { Home, FileText, Video, Settings, ShoppingBag, Sparkles, Users, Mail, ExternalLink, CreditCard } from "lucide-react"
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -14,8 +14,9 @@ export default function Sidebar() {
     { icon: Settings, label: "Configurações", href: "/dashboard/configuracoes" },
   ]
 
-  const lovableMenuItems = [
-    { icon: Users, label: "Usuários", href: "/admin/lovable/users" },
+  const adminMenuItems = [
+    { icon: CreditCard, label: "Pagamentos", href: "/admin/payments" },
+    { icon: Users, label: "Usuários Lovable", href: "/admin/lovable/users" },
     { icon: Mail, label: "Logs de E-mail", href: "/admin/lovable/emails" },
   ]
   
@@ -60,18 +61,18 @@ export default function Sidebar() {
           })}
         </ul>
 
-        {/* Seção LOVABLE */}
+        {/* Seção ADMIN */}
         <div className="mt-6">
           <div className="px-4 mb-2">
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-slate-400" />
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Integração Lovable
+                Administração
               </h3>
             </div>
           </div>
           <ul className="space-y-2">
-            {lovableMenuItems.map((item) => {
+            {adminMenuItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               

@@ -610,7 +610,7 @@ export default function CheckoutPage() {
         }
       }
       
-      const response = await fetch('/api/checkout', {
+      const response = await fetch('/api/checkout/enterprise', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

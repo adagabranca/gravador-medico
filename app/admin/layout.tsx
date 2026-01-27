@@ -33,7 +33,8 @@ import {
   Ticket,
   Mail,
   ExternalLink,
-  Heart
+  Heart,
+  CreditCard
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import { WhatsAppNotificationProvider } from '@/components/WhatsAppNotificationProvider'
@@ -127,11 +128,34 @@ const trackingItems = [
   },
 ]
 
+// Menu de Catálogo (Produtos + Cupons)
+const catalogItems = [
+  { 
+    icon: Package, 
+    label: 'Produtos', 
+    href: '/admin/products',
+    badge: null
+  },
+  { 
+    icon: Ticket, 
+    label: 'Cupons', 
+    href: '/admin/cupons',
+    badge: null
+  },
+]
+
 const menuItems = [
+  // 📊 OPERACIONAL (Core Business)
   { 
     icon: LayoutDashboard, 
     label: 'Visão Geral', 
     href: '/admin/dashboard',
+    badge: null
+  },
+  { 
+    icon: CreditCard, 
+    label: 'Pagamentos', 
+    href: '/admin/payments',
     badge: null
   },
   { 
@@ -146,18 +170,15 @@ const menuItems = [
     href: '/admin/customers',
     badge: null
   },
+  
+  // 🛍️ CATÁLOGO (Produtos + Cupons)
   { 
-    icon: Package, 
-    label: 'Produtos', 
-    href: '/admin/products',
-    badge: null
+    label: 'Catálogo', 
+    icon: ShoppingBag,
+    items: catalogItems
   },
-  { 
-    icon: Ticket, 
-    label: 'Cupons', 
-    href: '/admin/cupons',
-    badge: null
-  },
+  
+  // 📈 ANALYTICS & GROWTH
   { 
     icon: TrendingUp, 
     label: 'Analytics', 
@@ -170,11 +191,8 @@ const menuItems = [
     href: '/admin/crm',
     badge: null
   },
-  { 
-    label: 'Lovable', 
-    icon: Heart,
-    items: lovableItems
-  },
+  
+  // 🔧 FERRAMENTAS
   { 
     label: 'Tracking', 
     icon: MousePointerClick,
@@ -186,11 +204,20 @@ const menuItems = [
     items: automationItems
   },
   { 
+    label: 'Lovable', 
+    icon: Heart,
+    items: lovableItems
+  },
+  
+  // 💬 COMUNICAÇÃO
+  { 
     icon: MessageCircle, 
     label: 'Chat Interno', 
     href: '/admin/chat',
     badge: null
   },
+  
+  // 📄 RELATÓRIOS & CONFIG
   { 
     icon: BarChart3, 
     label: 'Relatórios', 

@@ -247,6 +247,90 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 📱 PIX MERCADO PAGO
+    if (payment_method === 'pix') {
+      try {
+        console.log('📱 Gerando PIX Mercado Pago...')
+        
+        const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`,
+            'X-Idempotency-Key': idempotencyKey
+          },
+          body: JSON.stringify({
+            transaction_amount: amount,
+            description: 'Gravador Médico - Acesso Vitalício',
+            payment_method_id: 'pix',
+            payer: {
+              email: customer.email,
+              first_name: customer.name.split(' ')[0],
+              last_name: customer.name.split(' ').slice(1).join(' ') || customer.name.split(' ')[0],
+              identification: {
+                type: 'CPF',
+                number: customer.cpf.replace(/\D/g, '')
+              }
+            },
+            notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago-enterprise`
+          })
+        })
+
+        const mpResult = await mpResponse.json()
+
+        if (mpResult.status === 'pending' && mpResult.point_of_interaction?.transaction_data) {
+          console.log('✅ PIX gerado com sucesso!')
+
+          // Atualizar pedido
+          await supabaseAdmin
+            .from('sales')
+            .update({
+              order_status: 'pending_payment',
+              status: 'pending',
+              payment_gateway: 'mercadopago',
+              mercadopago_payment_id: mpResult.id,
+              fallback_used: false
+            })
+            .eq('id', order.id)
+
+          // Registrar tentativa
+          await supabaseAdmin.from('payment_attempts').insert({
+            sale_id: order.id,
+            gateway: 'mercadopago',
+            status: 'pending',
+            error_code: null,
+            error_message: null
+          })
+
+          return NextResponse.json({
+            success: true,
+            order_id: order.id,
+            payment_id: mpResult.id,
+            gateway_used: 'mercadopago',
+            pix_qr_code: mpResult.point_of_interaction.transaction_data.qr_code_base64,
+            pix_emv: mpResult.point_of_interaction.transaction_data.qr_code,
+            status: 'pending_payment'
+          })
+        }
+
+        throw new Error('Falha ao gerar PIX no Mercado Pago')
+
+      } catch (pixError: any) {
+        console.error('❌ Erro ao gerar PIX:', pixError)
+        
+        await supabaseAdmin
+          .from('sales')
+          .update({ order_status: 'failed', status: 'failed' })
+          .eq('id', order.id)
+
+        return NextResponse.json({
+          success: false,
+          error: 'Falha ao gerar PIX',
+          details: pixError.message
+        }, { status: 500 })
+      }
+    }
+
     // =====================================================
     // 5️⃣ TENTATIVA 2: APPMAX (FALLBACK)
     // =====================================================

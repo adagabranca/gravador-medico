@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Compass, Wrench, ShoppingBag, User, FileText, BarChart3, ShoppingCart, MessageSquare, MessageCircle, Target, Ticket, Users, Mail } from "lucide-react"
+import { Home, Compass, Wrench, ShoppingBag, User, FileText, BarChart3, ShoppingCart, MessageSquare, MessageCircle, Target, Ticket, Users, Mail, CreditCard } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import NotificationBell from "./NotificationBell"
@@ -27,6 +27,13 @@ export default function DockSidebar() {
       href: "/dashboard",
       label: "Início",
       description: "Seu centro de comando",
+    },
+    {
+      id: "payments",
+      icon: <CreditCard className="w-6 h-6" />,
+      href: "/admin/payments",
+      label: "Pagamentos",
+      description: "Análise MP + AppMax",
     },
     {
       id: "templates",
