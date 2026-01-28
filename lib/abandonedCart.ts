@@ -10,6 +10,7 @@ export async function saveAbandonedCart(data: {
   customer_email: string
   customer_phone?: string
   customer_cpf?: string
+  document_type?: 'CPF' | 'CNPJ'
   step: 'form_filled' | 'payment_started' | 'payment_pending'
   product_id?: string
   order_bumps?: any[]
@@ -61,6 +62,7 @@ export async function saveAbandonedCart(data: {
       customer_email: data.customer_email,
       customer_phone: data.customer_phone,
       customer_cpf: data.customer_cpf,
+      document_type: data.document_type || 'CPF',
       step: data.step,
       status: status,
       product_id: data.product_id,

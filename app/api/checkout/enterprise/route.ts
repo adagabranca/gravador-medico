@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
         customer_name: customer.name,
         customer_phone: customer.phone,
         customer_cpf: customer.cpf,
+        document_type: customer.documentType || 'CPF', // CPF ou CNPJ
+        company_name: customer.companyName || null, // Razão Social (quando CNPJ)
         total_amount: amount, // ✅ CORRIGIDO: usar total_amount em vez de amount
         amount: amount,        // Manter ambos para compatibilidade
         idempotency_key: idempotencyKey,
@@ -153,7 +155,7 @@ export async function POST(request: NextRequest) {
                 first_name: customer.name?.split(' ')[0] || '',
                 last_name: customer.name?.split(' ').slice(1).join(' ') || '',
                 identification: {
-                  type: 'CPF',
+                  type: customer.documentType || 'CPF', // CPF ou CNPJ
                   number: customer.cpf.replace(/\D/g, '')
                 }
               },
@@ -306,7 +308,7 @@ export async function POST(request: NextRequest) {
               first_name: customer.name.split(' ')[0],
               last_name: customer.name.split(' ').slice(1).join(' ') || customer.name.split(' ')[0],
               identification: {
-                type: 'CPF',
+                type: customer.documentType || 'CPF', // CPF ou CNPJ
                 number: customer.cpf.replace(/\D/g, '')
               }
             },
@@ -390,7 +392,8 @@ export async function POST(request: NextRequest) {
               name: customer.name,
               email: customer.email,
               phone: customer.phone,
-              cpf: customer.cpf
+              cpf: customer.cpf,
+              document_type: customer.documentType || 'CPF' // CPF ou CNPJ
             },
             product_id: process.env.APPMAX_PRODUCT_ID,
             quantity: 1,

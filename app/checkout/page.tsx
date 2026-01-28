@@ -9,6 +9,7 @@ import { saveAbandonedCart, markCartAsRecovered } from '@/lib/abandonedCart'
 import { supabase } from '@/lib/supabase'
 import { useMercadoPago } from '@/hooks/useMercadoPago'
 import { validateCPF, formatCPF } from '@/lib/cpf'
+import { validateCNPJ, formatCNPJ, consultarCNPJ } from '@/lib/cnpj-api'
 import {
   Check,
   Clock,
@@ -32,6 +33,9 @@ import {
   X,
   ChevronRight,
   Copy,
+  Building2,
+  Loader2,
+  Search,
 } from "lucide-react"
 
 export default function CheckoutPage() {
@@ -62,7 +66,13 @@ export default function CheckoutPage() {
     email: "",
     phone: "",
     cpf: "",
+    documentType: "CPF" as "CPF" | "CNPJ",
+    companyName: "", // Razão Social (quando CNPJ)
   })
+
+  // Estado para busca de CNPJ
+  const [cnpjLoading, setCnpjLoading] = useState(false)
+  const [cnpjError, setCnpjError] = useState("")
 
   // Erros de validação
   const [formErrors, setFormErrors] = useState({
@@ -109,12 +119,19 @@ export default function CheckoutPage() {
             .eq('id', user.id)
             .single()
 
+          // Determina tipo de documento baseado no tamanho
+          const document = profile?.document || profile?.cpf || ''
+          const cleanDoc = document.replace(/\D/g, '')
+          const docType = cleanDoc.length === 14 ? 'CNPJ' : 'CPF'
+
           // Preenche formulário automaticamente
           setFormData({
             name: profile?.full_name || user.user_metadata?.full_name || '',
             email: user.email || '',
             phone: profile?.phone || '',
-            cpf: profile?.document || profile?.cpf || ''
+            cpf: document,
+            documentType: docType as "CPF" | "CNPJ",
+            companyName: profile?.company_name || ''
           })
 
           console.log('✅ Dados do usuário carregados automaticamente')
@@ -400,15 +417,69 @@ export default function CheckoutPage() {
 
   // Validações
   const isStep1Valid = () => {
-    const cpfClean = formData.cpf.replace(/\D/g, '')
+    const docClean = formData.cpf.replace(/\D/g, '')
+    
+    // Valida baseado no tipo de documento
+    if (formData.documentType === 'CNPJ') {
+      return (
+        formData.name && 
+        formData.email && 
+        formData.cpf && 
+        formData.companyName && // Razão Social obrigatória para CNPJ
+        docClean.length === 14 && 
+        validateCNPJ(docClean) && 
+        !formErrors.cpf
+      )
+    }
+    
     return (
       formData.name && 
       formData.email && 
       formData.cpf && 
-      cpfClean.length === 11 && 
-      validateCPF(cpfClean) && 
+      docClean.length === 11 && 
+      validateCPF(docClean) && 
       !formErrors.cpf
     )
+  }
+
+  // Função para buscar dados do CNPJ
+  const handleCNPJLookup = async () => {
+    const cnpjClean = formData.cpf.replace(/\D/g, '')
+    
+    if (cnpjClean.length !== 14) {
+      setCnpjError('Digite o CNPJ completo para consultar')
+      return
+    }
+
+    if (!validateCNPJ(cnpjClean)) {
+      setCnpjError('CNPJ inválido')
+      return
+    }
+
+    setCnpjLoading(true)
+    setCnpjError('')
+
+    try {
+      const result = await consultarCNPJ(cnpjClean)
+      
+      if (result.success && result.data) {
+        setFormData(prev => ({
+          ...prev,
+          companyName: result.data!.razaoSocial,
+          // Se quiser preencher o nome do responsável com o nome fantasia
+          // name: result.data!.nomeFantasia || prev.name,
+        }))
+        setCnpjError('')
+        console.log('✅ Dados do CNPJ carregados:', result.data)
+      } else {
+        setCnpjError(result.error || 'Não foi possível consultar o CNPJ')
+      }
+    } catch (error) {
+      console.error('Erro ao consultar CNPJ:', error)
+      setCnpjError('Erro ao consultar CNPJ. Preencha manualmente.')
+    } finally {
+      setCnpjLoading(false)
+    }
   }
 
   const isStep3Valid = () => {
@@ -573,6 +644,7 @@ export default function CheckoutPage() {
       customer_email: emailToSave,
       customer_phone: formData.phone || undefined,
       customer_cpf: formData.cpf || undefined,
+      document_type: formData.documentType, // CPF ou CNPJ
       step: currentStep === 1 ? 'form_filled' : currentStep === 3 ? 'payment_started' : 'form_filled',
       product_id: process.env.NEXT_PUBLIC_APPMAX_PRODUCT_ID || '32991339',
       order_bumps: selectedBumpProducts,
@@ -617,6 +689,8 @@ export default function CheckoutPage() {
           email: formData.email,
           phone: formData.phone,
           cpf: formData.cpf.replace(/\D/g, ''),
+          documentType: formData.documentType, // CPF ou CNPJ
+          companyName: formData.documentType === 'CNPJ' ? formData.companyName : undefined, // Razão Social
         },
         amount: total,
         payment_method: paymentMethod === 'credit' ? 'credit_card' : 'pix',
@@ -637,7 +711,7 @@ export default function CheckoutPage() {
           cardExpirationMonth: cardData.expMonth,
           cardExpirationYear: cardData.expYear,
           securityCode: cardData.cvv,
-          identificationType: 'CPF',
+          identificationType: formData.documentType, // CPF ou CNPJ
           identificationNumber: formData.cpf,
         })
 
@@ -920,50 +994,177 @@ export default function CheckoutPage() {
                         />
                       </div>
 
+                      {/* Tipo de Documento - Botões de seleção */}
                       <div className="min-w-0">
                         <label className="block text-sm font-bold text-gray-900 mb-2">
-                          CPF *
+                          Tipo de Documento *
                         </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, documentType: 'CPF', cpf: '', companyName: '' })
+                              setFormErrors({ ...formErrors, cpf: '' })
+                              setCnpjError('')
+                            }}
+                            className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                              formData.documentType === 'CPF'
+                                ? 'bg-brand-50 border-brand-500 text-brand-700'
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            CPF
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, documentType: 'CNPJ', cpf: '', companyName: '' })
+                              setFormErrors({ ...formErrors, cpf: '' })
+                              setCnpjError('')
+                            }}
+                            className={`flex-1 py-2.5 sm:py-3 px-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                              formData.documentType === 'CNPJ'
+                                ? 'bg-brand-50 border-brand-500 text-brand-700'
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            CNPJ
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Campo CPF/CNPJ - Linha separada para melhor visualização */}
+                    <div className="min-w-0">
+                      <label className="block text-sm font-bold text-gray-900 mb-2">
+                        {formData.documentType === 'CNPJ' ? 'CNPJ *' : 'CPF *'}
+                      </label>
+                      <div className="relative">
                         <input
                           type="text"
                           name="document"
                           autoComplete="off"
                           value={formData.cpf}
-                          onChange={(e) => {
-                            const formatted = formatCPF(e.target.value)
+                          onChange={async (e) => {
+                            const formatted = formData.documentType === 'CNPJ' 
+                              ? formatCNPJ(e.target.value) 
+                              : formatCPF(e.target.value)
                             setFormData({ ...formData, cpf: formatted })
                             // Limpa erro ao digitar
                             if (formErrors.cpf) {
                               setFormErrors({ ...formErrors, cpf: "" })
                             }
-                          }}
-                          onBlur={(e) => {
-                            handleSaveAbandonedCart()
-                            // Valida CPF quando usuário sai do campo
-                            const cpf = e.target.value.replace(/\D/g, '')
-                            if (cpf.length === 11 && !validateCPF(cpf)) {
-                              setFormErrors({ ...formErrors, cpf: "CPF inválido" })
-                            } else if (cpf.length > 0 && cpf.length < 11) {
-                              setFormErrors({ ...formErrors, cpf: "CPF incompleto" })
-                            } else {
-                              setFormErrors({ ...formErrors, cpf: "" })
-                            }
-                          }}
-                          className={`w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 ${
-                            formErrors.cpf ? 'border-red-500' : 'border-gray-200'
-                          } rounded-xl focus:border-brand-500 focus:outline-none transition-colors text-sm md:text-base box-border`}
-                          placeholder="000.000.000-00"
-                          maxLength={14}
-                          required
-                        />
+                            
+                            // 🔥 CONSULTA AUTOMÁTICA: Quando CNPJ completo (14 dígitos)
+                            const docClean = formatted.replace(/\D/g, '')
+                            if (formData.documentType === 'CNPJ' && docClean.length === 14) {
+                              // Valida antes de consultar
+                              if (validateCNPJ(docClean)) {
+                                setCnpjLoading(true)
+                                setCnpjError('')
+                                try {
+                                  const result = await consultarCNPJ(docClean)
+                                  if (result.success && result.data) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      cpf: formatted,
+                                      companyName: result.data!.razaoSocial,
+                                    }))
+                                    console.log('✅ Razão Social preenchida automaticamente:', result.data.razaoSocial)
+                                  } else {
+                                    setCnpjError(result.error || 'Não foi possível consultar')
+                                  }
+                                } catch (error) {
+                                  setCnpjError('Erro ao consultar CNPJ')
+                                } finally {
+                                  setCnpjLoading(false)
+                                }
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              handleSaveAbandonedCart()
+                              const doc = e.target.value.replace(/\D/g, '')
+                              
+                              if (formData.documentType === 'CNPJ') {
+                                // Valida CNPJ
+                                if (doc.length === 14 && !validateCNPJ(doc)) {
+                                  setFormErrors({ ...formErrors, cpf: "CNPJ inválido" })
+                                } else if (doc.length > 0 && doc.length < 14) {
+                                  setFormErrors({ ...formErrors, cpf: "CNPJ incompleto" })
+                                } else {
+                                  setFormErrors({ ...formErrors, cpf: "" })
+                                }
+                              } else {
+                                // Valida CPF
+                                if (doc.length === 11 && !validateCPF(doc)) {
+                                  setFormErrors({ ...formErrors, cpf: "CPF inválido" })
+                                } else if (doc.length > 0 && doc.length < 11) {
+                                  setFormErrors({ ...formErrors, cpf: "CPF incompleto" })
+                                } else {
+                                  setFormErrors({ ...formErrors, cpf: "" })
+                                }
+                              }
+                            }}
+                            className={`w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 ${
+                              formErrors.cpf ? 'border-red-500' : 'border-gray-200'
+                            } rounded-xl focus:border-brand-500 focus:outline-none transition-colors text-sm md:text-base box-border`}
+                            placeholder={formData.documentType === 'CNPJ' ? "00.000.000/0000-00" : "000.000.000-00"}
+                            maxLength={formData.documentType === 'CNPJ' ? 18 : 14}
+                            required
+                          />
+                          {/* Indicador de loading dentro do input */}
+                          {cnpjLoading && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
+                            </div>
+                          )}
+                        </div>
                         {formErrors.cpf && (
                           <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                             <AlertCircle className="w-4 h-4" />
                             {formErrors.cpf}
                           </p>
                         )}
-                      </div>
+                        {cnpjError && !formErrors.cpf && (
+                          <p className="text-amber-600 text-xs mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {cnpjError}
+                          </p>
+                        )}
                     </div>
+
+                    {/* Campo Razão Social - Apenas para CNPJ */}
+                    {formData.documentType === 'CNPJ' && (
+                      <div className="min-w-0">
+                        <label className="block text-sm font-bold text-gray-900 mb-2">
+                          <Building2 className="w-4 h-4 inline mr-1" />
+                          Razão Social *
+                        </label>
+                        <input
+                          type="text"
+                          name="companyName"
+                          autoComplete="organization"
+                          value={formData.companyName}
+                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                          onBlur={handleSaveAbandonedCart}
+                          className="w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors text-sm md:text-base box-border"
+                          placeholder="Nome da empresa conforme CNPJ"
+                          required
+                        />
+                        {cnpjLoading && (
+                          <p className="text-xs text-brand-600 mt-1 flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Buscando dados do CNPJ...
+                          </p>
+                        )}
+                        {!cnpjLoading && !formData.companyName && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Preenchido automaticamente ao digitar o CNPJ completo
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <button

@@ -52,6 +52,7 @@ export interface Sale {
   customer_email: string
   customer_phone?: string
   customer_cpf?: string
+  document_type?: 'CPF' | 'CNPJ'
   total_amount: number
   discount: number
   subtotal: number

@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { validateCPF } from '@/lib/cpf';
+import { validateCNPJ } from '@/lib/cnpj';
 
 // =====================================================
 // 🔧 TIPOS
@@ -48,6 +50,7 @@ export default function CheckoutFormV3({
     name: '',
     email: '',
     cpf: '',
+    documentType: 'CPF' as 'CPF' | 'CNPJ',
     cardNumber: '',
     cardExpiry: '',
     cardCvv: '',
@@ -117,6 +120,22 @@ export default function CheckoutFormV3({
     return value;
   };
 
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 14) {
+      return numbers
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    }
+    return value;
+  };
+
+  const formatDocument = (value: string) => {
+    return formData.documentType === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
+  };
+
   const formatCardNumber = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     return numbers.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
@@ -169,11 +188,12 @@ export default function CheckoutFormV3({
       console.log('📅 Data bruta do form:', formData.cardExpiry);
       console.log('📅 Mês:', month, 'Ano:', year);
       
-      console.log('� Criando token MP com dados:', {
+      console.log('📝 Criando token MP com dados:', {
         cardNumber: formData.cardNumber.replace(/\s/g, '').substring(0, 6) + '...',
         month,
         year: `20${year}`,
-        cpf: formData.cpf.replace(/\D/g, '').substring(0, 3) + '...',
+        documentType: formData.documentType,
+        document: formData.cpf.replace(/\D/g, '').substring(0, 3) + '...',
       });
 
       try {
@@ -184,7 +204,7 @@ export default function CheckoutFormV3({
           cardExpirationMonth: month,
           cardExpirationYear: `20${year}`,
           securityCode: formData.cardCvv,
-          identificationType: 'CPF',
+          identificationType: formData.documentType, // CPF ou CNPJ
           identificationNumber: formData.cpf.replace(/\D/g, ''),
         },
         (status: number, response: any) => {
@@ -300,6 +320,7 @@ export default function CheckoutFormV3({
             email: formData.email,
             name: formData.name,
             cpf: formData.cpf,
+            documentType: formData.documentType, // CPF ou CNPJ
           },
           product: {
             id: productId,
@@ -334,6 +355,7 @@ export default function CheckoutFormV3({
         name: '',
         email: '',
         cpf: '',
+        documentType: 'CPF',
         cardNumber: '',
         cardExpiry: '',
         cardCvv: '',
@@ -394,15 +416,41 @@ export default function CheckoutFormV3({
             />
           </div>
 
-          {/* CPF */}
+          {/* Tipo de Documento */}
           <div>
-            <Label htmlFor="cpf">CPF</Label>
+            <Label>Tipo de Documento</Label>
+            <div className="flex gap-2 mt-1.5 mb-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, documentType: 'CPF', cpf: '' })}
+                disabled={status.stage === 'processing' || status.stage === 'tokenizing'}
+                className={`flex-1 py-2 px-3 rounded-md border text-sm font-medium transition-all ${
+                  formData.documentType === 'CPF'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-input hover:bg-accent hover:text-accent-foreground'
+                }`}
+              >
+                CPF
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, documentType: 'CNPJ', cpf: '' })}
+                disabled={status.stage === 'processing' || status.stage === 'tokenizing'}
+                className={`flex-1 py-2 px-3 rounded-md border text-sm font-medium transition-all ${
+                  formData.documentType === 'CNPJ'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-input hover:bg-accent hover:text-accent-foreground'
+                }`}
+              >
+                CNPJ
+              </button>
+            </div>
             <Input
-              id="cpf"
+              id="document"
               value={formData.cpf}
-              onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-              placeholder="000.000.000-00"
-              maxLength={14}
+              onChange={(e) => setFormData({ ...formData, cpf: formatDocument(e.target.value) })}
+              placeholder={formData.documentType === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'}
+              maxLength={formData.documentType === 'CNPJ' ? 18 : 14}
               required
               disabled={status.stage === 'processing' || status.stage === 'tokenizing'}
             />
