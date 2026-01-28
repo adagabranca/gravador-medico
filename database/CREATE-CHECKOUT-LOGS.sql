@@ -52,6 +52,10 @@ CREATE INDEX IF NOT EXISTS idx_checkout_logs_created_at ON checkout_logs(created
 -- RLS: Apenas admin pode ler logs
 ALTER TABLE public.checkout_logs ENABLE ROW LEVEL SECURITY;
 
+-- Dropar policies antigas se existirem
+DROP POLICY IF EXISTS "Service can insert logs" ON checkout_logs;
+DROP POLICY IF EXISTS "Admin can read logs" ON checkout_logs;
+
 -- Service role pode inserir (API interna)
 CREATE POLICY "Service can insert logs" 
   ON checkout_logs 
