@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
         token: mpToken,
         transaction_amount: amount,
         description: 'Gravador Médico - Acesso Vitalício',
-        payment_method_id: 'credit_card',
+        // NÃO enviar payment_method_id - MP detecta automaticamente pelo token
         installments: 1,
         payer: {
           email: customer.email,
@@ -230,12 +230,12 @@ export async function POST(request: NextRequest) {
         // 🔥 LOG DETALHADO DO PAYLOAD
         console.log('📦 PAYLOAD ENVIADO PARA MERCADO PAGO:', JSON.stringify({
           transaction_amount: mpPayload.transaction_amount,
-          payment_method_id: mpPayload.payment_method_id,
           installments: mpPayload.installments,
           payer_email: mpPayload.payer.email,
           payer_cpf: mpPayload.payer.identification.number,
           external_reference: mpPayload.external_reference,
-          has_token: !!mpPayload.token
+          has_token: !!mpPayload.token,
+          note: 'payment_method_id removido - MP detecta automaticamente pelo token'
         }, null, 2))
         
         // Criar AbortController para timeout de 30 segundos
