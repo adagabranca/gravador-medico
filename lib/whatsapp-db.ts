@@ -23,7 +23,7 @@ export async function getWhatsAppConversations(): Promise<WhatsAppConversation[]
 
   if (typeof window !== 'undefined') {
     try {
-      const response = await fetch('/api/whatsapp/conversations')
+      const response = await fetch(`/api/whatsapp/conversations?_t=${Date.now()}`)
       if (!response.ok) {
         throw new Error('Falha ao buscar conversas')
       }
@@ -153,7 +153,8 @@ export async function getWhatsAppMessages(
     try {
       const params = new URLSearchParams({
         remoteJid,
-        limit: String(limit)
+        limit: String(limit),
+        _t: String(Date.now()) // Cache buster
       })
 
       if (before) {

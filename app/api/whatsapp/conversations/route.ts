@@ -13,7 +13,16 @@ export async function GET() {
       .order('last_message_timestamp', { ascending: false, nullsFirst: false })
 
     if (!error) {
-      return NextResponse.json({ success: true, conversations: data || [] })
+      return NextResponse.json(
+        { success: true, conversations: data || [] },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      )
     }
 
     const { data: contacts, error: contactsError } = await supabaseAdmin
@@ -30,7 +39,16 @@ export async function GET() {
       total_messages: 0
     }))
 
-    return NextResponse.json({ success: true, conversations })
+    return NextResponse.json(
+      { success: true, conversations },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    )
   } catch (error) {
     console.error('❌ Erro ao buscar conversas:', error)
     return NextResponse.json(

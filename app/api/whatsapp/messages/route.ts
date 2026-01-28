@@ -40,7 +40,16 @@ export async function GET(request: NextRequest) {
 
     const ordered = (data || []).slice().reverse()
 
-    return NextResponse.json({ success: true, messages: ordered })
+    return NextResponse.json(
+      { success: true, messages: ordered },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    )
   } catch (error) {
     console.error('❌ Erro ao buscar mensagens:', error)
     return NextResponse.json(
