@@ -133,12 +133,48 @@ export default function CampanhasPage() {
   }, [campaigns, statusFilter, sortBy]);
 
   // Calcular totais
-  const totals = useMemo(() => ({
-    spend: filteredCampaigns.reduce((sum, c) => sum + Number(c.spend || 0), 0),
-    impressions: filteredCampaigns.reduce((sum, c) => sum + Number(c.impressions || 0), 0),
-    clicks: filteredCampaigns.reduce((sum, c) => sum + Number(c.clicks || 0), 0),
-    conversions: filteredCampaigns.reduce((sum, c) => sum + Number((c as any).conversions || 0), 0),
-  }), [filteredCampaigns]);
+  const totals = useMemo(() => {
+    const result = {
+      spend: 0,
+      reach: 0,
+      impressions: 0,
+      clicks: 0,
+      outbound_clicks: 0,
+      purchases: 0,
+      revenue: 0,
+    };
+    
+    filteredCampaigns.forEach(campaign => {
+      result.spend += Number(campaign.spend || 0);
+      result.reach += Number(campaign.reach || 0);
+      result.impressions += Number(campaign.impressions || 0);
+      result.clicks += Number(campaign.clicks || 0);
+      
+      // Cliques de saída
+      const outboundClicks = campaign.outbound_clicks?.reduce(
+        (sum, oc) => sum + Number(oc.value || 0), 0
+      ) || 0;
+      result.outbound_clicks += outboundClicks;
+      
+      // Compras
+      const purchases = campaign.actions?.find(a => 
+        a.action_type === 'purchase' || 
+        a.action_type === 'omni_purchase' ||
+        a.action_type === 'offsite_conversion.fb_pixel_purchase'
+      );
+      result.purchases += Number(purchases?.value || 0);
+      
+      // Receita
+      const purchaseValue = campaign.action_values?.find(a => 
+        a.action_type === 'purchase' || 
+        a.action_type === 'omni_purchase' ||
+        a.action_type === 'offsite_conversion.fb_pixel_purchase'
+      );
+      result.revenue += Number(purchaseValue?.value || 0);
+    });
+    
+    return result;
+  }, [filteredCampaigns]);
 
   return (
     <div className="p-6 space-y-6">
@@ -225,9 +261,9 @@ export default function CampanhasPage() {
         <div className="bg-gradient-to-br from-orange-500/20 to-amber-600/20 rounded-2xl border border-orange-500/30 p-5">
           <div className="flex items-center gap-2 mb-2">
             <Target className="h-5 w-5 text-orange-400" />
-            <span className="text-sm text-orange-300">Conversões</span>
+            <span className="text-sm text-orange-300">Compras</span>
           </div>
-          <div className="text-2xl font-bold text-white">{formatNumber(totals.conversions)}</div>
+          <div className="text-2xl font-bold text-white">{formatNumber(totals.purchases)}</div>
         </div>
       </div>
 
@@ -260,26 +296,50 @@ export default function CampanhasPage() {
               <thead>
                 <tr className="bg-white/5">
                   <th className="text-left text-xs font-semibold text-gray-400 px-4 py-3">Campanha</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Investimento</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Impressões</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CPM</th>
+                  <th className="text-left text-xs font-semibold text-gray-400 px-4 py-3">Status</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Gasto</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Alcance</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Cliques</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CTR</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Cliq. Saída</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CPC</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Conversões</th>
-                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CPL</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CTR</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Impressões</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Compras</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Receita</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Custo/Compra</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCampaigns.map((campaign, index) => {
                   const spend = Number(campaign.spend || 0);
+                  const reach = Number(campaign.reach || 0);
                   const impressions = Number(campaign.impressions || 0);
                   const clicks = Number(campaign.clicks || 0);
                   const ctr = Number(campaign.ctr || 0);
-                  const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
-                  const cpc = clicks > 0 ? spend / clicks : 0;
-                  const conversions = Number((campaign as any).conversions || 0);
-                  const cpl = conversions > 0 ? spend / conversions : 0;
+                  const cpc = Number(campaign.cpc || 0);
+                  
+                  // Cliques de saída (outbound clicks)
+                  const outboundClicks = campaign.outbound_clicks?.reduce(
+                    (sum, oc) => sum + Number(oc.value || 0), 0
+                  ) || 0;
+                  
+                  // Extrair compras das actions
+                  const purchases = campaign.actions?.find(a => 
+                    a.action_type === 'purchase' || 
+                    a.action_type === 'omni_purchase' ||
+                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
+                  );
+                  const purchaseCount = Number(purchases?.value || 0);
+                  
+                  // Extrair valor das compras
+                  const purchaseValue = campaign.action_values?.find(a => 
+                    a.action_type === 'purchase' || 
+                    a.action_type === 'omni_purchase' ||
+                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
+                  );
+                  const purchaseAmount = Number(purchaseValue?.value || 0);
+                  
+                  const status = (campaign as any).effective_status || 'UNKNOWN';
                   
                   return (
                     <motion.tr
@@ -296,32 +356,63 @@ export default function CampanhasPage() {
                           </div>
                           <div>
                             <p className="font-medium text-white text-sm">{campaign.campaign_name}</p>
-                            <StatusBadge status={(campaign as any).effective_status || 'UNKNOWN'} />
                           </div>
                         </div>
                       </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={status} />
+                      </td>
                       <td className="text-right px-4 py-3 text-green-400 font-medium">{formatCurrency(spend)}</td>
-                      <td className="text-right px-4 py-3 text-gray-300">{formatNumber(impressions)}</td>
-                      <td className="text-right px-4 py-3 text-gray-400">{formatCurrency(cpm)}</td>
-                      <td className="text-right px-4 py-3 text-blue-400">{formatNumber(clicks)}</td>
+                      <td className="text-right px-4 py-3 text-indigo-400">{formatNumber(reach)}</td>
+                      <td className="text-right px-4 py-3 text-white">{formatNumber(clicks)}</td>
+                      <td className="text-right px-4 py-3 text-cyan-400">{formatNumber(outboundClicks)}</td>
+                      <td className="text-right px-4 py-3 text-orange-400">{formatCurrency(cpc)}</td>
                       <td className="text-right px-4 py-3 text-purple-400">{ctr.toFixed(2)}%</td>
-                      <td className="text-right px-4 py-3 text-gray-400">{formatCurrency(cpc)}</td>
-                      <td className="text-right px-4 py-3 text-orange-400 font-medium">{formatNumber(conversions)}</td>
-                      <td className="text-right px-4 py-3 text-gray-400">{conversions > 0 ? formatCurrency(cpl) : '—'}</td>
+                      <td className="text-right px-4 py-3 text-gray-400">{formatNumber(impressions)}</td>
+                      <td className="text-right px-4 py-3">
+                        {purchaseCount > 0 ? (
+                          <span className="font-semibold text-emerald-400">{purchaseCount}</span>
+                        ) : (
+                          <span className="text-gray-500">0</span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3">
+                        {purchaseAmount > 0 ? (
+                          <span className="font-semibold text-yellow-400">{formatCurrency(purchaseAmount)}</span>
+                        ) : (
+                          <span className="text-gray-500">R$ 0,00</span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3">
+                        {purchaseCount > 0 ? (
+                          <span className="font-semibold text-pink-400">{formatCurrency(spend / purchaseCount)}</span>
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
+                      </td>
                     </motion.tr>
                   );
                 })}
                 {/* Linha de Total */}
                 <tr className="border-t-2 border-white/20 bg-white/5 font-bold">
                   <td className="px-4 py-3 text-white">Total Geral</td>
+                  <td className="px-4 py-3">-</td>
                   <td className="text-right px-4 py-3 text-green-400">{formatCurrency(totals.spend)}</td>
-                  <td className="text-right px-4 py-3 text-gray-300">{formatNumber(totals.impressions)}</td>
-                  <td className="text-right px-4 py-3 text-gray-400">{totals.impressions > 0 ? formatCurrency((totals.spend / totals.impressions) * 1000) : '—'}</td>
-                  <td className="text-right px-4 py-3 text-blue-400">{formatNumber(totals.clicks)}</td>
-                  <td className="text-right px-4 py-3 text-purple-400">{totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : 0}%</td>
-                  <td className="text-right px-4 py-3 text-gray-400">{totals.clicks > 0 ? formatCurrency(totals.spend / totals.clicks) : '—'}</td>
-                  <td className="text-right px-4 py-3 text-orange-400">{formatNumber(totals.conversions)}</td>
-                  <td className="text-right px-4 py-3 text-gray-400">{totals.conversions > 0 ? formatCurrency(totals.spend / totals.conversions) : '—'}</td>
+                  <td className="text-right px-4 py-3 text-indigo-400">{formatNumber(totals.reach)}</td>
+                  <td className="text-right px-4 py-3 text-white">{formatNumber(totals.clicks)}</td>
+                  <td className="text-right px-4 py-3 text-cyan-400">{formatNumber(totals.outbound_clicks)}</td>
+                  <td className="text-right px-4 py-3 text-orange-400">
+                    {totals.clicks > 0 ? formatCurrency(totals.spend / totals.clicks) : '—'}
+                  </td>
+                  <td className="text-right px-4 py-3 text-purple-400">
+                    {totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : 0}%
+                  </td>
+                  <td className="text-right px-4 py-3 text-gray-400">{formatNumber(totals.impressions)}</td>
+                  <td className="text-right px-4 py-3 text-emerald-400">{formatNumber(totals.purchases)}</td>
+                  <td className="text-right px-4 py-3 text-yellow-400">{formatCurrency(totals.revenue)}</td>
+                  <td className="text-right px-4 py-3 text-pink-400">
+                    {totals.purchases > 0 ? formatCurrency(totals.spend / totals.purchases) : '—'}
+                  </td>
                 </tr>
               </tbody>
             </table>
