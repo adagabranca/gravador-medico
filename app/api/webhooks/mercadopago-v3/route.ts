@@ -400,7 +400,10 @@ export async function POST(request: NextRequest) {
       error: undefined 
     };
     
-    if (customerEmail && customerName && process.env.LOVABLE_API_URL) {
+    // Verificar se temos as variáveis necessárias para provisionamento
+    const lovableUrl = process.env.NEXT_PUBLIC_LOVABLE_EDGE_FUNCTION_URL || process.env.LOVABLE_API_URL;
+    
+    if (customerEmail && customerName && lovableUrl) {
       console.log(`[${saleId || paymentId}] Iniciando provisionamento...`);
       
       try {
