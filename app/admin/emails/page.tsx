@@ -21,7 +21,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Mail, Search, Eye, RefreshCw, CheckCircle2, XCircle, Clock, Send, TrendingUp, BarChart3 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Mail, Search, Eye, RefreshCw, CheckCircle2, XCircle, Clock, Send, TrendingUp, BarChart3, MousePointerClick, Copy, Check } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -40,11 +41,25 @@ interface EmailLog {
   order_id: string | null
   created_at: string
   sent_at: string | null
+  delivered_at: string | null
   error_message: string | null
   user_agent: string | null
   device_type: string | null
   browser: string | null
   os: string | null
+  from_email: string | null
+  from_name: string | null
+  metadata: any
+}
+
+interface TimelineEvent {
+  id: string
+  event_type: string
+  created_at: string
+  icon?: string
+  label?: string
+  color?: string
+  details?: any
 }
 
 interface EmailStats {
@@ -70,10 +85,41 @@ export default function EmailManagementPage() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null)
   const [showPreview, setShowPreview] = useState(false)
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([])
+  const [loadingTimeline, setLoadingTimeline] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     loadEmails()
   }, [statusFilter, typeFilter])
+
+  // Carregar timeline quando selecionar um email
+  useEffect(() => {
+    if (selectedEmail && showPreview) {
+      loadTimeline(selectedEmail.id)
+    }
+  }, [selectedEmail, showPreview])
+
+  async function loadTimeline(emailId: string) {
+    setLoadingTimeline(true)
+    try {
+      const response = await fetch(`/api/admin/emails/${emailId}/events`)
+      const data = await response.json()
+      if (data.success) {
+        setTimeline(data.timeline || [])
+      }
+    } catch (error) {
+      console.error('Erro ao carregar timeline:', error)
+    } finally {
+      setLoadingTimeline(false)
+    }
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   async function loadEmails() {
     setLoading(true)
@@ -416,72 +462,242 @@ export default function EmailManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Email Preview Dialog */}
+      {/* Email Preview Dialog - Estilo Resend */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">📧 Visualização do E-mail</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden bg-gray-900 border-gray-700 p-0">
           {selectedEmail && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6 text-sm">
-                <div className="space-y-1">
-                  <p className="font-semibold text-gray-400">Destinatário</p>
-                  <p className="font-medium text-white">{selectedEmail.recipient_email}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-gray-400">Status</p>
-                  {getStatusBadge(selectedEmail.status)}
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-gray-400">Assunto</p>
-                  <p className="font-medium text-white">{selectedEmail.subject}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-gray-400">Tipo</p>
-                  {getTypeBadge(selectedEmail.email_type)}
-                </div>
-                {selectedEmail.order_id && (
-                  <div className="space-y-1">
-                    <p className="font-semibold text-gray-400">Pedido</p>
-                    <p className="font-mono text-xs bg-gray-800 px-2 py-1 rounded inline-block text-gray-300">{selectedEmail.order_id}</p>
+            <div className="flex flex-col h-full">
+              {/* Header do Email */}
+              <div className="border-b border-gray-700 p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl">
+                    <Mail className="w-8 h-8 text-white" />
                   </div>
-                )}
-                {selectedEmail.opened && (
-                  <div className="space-y-1">
-                    <p className="font-semibold text-gray-400">Tracking</p>
-                    <p className="font-medium text-white">
-                      Aberto {selectedEmail.open_count}x · {selectedEmail.device_type} ·{' '}
-                      {selectedEmail.browser}
-                    </p>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400">Email</p>
+                    <h2 className="text-2xl font-bold text-white">{selectedEmail.recipient_email}</h2>
                   </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyToClipboard(selectedEmail.email_id || selectedEmail.id)}
+                      className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <span className="ml-2 text-xs font-mono">{selectedEmail.email_id?.slice(0, 8) || selectedEmail.id.slice(0, 8)}...</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-4 gap-6 mt-6 text-sm">
+                  <div>
+                    <p className="text-gray-500 mb-1">FROM</p>
+                    <p className="text-gray-300">{selectedEmail.from_name || 'Gravador Médico'} &lt;{selectedEmail.from_email || 'suporte@gravadormedico.com.br'}&gt;</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">SUBJECT</p>
+                    <p className="text-gray-300 truncate">{selectedEmail.subject}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">TO</p>
+                    <p className="text-gray-300">{selectedEmail.recipient_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">ID</p>
+                    <p className="text-gray-300 font-mono text-xs truncate">{selectedEmail.email_id || selectedEmail.id}</p>
+                  </div>
+                </div>
               </div>
 
-              {selectedEmail.error_message && (
-                <div className="bg-red-900/20 border-2 border-red-800 rounded-xl p-4">
-                  <p className="font-bold text-red-400 mb-2 flex items-center gap-2">
-                    <XCircle className="w-5 h-5" />
-                    Erro no envio:
-                  </p>
-                  <p className="text-sm text-red-300 font-medium">{selectedEmail.error_message}</p>
+              {/* Timeline de Eventos */}
+              <div className="border-b border-gray-700 p-6">
+                <p className="text-gray-400 text-sm font-medium mb-4">EMAIL EVENTS</p>
+                <div className="flex items-center gap-4">
+                  {loadingTimeline ? (
+                    <RefreshCw className="w-5 h-5 animate-spin text-gray-500" />
+                  ) : timeline.length > 0 ? (
+                    timeline.map((event, index) => (
+                      <div key={event.id} className="flex items-center">
+                        {index > 0 && <div className="w-12 h-0.5 bg-gray-700 mx-2" />}
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            event.color === 'green' ? 'bg-emerald-500/20 text-emerald-400' :
+                            event.color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
+                            event.color === 'purple' ? 'bg-purple-500/20 text-purple-400' :
+                            event.color === 'red' ? 'bg-red-500/20 text-red-400' :
+                            'bg-gray-700 text-gray-400'
+                          }`}>
+                            {event.event_type === 'sent' && <Send className="w-4 h-4" />}
+                            {event.event_type === 'delivered' && <CheckCircle2 className="w-4 h-4" />}
+                            {event.event_type === 'opened' && <Eye className="w-4 h-4" />}
+                            {event.event_type === 'clicked' && <MousePointerClick className="w-4 h-4" />}
+                            {event.event_type === 'bounced' && <XCircle className="w-4 h-4" />}
+                            {event.event_type === 'spam' && <XCircle className="w-4 h-4" />}
+                          </div>
+                          <p className={`text-xs mt-2 font-medium ${
+                            event.color === 'green' ? 'text-emerald-400' :
+                            event.color === 'blue' ? 'text-blue-400' :
+                            event.color === 'purple' ? 'text-purple-400' :
+                            event.color === 'red' ? 'text-red-400' :
+                            'text-gray-400'
+                          }`}>
+                            {event.label || event.event_type}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {format(new Date(event.created_at), "dd/MM, HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {/* Timeline padrão baseada no status */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center">
+                          <Send className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs mt-2 font-medium text-gray-400">Sent</p>
+                        <p className="text-xs text-gray-500">
+                          {format(new Date(selectedEmail.sent_at || selectedEmail.created_at), "dd/MM, HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                      {(selectedEmail.status === 'delivered' || selectedEmail.status === 'sent' || selectedEmail.opened) && (
+                        <>
+                          <div className="w-12 h-0.5 bg-gray-700 mx-2" />
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                            <p className="text-xs mt-2 font-medium text-emerald-400">Delivered</p>
+                            <p className="text-xs text-gray-500">
+                              {format(new Date(selectedEmail.delivered_at || selectedEmail.sent_at || selectedEmail.created_at), "dd/MM, HH:mm", { locale: ptBR })}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                      {selectedEmail.opened && (
+                        <>
+                          <div className="w-12 h-0.5 bg-gray-700 mx-2" />
+                          <div className="flex flex-col items-center">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                              <Eye className="w-4 h-4" />
+                            </div>
+                            <p className="text-xs mt-2 font-medium text-blue-400">Opened</p>
+                            <p className="text-xs text-gray-500">
+                              {selectedEmail.first_opened_at ? format(new Date(selectedEmail.first_opened_at), "dd/MM, HH:mm", { locale: ptBR }) : '-'}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {selectedEmail.html_content && (
-                <div className="border-2 border-gray-700 rounded-xl overflow-hidden shadow-lg">
-                  <div className="bg-gray-800/70 px-6 py-3 border-b-2 border-gray-700">
-                    <p className="text-sm font-bold text-gray-300">📩 Conteúdo do E-mail</p>
-                  </div>
-                  <div className="p-4 bg-gray-900">
-                    <iframe
-                      srcDoc={selectedEmail.html_content}
-                      className="w-full h-96 border-0 rounded bg-white"
-                      title="Email Preview"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Tabs de Conteúdo */}
+              <div className="flex-1 overflow-hidden">
+                <Tabs defaultValue="preview" className="h-full flex flex-col">
+                  <TabsList className="bg-gray-800 border-b border-gray-700 rounded-none px-6 py-0 h-auto">
+                    <TabsTrigger value="preview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none py-3 px-4">
+                      Preview
+                    </TabsTrigger>
+                    <TabsTrigger value="details" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none py-3 px-4">
+                      Detalhes
+                    </TabsTrigger>
+                    <TabsTrigger value="html" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none py-3 px-4">
+                      HTML
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="preview" className="flex-1 overflow-auto p-0 m-0">
+                    {selectedEmail.html_content ? (
+                      <iframe
+                        srcDoc={selectedEmail.html_content}
+                        className="w-full h-[400px] border-0 bg-white"
+                        title="Email Preview"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-[400px] text-gray-500">
+                        <div className="text-center">
+                          <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p>Preview não disponível</p>
+                          <p className="text-sm text-gray-600 mt-2">O conteúdo HTML não foi salvo para este email</p>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="details" className="flex-1 overflow-auto p-6 m-0">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase">Informações do Email</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-gray-500">Tipo</p>
+                            {getTypeBadge(selectedEmail.email_type)}
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Status</p>
+                            {getStatusBadge(selectedEmail.status)}
+                          </div>
+                          {selectedEmail.order_id && (
+                            <div>
+                              <p className="text-xs text-gray-500">Pedido</p>
+                              <code className="text-sm bg-gray-800 px-2 py-1 rounded text-gray-300">{selectedEmail.order_id}</code>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-xs text-gray-500">Enviado em</p>
+                            <p className="text-gray-300">{format(new Date(selectedEmail.created_at), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase">Tracking</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-gray-500">Aberturas</p>
+                            <p className="text-gray-300">{selectedEmail.open_count || 0}x</p>
+                          </div>
+                          {selectedEmail.first_opened_at && (
+                            <div>
+                              <p className="text-xs text-gray-500">Primeira Abertura</p>
+                              <p className="text-gray-300">{format(new Date(selectedEmail.first_opened_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                            </div>
+                          )}
+                          {selectedEmail.device_type && (
+                            <div>
+                              <p className="text-xs text-gray-500">Dispositivo</p>
+                              <p className="text-gray-300">{selectedEmail.device_type} • {selectedEmail.browser} • {selectedEmail.os}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedEmail.error_message && (
+                        <div className="col-span-2">
+                          <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
+                            <p className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
+                              <XCircle className="w-4 h-4" />
+                              Erro no Envio
+                            </p>
+                            <p className="text-sm text-red-300">{selectedEmail.error_message}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="html" className="flex-1 overflow-auto p-0 m-0">
+                    <pre className="p-6 text-xs text-gray-400 overflow-auto h-[400px] bg-gray-950">
+                      <code>{selectedEmail.html_content || 'HTML não disponível'}</code>
+                    </pre>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
           )}
         </DialogContent>

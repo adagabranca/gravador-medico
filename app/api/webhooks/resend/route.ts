@@ -1,5 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import crypto from 'crypto'
+
+const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || ''
+
+/**
+ * Verifica a assinatura do webhook do Resend
+ */
+function verifyResendSignature(payload: string, signature: string): boolean {
+  if (!RESEND_WEBHOOK_SECRET) {
+    console.warn('⚠️ RESEND_WEBHOOK_SECRET não configurado, pulando verificação')
+    return true
+  }
+
+  try {
+    const expectedSignature = crypto
+      .createHmac('sha256', RESEND_WEBHOOK_SECRET)
+      .update(payload)
+      .digest('base64')
+
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    )
+  } catch (error) {
+    console.error('❌ Erro ao verificar assinatura:', error)
+    return false
+  }
+}
 
 /**
  * Webhook do Resend para rastrear eventos de email
@@ -32,7 +60,16 @@ interface ResendWebhookPayload {
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: ResendWebhookPayload = await request.json()
+    const rawBody = await request.text()
+    const signature = request.headers.get('resend-signature') || ''
+    
+    // Verificar assinatura
+    if (RESEND_WEBHOOK_SECRET && !verifyResendSignature(rawBody, signature)) {
+      console.error('❌ Assinatura inválida do webhook Resend')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+    }
+
+    const payload: ResendWebhookPayload = JSON.parse(rawBody)
     
     console.log('📧 Resend Webhook:', payload.type, payload.data.email_id)
 
@@ -140,6 +177,16 @@ export async function POST(request: NextRequest) {
 
       default:
         console.log('ℹ️ Evento não tratado:', eventType)
+    }
+
+    // Salvar evento no histórico (se tiver o email_log_id)
+    if (emailLog?.id) {
+      await supabaseAdmin.from('email_events').insert({
+        email_log_id: emailLog.id,
+        event_type: eventType.replace('email.', ''),
+        event_data: payload.data,
+      })
+      console.log('📝 Evento salvo no histórico')
     }
 
     return NextResponse.json({ received: true })
