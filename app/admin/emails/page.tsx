@@ -22,9 +22,10 @@ import {
 } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Mail, Search, Eye, RefreshCw, CheckCircle2, XCircle, Clock, Send, TrendingUp, BarChart3, MousePointerClick, Copy, Check } from 'lucide-react'
+import { Mail, Search, Eye, RefreshCw, CheckCircle2, XCircle, Clock, Send, TrendingUp, BarChart3, MousePointerClick, Copy, Check, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getDisplayName } from '@/lib/display-helpers'
 
 interface EmailLog {
   id: string
@@ -403,58 +404,72 @@ export default function EmailManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {emails.map((email) => (
-                    <TableRow key={email.id} className="hover:bg-gray-800/50 transition-colors border-gray-700">
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-white">{email.recipient_name || 'N/A'}</p>
-                          <p className="text-sm text-gray-400">{email.recipient_email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate font-medium text-gray-300">{email.subject}</TableCell>
-                      <TableCell>{getTypeBadge(email.email_type)}</TableCell>
-                      <TableCell>{getStatusBadge(email.status)}</TableCell>
-                      <TableCell>
-                        {email.opened ? (
-                          <div className="text-sm">
-                            <Badge variant="success" className="mb-1">
-                              ✓ {email.open_count}x
-                            </Badge>
-                            {email.first_opened_at && (
-                              <p className="text-xs text-gray-400">
-                                {format(new Date(email.first_opened_at), "dd/MM 'às' HH:mm", {
-                                  locale: ptBR,
-                                })}
-                              </p>
-                            )}
-                            {email.device_type && (
-                              <p className="text-xs text-gray-500">
-                                {email.device_type} · {email.browser}
-                              </p>
-                            )}
+                  {emails.map((email) => {
+                    const { displayName, isGenerated } = getDisplayName(
+                      email.recipient_name,
+                      email.recipient_email
+                    )
+                    
+                    return (
+                      <TableRow key={email.id} className="hover:bg-gray-800/50 transition-colors border-gray-700">
+                        <TableCell>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-white">{displayName}</p>
+                              {isGenerated && (
+                                <span title="Nome gerado automaticamente do e-mail">
+                                  <Sparkles className="w-3 h-3 text-blue-400" />
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-400">{email.recipient_email}</p>
                           </div>
-                        ) : (
-                          <Badge variant="default" className="bg-gray-700 text-gray-300">Não aberto</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium text-gray-300">
-                        {format(new Date(email.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedEmail(email)
-                            setShowPreview(true)
-                          }}
-                          className="hover:bg-blue-900/30 hover:text-blue-400 text-white"
-                        >
-                          <Eye className="w-4 h-4 text-white" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate font-medium text-gray-300">{email.subject}</TableCell>
+                        <TableCell>{getTypeBadge(email.email_type)}</TableCell>
+                        <TableCell>{getStatusBadge(email.status)}</TableCell>
+                        <TableCell>
+                          {email.opened ? (
+                            <div className="text-sm">
+                              <Badge variant="success" className="mb-1">
+                                ✓ {email.open_count}x
+                              </Badge>
+                              {email.first_opened_at && (
+                                <p className="text-xs text-gray-400">
+                                  {format(new Date(email.first_opened_at), "dd/MM 'às' HH:mm", {
+                                    locale: ptBR,
+                                  })}
+                                </p>
+                              )}
+                              {email.device_type && (
+                                <p className="text-xs text-gray-500">
+                                  {email.device_type} · {email.browser}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <Badge variant="default" className="bg-gray-700 text-gray-300">Não aberto</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium text-gray-300">
+                          {format(new Date(email.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedEmail(email)
+                              setShowPreview(true)
+                            }}
+                            className="hover:bg-blue-900/30 hover:text-blue-400 text-white"
+                          >
+                            <Eye className="w-4 h-4 text-white" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -9,6 +9,61 @@ interface AppmaxWebhookResult {
   response: NextResponse
 }
 
+/**
+ * 🛡️ PROTEÇÃO DE DADOS DO CLIENTE
+ * 
+ * Valida se um valor do webhook é válido e deve sobrescrever o dado do banco.
+ * O checkout próprio sempre tem dados corretos (input do usuário).
+ * O webhook pode vir com dados vazios/genéricos que NÃO devem sobrescrever.
+ * 
+ * @param value - Valor recebido do webhook
+ * @param fieldName - Nome do campo (para logs)
+ * @returns true se o valor é válido e pode sobrescrever
+ */
+function isValidCustomerData(value: any, fieldName: string): boolean {
+  if (!value) return false
+  
+  const strValue = String(value).trim().toLowerCase()
+  
+  // Lista de valores inválidos/genéricos que NÃO devem sobrescrever
+  const invalidValues = [
+    '',
+    'null',
+    'undefined',
+    'unknown',
+    'cliente appmax',
+    'collection_id',
+    'n/a',
+    'não informado',
+    'sem nome',
+    '--'
+  ]
+  
+  const isInvalid = invalidValues.includes(strValue)
+  
+  if (isInvalid) {
+    console.log(`🛡️ Valor inválido detectado para ${fieldName}: "${value}" - NÃO será atualizado`)
+  }
+  
+  return !isInvalid
+}
+
+/**
+ * 🔄 BUSCAR DADOS EXISTENTES DA VENDA
+ * 
+ * Busca a venda existente no banco para comparar com os dados do webhook
+ * e evitar sobrescrita de dados válidos com dados vazios.
+ */
+async function getExistingSale(appmaxOrderId: string) {
+  const { data: existingSale } = await supabaseAdmin
+    .from('sales')
+    .select('customer_name, customer_email, customer_phone, customer_cpf')
+    .eq('appmax_order_id', appmaxOrderId)
+    .maybeSingle()
+  
+  return existingSale
+}
+
 const EVENT_STATUS_MAP: Record<string, { status: string; failure_reason?: string }> = {
   // ✅ STATUS DA API APPMAX (o que vem do backend da Appmax)
   'integrado': { status: 'approved' },
@@ -598,23 +653,61 @@ export async function handleAppmaxWebhook(request: NextRequest, endpoint: string
         0
     }
     
+    // 🛡️ PROTEÇÃO: Buscar dados existentes para evitar sobrescrita
+    const existingSale = await getExistingSale(orderId)
+    
+    console.log('🛡️ Validando dados do webhook antes de atualizar...')
+    
+    // Preparar payload base (campos que sempre podem ser atualizados)
     const salePayload: Record<string, any> = {
       appmax_order_id: orderId,
       customer_id: customerId,
-      customer_name: customerName || 'Cliente Appmax',
-      customer_email: customerEmail,
-      customer_phone: customerPhone,
-      customer_cpf: customerCpf,
       total_amount: totalAmount,
       subtotal: totalAmount,
       discount: couponDiscount,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       status,
-      order_status: STATUS_TO_ORDER_STATUS[status] || 'draft', // ✅ Mapear para order_status
+      order_status: STATUS_TO_ORDER_STATUS[status] || 'draft',
       failure_reason: failureReason || null,
       payment_method: paymentMethod,
       updated_at: now
+    }
+    
+    // 🛡️ PROTEÇÃO: Só atualizar customer_name se o valor do webhook for válido
+    if (isValidCustomerData(customerName, 'customer_name')) {
+      salePayload.customer_name = customerName
+    } else if (existingSale?.customer_name) {
+      // Manter o nome existente do banco
+      salePayload.customer_name = existingSale.customer_name
+      console.log(`🛡️ Mantendo customer_name existente: "${existingSale.customer_name}"`)
+    } else {
+      // Fallback apenas se não existir nada no banco
+      salePayload.customer_name = 'Cliente Appmax'
+    }
+    
+    // 🛡️ PROTEÇÃO: Só atualizar customer_email se válido
+    if (customerEmail && isValidCustomerData(customerEmail, 'customer_email')) {
+      salePayload.customer_email = customerEmail
+    } else if (existingSale?.customer_email) {
+      salePayload.customer_email = existingSale.customer_email
+      console.log(`🛡️ Mantendo customer_email existente: "${existingSale.customer_email}"`)
+    }
+    
+    // 🛡️ PROTEÇÃO: Só atualizar customer_phone se válido
+    if (isValidCustomerData(customerPhone, 'customer_phone')) {
+      salePayload.customer_phone = customerPhone
+    } else if (existingSale?.customer_phone) {
+      salePayload.customer_phone = existingSale.customer_phone
+      console.log(`🛡️ Mantendo customer_phone existente: "${existingSale.customer_phone}"`)
+    }
+    
+    // 🛡️ PROTEÇÃO: Só atualizar customer_cpf se válido
+    if (isValidCustomerData(customerCpf, 'customer_cpf')) {
+      salePayload.customer_cpf = customerCpf
+    } else if (existingSale?.customer_cpf) {
+      salePayload.customer_cpf = existingSale.customer_cpf
+      console.log(`🛡️ Mantendo customer_cpf existente: "${existingSale.customer_cpf}"`)
     }
 
     let { data: saleRow, error: saleError } = await supabaseAdmin

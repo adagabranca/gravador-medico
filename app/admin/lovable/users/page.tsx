@@ -47,8 +47,10 @@ import {
   Shield,
   Ban,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Sparkles
 } from 'lucide-react'
+import { getDisplayName } from '@/lib/display-helpers'
 
 export default function LovableUsersPage() {
   const { toast } = useToast()
@@ -447,85 +449,101 @@ export default function LovableUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} className="border-gray-700">
-                  <TableCell className="font-medium text-white">{user.full_name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 flex-nowrap">
-                      <span className="text-sm text-gray-300 truncate">{user.email}</span>
-                      {user.email_confirmed_at && (
-                        <Badge variant="success" className="text-xs bg-green-600 text-white whitespace-nowrap flex-shrink-0">
-                          ✓ Confirmado
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getUserStatusBadge(user)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      style={{ 
-                        backgroundColor: user.role === 'admin' ? '#9333ea' : '#2563eb',
-                        color: '#ffffff',
-                        fontWeight: 600
-                      }}
-                      className="border-0"
-                    >
-                      {user.role || 'user'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-gray-400">
-                    {formatDate(user.created_at)}
-                  </TableCell>
-                  <TableCell className="text-xs text-gray-400">
-                    {formatDate(user.last_sign_in_at)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setResetDialogOpen(true)
+              {users.map((user) => {
+                const { displayName, isGenerated } = getDisplayName(
+                  user.full_name,
+                  user.email
+                )
+                
+                return (
+                  <TableRow key={user.id} className="border-gray-700">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white">{displayName}</span>
+                        {isGenerated && (
+                          <span title="Nome gerado automaticamente do e-mail">
+                            <Sparkles className="w-3 h-3 text-blue-400" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 flex-nowrap">
+                        <span className="text-sm text-gray-300 truncate">{user.email}</span>
+                        {user.email_confirmed_at && (
+                          <Badge variant="success" className="text-xs bg-green-600 text-white whitespace-nowrap flex-shrink-0">
+                            ✓ Confirmado
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getUserStatusBadge(user)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        style={{ 
+                          backgroundColor: user.role === 'admin' ? '#9333ea' : '#2563eb',
+                          color: '#ffffff',
+                          fontWeight: 600
                         }}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-gray-700"
-                        title="Alterar senha"
+                        className="border-0"
                       >
-                        <Key className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setDeactivateDialogOpen(true)
-                        }}
-                        className={isUserBanned(user) 
-                          ? "text-green-400 hover:text-green-300 hover:bg-gray-700" 
-                          : "text-yellow-400 hover:text-yellow-300 hover:bg-gray-700"
-                        }
-                        title={isUserBanned(user) ? "Reativar usuário" : "Desativar usuário"}
-                      >
-                        {isUserBanned(user) ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setDeleteDialogOpen(true)
-                        }}
-                        className="text-red-400 hover:text-red-300 hover:bg-gray-700"
-                        title="Excluir usuário"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {user.role || 'user'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-gray-400">
+                      {formatDate(user.created_at)}
+                    </TableCell>
+                    <TableCell className="text-xs text-gray-400">
+                      {formatDate(user.last_sign_in_at)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setResetDialogOpen(true)
+                          }}
+                          className="text-blue-400 hover:text-blue-300 hover:bg-gray-700"
+                          title="Alterar senha"
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setDeactivateDialogOpen(true)
+                          }}
+                          className={isUserBanned(user) 
+                            ? "text-green-400 hover:text-green-300 hover:bg-gray-700" 
+                            : "text-yellow-400 hover:text-yellow-300 hover:bg-gray-700"
+                          }
+                          title={isUserBanned(user) ? "Reativar usuário" : "Desativar usuário"}
+                        >
+                          {isUserBanned(user) ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setDeleteDialogOpen(true)
+                          }}
+                          className="text-red-400 hover:text-red-300 hover:bg-gray-700"
+                          title="Excluir usuário"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
