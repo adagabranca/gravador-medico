@@ -9,17 +9,14 @@ export async function GET() {
 
   // 1. CAROLINA - buscar dados e enviar email
   try {
-    // Buscar dados da Carolina no Lovable
-    const carolinaEmail = 'carolinaoliveiralucas@hotmail.com'
+    // Email exato da Carolina
+    const carolinaEmail = 'carol.lucas20@hotmail.com'
     
-    // Buscar venda da Carolina
+    // Buscar venda da Carolina pelo ID exato
     const { data: carolinaSale } = await supabaseAdmin
       .from('sales')
       .select('*')
-      .ilike('customer_email', '%carol%')
-      .eq('order_status', 'paid')
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('id', 'fa7c42e7-3a85-4028-8ef1-67987afb979b')
       .single()
 
     if (carolinaSale) {
@@ -109,20 +106,17 @@ export async function GET() {
 
   // 2. SILAS - buscar dados, resetar senha e enviar email
   try {
-    const silasEmail = await getSilasEmail()
+    const silasEmail = 'silasjuba@me.com'
     
-    // Buscar venda do Silas
+    // Buscar venda do Silas pelo ID exato
     const { data: silasSale } = await supabaseAdmin
       .from('sales')
       .select('*')
-      .ilike('customer_name', '%silas%')
-      .eq('order_status', 'paid')
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('id', '4e29d861-b446-4c11-ad50-8f1be36da80c')
       .single()
 
     if (silasSale) {
-      const email = silasSale.customer_email
+      const email = silasEmail
       
       const lovableUrl = process.env.LOVABLE_EDGE_FUNCTION_URL || 'https://acouwzdniytqhaesgtpr.supabase.co/functions/v1/admin-user-manager'
       const lovableKey = process.env.LOVABLE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
