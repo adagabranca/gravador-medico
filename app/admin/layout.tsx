@@ -35,7 +35,8 @@ import {
   ExternalLink,
   Heart,
   CreditCard,
-  Megaphone
+  Megaphone,
+  Facebook
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import { WhatsAppNotificationProvider } from '@/components/WhatsAppNotificationProvider'
@@ -296,7 +297,7 @@ const menuItems = [
   // 📢 META ADS (Submenu expandível estilo VIGA)
   { 
     label: 'Meta Ads', 
-    icon: Megaphone,
+    icon: Facebook,
     items: metaAdsItems,
     badge: 'Meta',
     highlight: true,
@@ -574,7 +575,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <button
                       onClick={() => toggleGroup(item.label)}
                       className={`w-full flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
-                        isGroupActive
+                        item.label === 'Meta Ads'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30'
+                          : isGroupActive
                           ? 'bg-gray-800/70 text-white'
                           : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
                       }`}
@@ -683,7 +686,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   onClick={() => router.push(item.href)}
                   className={`w-full flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
-                    isActive
+                    item.label === 'WhatsApp'
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/30'
+                      : isActive
                       ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/50'
                       : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
                   }`}
