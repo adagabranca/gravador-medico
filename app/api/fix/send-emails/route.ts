@@ -12,11 +12,14 @@ export async function GET() {
     // Email exato da Carolina
     const carolinaEmail = 'carol.lucas20@hotmail.com'
     
-    // Buscar venda da Carolina pelo ID exato
+    // Buscar venda da Carolina - status pode ser 'active' ou 'paid'
     const { data: carolinaSale } = await supabaseAdmin
       .from('sales')
       .select('*')
-      .eq('id', 'fa7c42e7-3a85-4028-8ef1-67987afb979b')
+      .eq('customer_email', carolinaEmail)
+      .in('order_status', ['active', 'paid'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single()
 
     if (carolinaSale) {
@@ -108,11 +111,14 @@ export async function GET() {
   try {
     const silasEmail = 'silasjuba@me.com'
     
-    // Buscar venda do Silas pelo ID exato
+    // Buscar venda do Silas - status pode ser 'active' ou 'paid'
     const { data: silasSale } = await supabaseAdmin
       .from('sales')
       .select('*')
-      .eq('id', '4e29d861-b446-4c11-ad50-8f1be36da80c')
+      .eq('customer_email', silasEmail)
+      .in('order_status', ['active', 'paid'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single()
 
     if (silasSale) {
