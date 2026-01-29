@@ -404,6 +404,18 @@ export async function POST(request: NextRequest) {
         sale_id: saleId 
       });
     }
+
+    // ✅ Pagamento aprovado: remover carrinho abandonado associado
+    if (customerEmail) {
+      try {
+        await supabaseAdmin
+          .from('abandoned_carts')
+          .delete()
+          .eq('customer_email', customerEmail);
+      } catch (error) {
+        console.warn('⚠️ Erro ao limpar carrinho abandonado após compra MP:', error);
+      }
+    }
     
     // Verificar se order já foi processado
     if (order?.status === 'paid') {

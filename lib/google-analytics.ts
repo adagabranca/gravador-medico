@@ -6,12 +6,24 @@ import { BetaAnalyticsDataClient } from '@google-analytics/data';
 // 2. GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY - variáveis separadas
 function getCredentials() {
   // Método 1: JSON completo
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  const rawJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim();
+  if (rawJson) {
     try {
-      const creds = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+      const unquoted = (rawJson.startsWith("'") && rawJson.endsWith("'"))
+        ? rawJson.slice(1, -1)
+        : (rawJson.startsWith('"') && rawJson.endsWith('"'))
+          ? rawJson.slice(1, -1)
+          : rawJson;
+      const creds = JSON.parse(unquoted);
       // Se a private_key tem \n literal, converte
       if (creds.private_key && creds.private_key.includes('\\n')) {
         creds.private_key = creds.private_key.replace(/\\n/g, '\n');
+      }
+      if (creds.client_email && typeof creds.client_email === 'string') {
+        creds.client_email = creds.client_email.trim();
+      }
+      if (creds.private_key && typeof creds.private_key === 'string') {
+        creds.private_key = creds.private_key.trim();
       }
       return creds;
     } catch (e) {
@@ -20,7 +32,7 @@ function getCredentials() {
   }
   
   // Método 2: Variáveis separadas
-  const key = process.env.GOOGLE_PRIVATE_KEY;
+  const key = process.env.GOOGLE_PRIVATE_KEY?.trim();
   let privateKey: string | undefined;
   
   if (key) {
@@ -29,7 +41,7 @@ function getCredentials() {
   }
   
   return {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    client_email: process.env.GOOGLE_CLIENT_EMAIL?.trim(),
     private_key: privateKey,
   };
 }
@@ -330,14 +342,20 @@ export async function getRealtimeDetailed() {
 /**
  * Busca cliques de saída (outbound clicks) - para onde os usuários estão indo
  */
-export async function getOutboundClicks(dateRange: '7daysAgo' | '30daysAgo' | '90daysAgo' = '30daysAgo') {
+export async function getOutboundClicks(
+  dateRange: '7daysAgo' | '30daysAgo' | '90daysAgo' | { startDate: string; endDate: string } = '30daysAgo'
+) {
   if (!GA4_PROPERTY_ID) throw new Error('GA4_PROPERTY_ID não configurado');
 
   try {
+    const dateRanges = typeof dateRange === 'string'
+      ? [{ startDate: dateRange, endDate: 'today' }]
+      : [{ startDate: dateRange.startDate, endDate: dateRange.endDate }];
+
     // Busca eventos de clique em links externos
     const [response] = await analyticsDataClient.runReport({
       property: `properties/${GA4_PROPERTY_ID}`,
-      dateRanges: [{ startDate: dateRange, endDate: 'today' }],
+      dateRanges,
       dimensions: [{ name: 'linkUrl' }],
       metrics: [{ name: 'eventCount' }],
       dimensionFilter: {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { CampaignInsight } from '@/lib/meta-marketing';
+import { CampaignInsight, sumActions } from '@/lib/meta-marketing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DollarSign, Eye, Activity, AlertCircle, RefreshCw, Play, StopCircle, Video
@@ -30,18 +30,46 @@ const periodOptions = [
   { value: 'maximum', label: 'Todo período' },
 ];
 
+const statusFilterOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'active', label: 'Ativos' },
+  { value: 'paused', label: 'Pausados' },
+  { value: 'archived', label: 'Arquivados' },
+];
+
+const sumThruplayActions = (actions?: Array<{ value?: string }>) => {
+  if (!actions || !Array.isArray(actions)) return 0;
+  return actions.reduce((sum, item) => sum + Number(item.value || 0), 0);
+};
+
+const resolveVideoViews = (ad: CampaignInsight) => {
+  const direct = Number((ad as any).video_views || 0);
+  if (direct > 0) return direct;
+  return sumActions(ad.actions, ['video_view']);
+};
+
+const resolveThruPlays = (ad: CampaignInsight) => {
+  const thruplayActions = (ad as any).video_thruplay_watched_actions;
+  if (Array.isArray(thruplayActions)) {
+    return sumThruplayActions(thruplayActions);
+  }
+  const fallback = Number((ad as any).video_thru_plays || 0);
+  return fallback > 0 ? fallback : 0;
+};
+
 export default function EngajamentoPage() {
   const [ads, setAds] = useState<CampaignInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     setLoading(true);
     try {
-      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=ad`);
+      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=ad&include_status=1`);
       const data = await res.json();
       setAds(Array.isArray(data) ? data : []);
       setLastUpdate(new Date());
@@ -57,23 +85,37 @@ export default function EngajamentoPage() {
     fetchData();
   }, [selectedPeriod, fetchData]);
 
+  const filteredAds = useMemo(() => {
+    let result = [...ads];
+    if (statusFilter !== 'all') {
+      result = result.filter(ad => {
+        const status = ((ad as any).effective_status || (ad as any).status || 'UNKNOWN').toUpperCase();
+        if (statusFilter === 'active') return status === 'ACTIVE';
+        if (statusFilter === 'paused') return status === 'PAUSED';
+        if (statusFilter === 'archived') return status === 'ARCHIVED';
+        return true;
+      });
+    }
+    return result;
+  }, [ads, statusFilter]);
+
   // Calcular totais de engajamento
   const totals = useMemo(() => {
-    const spend = ads.reduce((sum, a) => sum + Number(a.spend || 0), 0);
-    const impressions = ads.reduce((sum, a) => sum + Number(a.impressions || 0), 0);
-    const reach = ads.reduce((sum, a) => sum + Number((a as any).reach || 0), 0);
-    const videoViews = ads.reduce((sum, a) => sum + Number((a as any).video_views || 0), 0);
-    const thruPlays = ads.reduce((sum, a) => sum + Number((a as any).video_thru_plays || 0), 0);
+    const spend = filteredAds.reduce((sum, a) => sum + Number(a.spend || 0), 0);
+    const impressions = filteredAds.reduce((sum, a) => sum + Number(a.impressions || 0), 0);
+    const reach = filteredAds.reduce((sum, a) => sum + Number((a as any).reach || 0), 0);
+    const videoViews = filteredAds.reduce((sum, a) => sum + resolveVideoViews(a), 0);
+    const thruPlays = filteredAds.reduce((sum, a) => sum + resolveThruPlays(a), 0);
     const stopRate = videoViews > 0 ? (1 - (thruPlays / videoViews)) * 100 : 0;
     const retention = thruPlays > 0 && videoViews > 0 ? (thruPlays / videoViews) * 100 : 0;
     
     return { spend, impressions, reach, videoViews, thruPlays, stopRate, retention };
-  }, [ads]);
+  }, [filteredAds]);
 
   // Ordenar por investimento
   const sortedAds = useMemo(() => {
-    return [...ads].sort((a, b) => Number(b.spend || 0) - Number(a.spend || 0));
-  }, [ads]);
+    return [...filteredAds].sort((a, b) => Number(b.spend || 0) - Number(a.spend || 0));
+  }, [filteredAds]);
 
   return (
     <div className="p-6 space-y-6">
@@ -100,6 +142,16 @@ export default function EngajamentoPage() {
             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm"
           >
             {periodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value} className="bg-gray-800">{opt.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm"
+          >
+            {statusFilterOptions.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-gray-800">{opt.label}</option>
             ))}
           </select>
@@ -180,8 +232,8 @@ export default function EngajamentoPage() {
                   const spend = Number(ad.spend || 0);
                   const impressions = Number(ad.impressions || 0);
                   const reach = Number((ad as any).reach || 0);
-                  const thruPlays = Number((ad as any).video_thru_plays || 0);
-                  const videoViews = Number((ad as any).video_views || 0);
+                  const thruPlays = resolveThruPlays(ad);
+                  const videoViews = resolveVideoViews(ad);
                   const stopRate = videoViews > 0 ? (1 - (thruPlays / videoViews)) * 100 : 0;
                   const retention = thruPlays > 0 && videoViews > 0 ? (thruPlays / videoViews) * 100 : 0;
                   

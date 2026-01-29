@@ -43,9 +43,8 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
     
     const { data: queueItems, error: queueError} = await supabaseAdmin
       .from('provisioning_queue')
-      .select('*, order:sale_id(*)') // Join com sales
+      .select('*')
       .in('status', ['pending', 'failed'])
-      .lt('retry_count', supabaseAdmin.rpc('max_retries')) // Não pegou ainda o máximo de retries
       .or('next_retry_at.is.null,next_retry_at.lte.now()') // Sem retry agendado ou já passou a hora
       .order('created_at', { ascending: true })
       .limit(10) // Processar no máximo 10 por vez
@@ -70,17 +69,29 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
       const itemStartTime = Date.now()
       
       try {
-        console.log(`\n🔄 Processando pedido: ${item.order_id}`)
+        const saleId = item.sale_id || item.order_id
+
+        if (!saleId) {
+          throw new Error('Fila sem sale_id (registro inválido)')
+        }
+
+        console.log(`\n🔄 Processando pedido: ${saleId}`)
 
         // Buscar dados do pedido
         const { data: order, error: orderError } = await supabaseAdmin
           .from('sales')
           .select('*')
-          .eq('id', item.order_id)
+          .eq('id', saleId)
           .single()
 
         if (orderError || !order) {
-          throw new Error(`Pedido não encontrado: ${item.order_id}`)
+          throw new Error(`Pedido não encontrado: ${saleId}`)
+        }
+
+        const maxRetries = item.max_retries ?? 3
+        if ((item.retry_count ?? 0) >= maxRetries) {
+          console.log(`⚠️ Pedido ${saleId} atingiu o máximo de retries (${maxRetries}), pulando...`)
+          continue
         }
 
         // Validar que pedido está pago
@@ -153,8 +164,12 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
           userEmail: order.customer_email,
           userPassword: password,
           orderId: order.id.toString(),
-          orderValue: parseFloat(order.order_value),
-          paymentMethod: order.payment_gateway === 'mercadopago' ? 'Mercado Pago' : 'AppMax'
+          orderValue: Number(order.total_amount ?? order.amount ?? 0),
+          paymentMethod: order.payment_gateway === 'mercadopago'
+            ? 'Mercado Pago'
+            : order.payment_gateway === 'appmax'
+              ? 'AppMax'
+              : (order.payment_gateway || order.payment_method || 'checkout')
         })
         
         console.log('✅ Email enviado com sucesso!')
@@ -184,7 +199,7 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
 
         result.failed++
         result.errors.push({
-          sale_id: item.sale_id,
+          sale_id: saleId || 'unknown',
           error: itemError.message
         })
 
@@ -194,6 +209,7 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
         
         const newRetryCount = (item.retry_count || 0) + 1
         const maxRetries = item.max_retries || 3
+        const saleId = item.sale_id || item.order_id
 
         if (newRetryCount >= maxRetries) {
           // Esgotou tentativas - marcar como falha permanente
@@ -202,7 +218,7 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
           await supabaseAdmin
             .from('sales')
             .update({ order_status: 'provisioning_failed' })
-            .eq('id', item.order_id)
+            .eq('id', saleId)
 
           await supabaseAdmin
             .from('provisioning_queue')
@@ -220,7 +236,7 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
 
           // Log de erro permanente
           await supabaseAdmin.from('integration_logs').insert({
-            order_id: item.order_id,
+            order_id: saleId,
             action: 'create_user_lovable',
             status: 'error',
             recipient_email: item.order?.customer_email,
@@ -259,11 +275,11 @@ export async function processProvisioningQueue(): Promise<ProvisioningResult> {
           await supabaseAdmin
             .from('sales')
             .update({ order_status: 'paid' })
-            .eq('id', item.order_id)
+            .eq('id', saleId)
 
           // Log de erro temporário
           await supabaseAdmin.from('integration_logs').insert({
-            order_id: item.order_id,
+            order_id: saleId,
             action: 'create_user_lovable',
             status: 'error',
             recipient_email: item.order?.customer_email,
@@ -323,20 +339,61 @@ export async function processSpecificOrder(orderId: string): Promise<{
   console.log(`🔧 [MANUAL] Reprocessando pedido: ${orderId}`)
 
   try {
-    // Verificar se existe na fila
-    const { data: queueItem } = await supabaseAdmin
+    // Verificar se existe na fila (compatível com sale_id/order_id)
+    let queueItem: any = null
+
+    const { data: queueBySale, error: queueBySaleError } = await supabaseAdmin
       .from('provisioning_queue')
       .select('*')
-      .eq('order_id', orderId)
-      .single()
+      .eq('sale_id', orderId)
+      .maybeSingle()
+
+    if (queueBySaleError && !queueBySaleError.message?.includes('sale_id')) {
+      throw queueBySaleError
+    }
+
+    if (queueBySale) {
+      queueItem = queueBySale
+    } else if (queueBySaleError?.message?.includes('sale_id')) {
+      const { data: queueByOrder, error: queueByOrderError } = await supabaseAdmin
+        .from('provisioning_queue')
+        .select('*')
+        .eq('order_id', orderId)
+        .maybeSingle()
+
+      if (queueByOrderError && !queueByOrderError.message?.includes('order_id')) {
+        throw queueByOrderError
+      }
+
+      queueItem = queueByOrder
+    }
 
     if (!queueItem) {
       // Criar entrada na fila
-      await supabaseAdmin.from('provisioning_queue').insert({
-        order_id: orderId,
-        status: 'pending',
-        retry_count: 0
-      })
+      // Inserir na fila com fallback de coluna
+      const { error: insertSaleError } = await supabaseAdmin
+        .from('provisioning_queue')
+        .insert({
+          sale_id: orderId,
+          status: 'pending',
+          retry_count: 0
+        })
+
+      if (insertSaleError?.message?.includes('sale_id')) {
+        const { error: insertOrderError } = await supabaseAdmin
+          .from('provisioning_queue')
+          .insert({
+            order_id: orderId,
+            status: 'pending',
+            retry_count: 0
+          })
+
+        if (insertOrderError) {
+          throw insertOrderError
+        }
+      } else if (insertSaleError) {
+        throw insertSaleError
+      }
     } else {
       // Resetar para pending
       await supabaseAdmin

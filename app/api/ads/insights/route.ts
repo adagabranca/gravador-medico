@@ -42,21 +42,123 @@ async function getCampaignsMetadata(): Promise<Map<string, { status: string; cre
   return map;
 }
 
+async function getAdsetsMetadata(): Promise<Map<string, { status: string; created_time: string; name: string }>> {
+  const map = new Map();
+  if (!AD_ACCOUNT_ID || !ACCESS_TOKEN) return map;
+
+  try {
+    let url: string | null = `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/adsets?` + new URLSearchParams({
+      access_token: ACCESS_TOKEN,
+      fields: 'id,name,status,effective_status,created_time',
+      limit: '500'
+    });
+
+    while (url) {
+      const res: Response = await fetch(url, { next: { revalidate: 300 } });
+      const data: any = await res.json();
+
+      if (data.data) {
+        data.data.forEach((a: any) => {
+          map.set(a.id, {
+            status: a.effective_status || a.status,
+            created_time: a.created_time,
+            name: a.name
+          });
+        });
+      }
+
+      url = data.paging?.next || null;
+    }
+  } catch (e) {
+    console.error('Erro ao buscar metadata de adsets:', e);
+  }
+
+  return map;
+}
+
+async function getAdsMetadata(): Promise<Map<string, { status: string; created_time: string; name: string }>> {
+  const map = new Map();
+  if (!AD_ACCOUNT_ID || !ACCESS_TOKEN) return map;
+
+  try {
+    let url: string | null = `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/ads?` + new URLSearchParams({
+      access_token: ACCESS_TOKEN,
+      fields: 'id,name,status,effective_status,created_time',
+      limit: '500'
+    });
+
+    while (url) {
+      const res: Response = await fetch(url, { next: { revalidate: 300 } });
+      const data: any = await res.json();
+
+      if (data.data) {
+        data.data.forEach((a: any) => {
+          map.set(a.id, {
+            status: a.effective_status || a.status,
+            created_time: a.created_time,
+            name: a.name
+          });
+        });
+      }
+
+      url = data.paging?.next || null;
+    }
+  } catch (e) {
+    console.error('Erro ao buscar metadata de ads:', e);
+  }
+
+  return map;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const datePreset = (searchParams.get('period') || 'maximum') as DatePreset;
     const level = (searchParams.get('level') || 'campaign') as InsightLevel;
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    const timeIncrement = searchParams.get('time_increment');
+    const includeStatus = searchParams.get('include_status') === '1';
+
+    const normalizeDate = (value: string) => {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      return d.toISOString().split('T')[0];
+    };
+
+    const since = start ? normalizeDate(start) : null;
+    const until = end ? normalizeDate(end) : null;
+    const timeRange = since && until ? { since, until } : undefined;
+    const resolvedTimeIncrement = timeIncrement ? timeIncrement : undefined;
     
     // Se for adset ou ad, retorna direto sem enriquecimento (não tem metadata)
     if (level === 'adset' || level === 'ad') {
-      const insights = await getAdsInsights(datePreset, level);
-      return NextResponse.json(insights);
+      const insights = await getAdsInsights(datePreset, level, timeRange, resolvedTimeIncrement);
+
+      if (!includeStatus) {
+        return NextResponse.json(insights);
+      }
+
+      const metadata = level === 'adset'
+        ? await getAdsetsMetadata()
+        : await getAdsMetadata();
+
+      const enrichedInsights = insights.map(insight => {
+        const id = level === 'adset' ? insight.adset_id : insight.ad_id;
+        const meta = metadata.get(id || '');
+        return {
+          ...insight,
+          effective_status: meta?.status || (insight as any).effective_status || 'UNKNOWN',
+          created_time: meta?.created_time || (insight as any).created_time || null
+        };
+      });
+
+      return NextResponse.json(enrichedInsights);
     }
     
     // Para campanhas, buscar insights e metadata em paralelo
     const [insights, metadata] = await Promise.all([
-      getAdsInsights(datePreset, 'campaign'),
+      getAdsInsights(datePreset, 'campaign', timeRange, resolvedTimeIncrement),
       getCampaignsMetadata()
     ]);
     

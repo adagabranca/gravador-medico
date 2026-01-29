@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { getPixelLogs } from '@/actions/tracking';
+import { fetchAdminUser } from '@/lib/admin-auth';
 import { 
   Activity, 
   Search, 
@@ -69,9 +70,12 @@ export default function PixelLogsPage() {
   const loadLogs = async () => {
     try {
       setIsLoading(true);
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
-      const result = await getPixelLogs(userId, 50);
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        setLogs([]);
+        return;
+      }
+      const result = await getPixelLogs(user.id, 50);
       
       if (result.success && result.logs) {
         setLogs(result.logs as PixelLog[]);

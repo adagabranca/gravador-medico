@@ -7,12 +7,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
+import {
   createTrackingLink, 
   updateTrackingLink, 
   deleteTrackingLink, 
   getTrackingLinks 
 } from '@/actions/tracking';
+import { fetchAdminUser } from '@/lib/admin-auth';
 import { TrackingLink, TrackingLinkInsert } from '@/lib/types/tracking';
 import { generateSlug } from '@/lib/tracking-utils';
 import { 
@@ -69,9 +70,12 @@ export default function TrackingLinksPage() {
 
   const loadLinks = async () => {
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
-      const result = await getTrackingLinks(userId);
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        toast('Usuário não autenticado', 'error');
+        return;
+      }
+      const result = await getTrackingLinks(user.id);
       if (result.success && result.links) {
         setLinks(result.links as TrackingLink[]);
       }
@@ -125,8 +129,11 @@ export default function TrackingLinksPage() {
     e.preventDefault();
     
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        toast('Usuário não autenticado', 'error');
+        return;
+      }
 
       if (editingLink) {
         // Atualizar link existente
@@ -142,7 +149,7 @@ export default function TrackingLinksPage() {
         // Criar novo link
         const linkData: TrackingLinkInsert = {
           ...formData,
-          user_id: userId,
+          user_id: user.id,
         };
         const result = await createTrackingLink(linkData);
         if (result.success) {

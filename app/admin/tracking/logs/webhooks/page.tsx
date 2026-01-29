@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   Webhook, 
   Search, 
@@ -32,53 +32,58 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-// Mock data para visualização
-const mockWebhookLogs = [
-  {
-    id: '1',
-    timestamp: '2026-01-22 15:42:10',
-    endpoint: 'https://api.example.com/webhook/tracking',
-    event_type: 'purchase',
-    status: 'success',
-    http_code: 200,
-    response_time: '245ms',
-    payload: { customer_id: '123', amount: 497.00 }
-  },
-  {
-    id: '2',
-    timestamp: '2026-01-22 15:38:33',
-    endpoint: 'https://crm.empresa.com.br/leads',
-    event_type: 'lead',
-    status: 'success',
-    http_code: 201,
-    response_time: '189ms',
-    payload: { name: 'João Silva', phone: '+5511999999999' }
-  },
-  {
-    id: '3',
-    timestamp: '2026-01-22 15:35:15',
-    endpoint: 'https://api.example.com/webhook/tracking',
-    event_type: 'contact',
-    status: 'failed',
-    http_code: 500,
-    response_time: '3024ms',
-    error: 'Internal Server Error',
-    payload: { phone: '+5511888888888' }
-  },
-];
+interface WebhookLog {
+  id: string;
+  created_at: string;
+  processed_at?: string | null;
+  source?: string | null;
+  event_type?: string | null;
+  processed?: boolean | null;
+  success?: boolean | null;
+  error_message?: string | null;
+  payload?: any;
+}
 
 export default function WebhookLogsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [logs] = useState(mockWebhookLogs);
+  const [logs, setLogs] = useState<WebhookLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadLogs();
+  }, []);
+
+  const loadLogs = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/admin/webhooks/logs', { credentials: 'include' });
+      const result = await response.json();
+      setLogs(Array.isArray(result.logs) ? result.logs : []);
+    } catch (error) {
+      console.error('Erro ao carregar logs de webhooks:', error);
+      setLogs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredLogs = logs.filter(log => 
-    log.endpoint.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.event_type.toLowerCase().includes(searchTerm.toLowerCase())
+    (log.source || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.event_type || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const successCount = logs.filter(l => l.status === 'success').length;
-  const failedCount = logs.filter(l => l.status === 'failed').length;
-  const avgResponseTime = (logs.reduce((acc, l) => acc + parseInt(l.response_time), 0) / logs.length).toFixed(0);
+  const successCount = logs.filter(l => l.success === true).length;
+  const failedCount = logs.filter(l => l.processed && !l.success).length;
+  const logsWithTime = logs.filter(l => l.processed_at && l.created_at);
+  const avgResponseTime = logsWithTime.length > 0
+    ? (
+        logsWithTime.reduce((acc, l) => {
+          const created = new Date(l.created_at).getTime();
+          const processed = new Date(l.processed_at as string).getTime();
+          return acc + Math.max(processed - created, 0);
+        }, 0) / logsWithTime.length
+      ).toFixed(0)
+    : '0';
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 space-y-6">
@@ -99,7 +104,7 @@ export default function WebhookLogsPage() {
             <Download className="w-4 h-4 mr-2" />
             Exportar
           </Button>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+          <Button onClick={loadLogs} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
             <RefreshCw className="w-4 h-4 mr-2" />
             Atualizar
           </Button>
@@ -204,7 +209,7 @@ export default function WebhookLogsPage() {
               <TableHeader>
                 <TableRow className="bg-zinc-800/50 border-zinc-700 hover:bg-zinc-800/50">
                   <TableHead className="text-zinc-300 font-semibold">Horário</TableHead>
-                  <TableHead className="text-zinc-300 font-semibold">Endpoint</TableHead>
+                  <TableHead className="text-zinc-300 font-semibold">Fonte</TableHead>
                   <TableHead className="text-zinc-300 font-semibold">Evento</TableHead>
                   <TableHead className="text-zinc-300 font-semibold">Status</TableHead>
                   <TableHead className="text-zinc-300 font-semibold">HTTP Code</TableHead>
@@ -213,60 +218,79 @@ export default function WebhookLogsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.map((log) => (
+                {filteredLogs.map((log) => {
+                  const createdAt = log.created_at
+                    ? new Date(log.created_at).toLocaleString('pt-BR')
+                    : '-';
+                  const status = log.success
+                    ? 'success'
+                    : log.processed
+                      ? 'failed'
+                      : 'pending';
+                  const httpCode = log.payload?.http_code ?? log.payload?.status ?? '-';
+                  const responseTime = log.processed_at
+                    ? `${Math.max(new Date(log.processed_at).getTime() - new Date(log.created_at).getTime(), 0)}ms`
+                    : '-';
+
+                  return (
                   <TableRow 
                     key={log.id} 
                     className="border-zinc-800 hover:bg-zinc-800/30 transition-colors"
                   >
                     <TableCell className="text-zinc-400 text-sm font-mono">
-                      {log.timestamp}
+                      {createdAt}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <ExternalLink className="w-4 h-4 text-zinc-500" />
                         <span className="text-zinc-300 text-sm font-mono truncate max-w-[300px]">
-                          {log.endpoint}
+                          {log.source || 'webhook'}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex px-2.5 py-1 rounded-md bg-blue-600/20 text-blue-300 border border-blue-600/40 text-xs font-semibold">
-                        {log.event_type}
+                        {log.event_type || 'unknown'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {log.status === 'success' ? (
+                      {status === 'success' ? (
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-600/20 border border-green-600/40">
                           <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
                           <span className="text-xs font-semibold text-green-300">Sucesso</span>
                         </div>
-                      ) : (
+                      ) : status === 'failed' ? (
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600/20 border border-red-600/40">
                           <XCircle className="w-3.5 h-3.5 text-red-400" />
                           <span className="text-xs font-semibold text-red-300">Falhou</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-yellow-600/20 border border-yellow-600/40">
+                          <Clock className="w-3.5 h-3.5 text-yellow-400" />
+                          <span className="text-xs font-semibold text-yellow-300">Pendente</span>
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
                       <span className={`text-sm font-mono ${
-                        log.http_code >= 200 && log.http_code < 300 
+                        typeof httpCode === 'number' && httpCode >= 200 && httpCode < 300 
                           ? 'text-green-400' 
-                          : log.http_code >= 400 
+                          : typeof httpCode === 'number' && httpCode >= 400 
                           ? 'text-red-400' 
                           : 'text-yellow-400'
                       }`}>
-                        {log.http_code}
+                        {httpCode}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className={`text-sm font-mono ${
-                        parseInt(log.response_time) < 200 
+                        typeof responseTime === 'string' && parseInt(responseTime) < 200 
                           ? 'text-green-400' 
-                          : parseInt(log.response_time) < 1000 
+                          : typeof responseTime === 'string' && parseInt(responseTime) < 1000 
                           ? 'text-yellow-400' 
                           : 'text-red-400'
                       }`}>
-                        {log.response_time}
+                        {responseTime}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -279,7 +303,7 @@ export default function WebhookLogsPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </div>

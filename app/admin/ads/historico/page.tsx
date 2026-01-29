@@ -21,8 +21,16 @@ const formatNumberCompact = (value: number) => {
   return value.toString();
 };
 
+const formatDateLabel = (value: string) => {
+  const [year, month, day] = value.split('-');
+  if (!year || !month || !day) return value;
+  return `${day}/${month}`;
+};
+
 // Opções de período
 const periodOptions = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
   { value: 'last_7d', label: 'Últimos 7 dias' },
   { value: 'last_14d', label: 'Últimos 14 dias' },
   { value: 'last_30d', label: 'Últimos 30 dias' },
@@ -41,7 +49,7 @@ export default function HistoricoPage() {
     if (showRefresh) setRefreshing(true);
     setLoading(true);
     try {
-      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=campaign`);
+      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=campaign&time_increment=1`);
       const data = await res.json();
       setCampaigns(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -65,18 +73,26 @@ export default function HistoricoPage() {
     return { spend, impressions, clicks, cpm };
   }, [campaigns]);
 
-  // Dados simulados para gráficos (agrupados por mês)
   const chartData = useMemo(() => {
-    // Na prática, a API deveria retornar dados por dia/mês
-    // Aqui vamos simular alguns pontos
-    const months = ['jan. de 2025', 'fev. de 2025', 'mar. de 2025', 'abr. de 2025', 'mai. de 2025', 'jun. de 2025', 'jul. de 2025', 'ago. de 2025'];
-    return months.map((month, i) => ({
-      month,
-      investimento: Math.random() * 2500 + 200,
-      impressoes: Math.random() * 100000 + 10000,
-      cpm: Math.random() * 40 + 15,
-    }));
-  }, []);
+    const buckets = new Map<string, { date: string; investimento: number; impressoes: number }>();
+
+    campaigns.forEach((campaign) => {
+      const date = campaign.date_start || '';
+      if (!date) return;
+
+      const entry = buckets.get(date) || { date, investimento: 0, impressoes: 0 };
+      entry.investimento += Number(campaign.spend || 0);
+      entry.impressoes += Number(campaign.impressions || 0);
+      buckets.set(date, entry);
+    });
+
+    return Array.from(buckets.values())
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((row) => ({
+        ...row,
+        cpm: row.impressoes > 0 ? (row.investimento / row.impressoes) * 1000 : 0
+      }));
+  }, [campaigns]);
 
   return (
     <div className="p-6 space-y-6">
@@ -139,11 +155,12 @@ export default function HistoricoPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.3} />
-                    <XAxis dataKey="month" stroke="#9ca3af" fontSize={10} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} tickFormatter={formatDateLabel} />
                     <YAxis stroke="#9ca3af" fontSize={10} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                       formatter={(value) => [formatCurrency(Number(value || 0)), 'Investimento']}
+                      labelFormatter={(label) => formatDateLabel(String(label))}
                     />
                     <Area type="monotone" dataKey="investimento" stroke="#84cc16" strokeWidth={2} fillOpacity={1} fill="url(#colorInvestimento)" />
                   </AreaChart>
@@ -170,11 +187,12 @@ export default function HistoricoPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.3} />
-                    <XAxis dataKey="month" stroke="#9ca3af" fontSize={10} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} tickFormatter={formatDateLabel} />
                     <YAxis stroke="#9ca3af" fontSize={10} tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                       formatter={(value) => [formatNumberCompact(Number(value || 0)), 'Impressões']}
+                      labelFormatter={(label) => formatDateLabel(String(label))}
                     />
                     <Line type="monotone" dataKey="impressoes" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
                   </LineChart>
@@ -201,11 +219,12 @@ export default function HistoricoPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.3} />
-                    <XAxis dataKey="month" stroke="#9ca3af" fontSize={10} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} tickFormatter={formatDateLabel} />
                     <YAxis stroke="#9ca3af" fontSize={10} tickFormatter={(v) => `R$${v.toFixed(0)}`} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
                       formatter={(value) => [formatCurrency(Number(value || 0)), 'CPM']}
+                      labelFormatter={(label) => formatDateLabel(String(label))}
                     />
                     <Line type="monotone" dataKey="cpm" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7' }} />
                   </LineChart>

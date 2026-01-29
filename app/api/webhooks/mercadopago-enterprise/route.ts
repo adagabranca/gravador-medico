@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
     // =====================================================
     
     if (payment.status === 'approved') {
+      let saleId: string | null = null
+
       // Tentar encontrar a venda pelo mercadopago_payment_id
       const { data: sale, error: saleError } = await supabaseAdmin
         .from('sales')
@@ -118,6 +120,18 @@ export async function POST(request: NextRequest) {
           .eq('id', sale.id)
         
         console.log(`✅ Venda ${sale.id} atualizada para PAID`)
+        saleId = sale.id
+
+        if (sale.customer_email) {
+          try {
+            await supabaseAdmin
+              .from('abandoned_carts')
+              .delete()
+              .eq('customer_email', sale.customer_email)
+          } catch (error) {
+            console.warn('⚠️ Erro ao limpar carrinho abandonado após compra MP:', error)
+          }
+        }
       } else {
         console.log('⚠️ Venda não encontrada pelo mercadopago_payment_id')
         
@@ -141,6 +155,42 @@ export async function POST(request: NextRequest) {
               .eq('id', saleByRef.id)
             
             console.log(`✅ Venda ${saleByRef.id} atualizada (encontrada por external_reference)`)
+            saleId = saleByRef.id
+
+            if (saleByRef.customer_email) {
+              try {
+                await supabaseAdmin
+                  .from('abandoned_carts')
+                  .delete()
+                  .eq('customer_email', saleByRef.customer_email)
+              } catch (error) {
+                console.warn('⚠️ Erro ao limpar carrinho abandonado após compra MP:', error)
+              }
+            }
+          }
+        }
+      }
+
+      if (saleId) {
+        const { data: existingQueue, error: queueCheckError } = await supabaseAdmin
+          .from('provisioning_queue')
+          .select('id')
+          .eq('sale_id', saleId)
+          .maybeSingle()
+
+        if (queueCheckError) {
+          console.warn('⚠️ Erro ao verificar fila de provisionamento:', queueCheckError.message)
+        }
+
+        if (!existingQueue) {
+          const { error: enqueueError } = await supabaseAdmin
+            .from('provisioning_queue')
+            .insert({ sale_id: saleId, status: 'pending' })
+
+          if (enqueueError) {
+            console.error('❌ Erro ao enfileirar provisionamento (PIX/MP):', enqueueError)
+          } else {
+            console.log(`✅ Pedido ${saleId} adicionado à fila de provisionamento`)
           }
         }
       }

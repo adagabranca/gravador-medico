@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DatePreset } from '@/lib/meta-marketing';
+import { DatePreset, ACTION_TYPES, sumActions, sumActionValues } from '@/lib/meta-marketing';
 
 const AD_ACCOUNT_ID = process.env.FACEBOOK_AD_ACCOUNT_ID;
 const ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN;
@@ -19,16 +19,35 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const datePreset = (searchParams.get('period') || 'last_30d') as DatePreset;
     const breakdown = searchParams.get('breakdown') || 'gender'; // gender, age, publisher_platform
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+
+    const normalizeDate = (value: string) => {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      return d.toISOString().split('T')[0];
+    };
+
+    const since = start ? normalizeDate(start) : null;
+    const until = end ? normalizeDate(end) : null;
+    const timeRange = since && until ? { since, until } : null;
 
     // Construir URL da API do Facebook
-    const url = `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/insights?` + new URLSearchParams({
+    const params: Record<string, string> = {
       access_token: ACCESS_TOKEN,
-      date_preset: datePreset,
       level: 'account',
       breakdowns: breakdown,
-      fields: 'spend,impressions,clicks,cpc,ctr,actions,action_values,reach',
+      fields: 'spend,impressions,clicks,cpc,ctr,cpm,actions,action_values,reach',
       limit: '100'
-    });
+    };
+
+    if (timeRange) {
+      params.time_range = JSON.stringify(timeRange);
+    } else {
+      params.date_preset = datePreset;
+    }
+
+    const url = `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/insights?` + new URLSearchParams(params);
 
     const res = await fetch(url, { next: { revalidate: 300 } });
     const data = await res.json();
@@ -41,34 +60,10 @@ export async function GET(request: NextRequest) {
     // Processar e formatar os dados
     const insights = (data.data || []).map((insight: any) => {
       // Extrair leads
-      const leads = insight.actions?.find((a: any) => 
-        a.action_type === 'lead' || 
-        a.action_type === 'offsite_conversion.fb_pixel_lead'
-      );
-      const leadCount = Number(leads?.value || 0);
-
-      // Extrair finalizações de checkout
-      const checkoutComplete = insight.actions?.find((a: any) => 
-        a.action_type === 'omni_initiated_checkout' ||
-        a.action_type === 'offsite_conversion.fb_pixel_initiate_checkout'
-      );
-      const checkoutCount = Number(checkoutComplete?.value || 0);
-
-      // Extrair compras (conversões)
-      const purchases = insight.actions?.find((a: any) => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      const purchaseCount = Number(purchases?.value || 0);
-
-      // Extrair valor das compras
-      const purchaseValue = insight.action_values?.find((a: any) => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      const revenue = Number(purchaseValue?.value || 0);
+      const leadCount = sumActions(insight.actions, ACTION_TYPES.leads);
+      const checkoutCount = sumActions(insight.actions, ACTION_TYPES.checkout);
+      const purchaseCount = sumActions(insight.actions, ACTION_TYPES.purchases);
+      const revenue = sumActionValues(insight.action_values, ACTION_TYPES.purchases);
 
       return {
         // Dependendo do breakdown, teremos diferentes chaves

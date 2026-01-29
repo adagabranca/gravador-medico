@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { getAdsInsights, calculateAdsMetrics, CampaignInsight, AdsMetrics } from '@/lib/meta-marketing';
+import { calculateAdsMetrics, CampaignInsight, AdsMetrics, ACTION_TYPES, sumActions, sumActionValues } from '@/lib/meta-marketing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -60,6 +60,7 @@ const statusFilterOptions = [
   { value: 'all', label: 'Todas' },
   { value: 'active', label: 'Ativas' },
   { value: 'paused', label: 'Pausadas' },
+  { value: 'archived', label: 'Arquivadas' },
 ];
 
 // Opções de ordenação
@@ -113,6 +114,7 @@ export default function CampanhasPage() {
         const status = (c as any).effective_status || 'UNKNOWN';
         if (statusFilter === 'active') return status === 'ACTIVE';
         if (statusFilter === 'paused') return status === 'PAUSED';
+        if (statusFilter === 'archived') return status === 'ARCHIVED';
         return true;
       });
     }
@@ -124,7 +126,8 @@ export default function CampanhasPage() {
         case 'spend_asc': return Number(a.spend || 0) - Number(b.spend || 0);
         case 'clicks_desc': return Number(b.clicks || 0) - Number(a.clicks || 0);
         case 'ctr_desc': return Number(b.ctr || 0) - Number(a.ctr || 0);
-        case 'conversions_desc': return Number((b as any).conversions || 0) - Number((a as any).conversions || 0);
+        case 'conversions_desc': 
+          return sumActions(b.actions, ACTION_TYPES.purchases) - sumActions(a.actions, ACTION_TYPES.purchases);
         default: return Number(b.spend || 0) - Number(a.spend || 0);
       }
     });
@@ -142,6 +145,8 @@ export default function CampanhasPage() {
       outbound_clicks: 0,
       purchases: 0,
       revenue: 0,
+      leads: 0,
+      checkoutComplete: 0,
     };
     
     filteredCampaigns.forEach(campaign => {
@@ -157,20 +162,16 @@ export default function CampanhasPage() {
       result.outbound_clicks += outboundClicks;
       
       // Compras
-      const purchases = campaign.actions?.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      result.purchases += Number(purchases?.value || 0);
+      result.purchases += sumActions(campaign.actions, ACTION_TYPES.purchases);
       
       // Receita
-      const purchaseValue = campaign.action_values?.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      result.revenue += Number(purchaseValue?.value || 0);
+      result.revenue += sumActionValues(campaign.action_values, ACTION_TYPES.purchases);
+
+      // Leads
+      result.leads += sumActions(campaign.actions, ACTION_TYPES.leads);
+
+      // Finalizações (checkout)
+      result.checkoutComplete += sumActions(campaign.actions, ACTION_TYPES.checkout);
     });
     
     return result;
@@ -267,6 +268,39 @@ export default function CampanhasPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-fuchsia-500/20 to-pink-600/20 rounded-2xl border border-fuchsia-500/30 p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-5 w-5 text-fuchsia-400" />
+            <span className="text-sm text-fuchsia-300">Leads</span>
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumber(totals.leads)}</div>
+        </div>
+        <div className="bg-gradient-to-br from-violet-500/20 to-purple-600/20 rounded-2xl border border-violet-500/30 p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Target className="h-5 w-5 text-violet-400" />
+            <span className="text-sm text-violet-300">CPL</span>
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {totals.leads > 0 ? formatCurrency(totals.spend / totals.leads) : '—'}
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-orange-500/20 to-amber-600/20 rounded-2xl border border-orange-500/30 p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <PlayCircle className="h-5 w-5 text-orange-400" />
+            <span className="text-sm text-orange-300">Finalizações</span>
+          </div>
+          <div className="text-2xl font-bold text-white">{formatNumber(totals.checkoutComplete)}</div>
+        </div>
+        <div className="bg-gradient-to-br from-yellow-500/20 to-amber-600/20 rounded-2xl border border-yellow-500/30 p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-5 w-5 text-yellow-400" />
+            <span className="text-sm text-yellow-300">Receita</span>
+          </div>
+          <div className="text-2xl font-bold text-white">{formatCurrency(totals.revenue)}</div>
+        </div>
+      </div>
+
       {/* Tabela de Campanhas */}
       <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
@@ -304,6 +338,9 @@ export default function CampanhasPage() {
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CPC</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CTR</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Impressões</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Leads</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">CPL</th>
+                  <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Finalizações</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Compras</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Receita</th>
                   <th className="text-right text-xs font-semibold text-gray-400 px-4 py-3">Custo/Compra</th>
@@ -323,21 +360,10 @@ export default function CampanhasPage() {
                     (sum, oc) => sum + Number(oc.value || 0), 0
                   ) || 0;
                   
-                  // Extrair compras das actions
-                  const purchases = campaign.actions?.find(a => 
-                    a.action_type === 'purchase' || 
-                    a.action_type === 'omni_purchase' ||
-                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                  );
-                  const purchaseCount = Number(purchases?.value || 0);
-                  
-                  // Extrair valor das compras
-                  const purchaseValue = campaign.action_values?.find(a => 
-                    a.action_type === 'purchase' || 
-                    a.action_type === 'omni_purchase' ||
-                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                  );
-                  const purchaseAmount = Number(purchaseValue?.value || 0);
+                  const purchaseCount = sumActions(campaign.actions, ACTION_TYPES.purchases);
+                  const purchaseAmount = sumActionValues(campaign.action_values, ACTION_TYPES.purchases);
+                  const leadCount = sumActions(campaign.actions, ACTION_TYPES.leads);
+                  const checkoutCount = sumActions(campaign.actions, ACTION_TYPES.checkout);
                   
                   const status = (campaign as any).effective_status || 'UNKNOWN';
                   
@@ -369,6 +395,27 @@ export default function CampanhasPage() {
                       <td className="text-right px-4 py-3 text-orange-400">{formatCurrency(cpc)}</td>
                       <td className="text-right px-4 py-3 text-purple-400">{ctr.toFixed(2)}%</td>
                       <td className="text-right px-4 py-3 text-gray-400">{formatNumber(impressions)}</td>
+                      <td className="text-right px-4 py-3">
+                        {leadCount > 0 ? (
+                          <span className="font-semibold text-pink-400">{formatNumber(leadCount)}</span>
+                        ) : (
+                          <span className="text-gray-500">0</span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3 text-violet-400">
+                        {leadCount > 0 ? (
+                          <span className="font-semibold">{formatCurrency(spend / leadCount)}</span>
+                        ) : (
+                          <span className="text-gray-500">—</span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3 text-orange-400">
+                        {checkoutCount > 0 ? (
+                          <span className="font-semibold text-orange-400">{formatNumber(checkoutCount)}</span>
+                        ) : (
+                          <span className="text-gray-500">0</span>
+                        )}
+                      </td>
                       <td className="text-right px-4 py-3">
                         {purchaseCount > 0 ? (
                           <span className="font-semibold text-emerald-400">{purchaseCount}</span>
@@ -408,6 +455,11 @@ export default function CampanhasPage() {
                     {totals.impressions > 0 ? ((totals.clicks / totals.impressions) * 100).toFixed(2) : 0}%
                   </td>
                   <td className="text-right px-4 py-3 text-gray-400">{formatNumber(totals.impressions)}</td>
+                  <td className="text-right px-4 py-3 text-pink-400">{formatNumber(totals.leads)}</td>
+                  <td className="text-right px-4 py-3 text-violet-400">
+                    {totals.leads > 0 ? formatCurrency(totals.spend / totals.leads) : '—'}
+                  </td>
+                  <td className="text-right px-4 py-3 text-orange-400">{formatNumber(totals.checkoutComplete)}</td>
                   <td className="text-right px-4 py-3 text-emerald-400">{formatNumber(totals.purchases)}</td>
                   <td className="text-right px-4 py-3 text-yellow-400">{formatCurrency(totals.revenue)}</td>
                   <td className="text-right px-4 py-3 text-pink-400">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { getAdsInsights, calculateAdsMetrics, getCampaignsStatus, CampaignInsight, AdsMetrics } from '@/lib/meta-marketing';
+import { calculateAdsMetrics, CampaignInsight, AdsMetrics, ACTION_TYPES, sumActions, sumActionValues } from '@/lib/meta-marketing';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -242,7 +242,11 @@ export default function AdsPage() {
 
   // Fetch data por nível
   const fetchLevelData = useCallback(async (level: InsightLevel, period: string) => {
-    const res = await fetch(`/api/ads/insights?period=${period}&level=${level}`);
+    const params = new URLSearchParams({ period, level });
+    if (level !== 'campaign') {
+      params.set('include_status', '1');
+    }
+    const res = await fetch(`/api/ads/insights?${params.toString()}`);
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   }, []);
@@ -316,11 +320,13 @@ export default function AdsPage() {
         fetchSpendSummary()
       ]);
       
+      setAllCampaigns(campaigns);
       const calculatedMetrics = calculateAdsMetrics(campaigns);
       setMetrics(calculatedMetrics);
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Erro ao carregar dados de anúncios:', error);
+      setAllCampaigns([]);
       setMetrics({
         totalSpend: 0,
         totalClicks: 0,
@@ -340,7 +346,7 @@ export default function AdsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedPeriod, fetchLevelData, fetchRealSales]);
+  }, [selectedPeriod, fetchLevelData, fetchRealSales, fetchSpendSummary]);
 
   // Carregar adsets quando tab mudar
   const fetchAdsets = useCallback(async () => {
@@ -395,11 +401,11 @@ export default function AdsPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Filtrar e ordenar campanhas
-  const filteredAndSortedCampaigns = useMemo(() => {
-    if (!metrics?.campaigns) return [];
+  // Filtrar campanhas (para métricas e lista)
+  const filteredCampaigns = useMemo(() => {
+    if (!allCampaigns.length) return [];
     
-    let result = [...metrics.campaigns];
+    let result = [...allCampaigns];
     
     // Filtrar por status (usando effective_status enriquecido da API)
     if (statusFilter !== 'all') {
@@ -419,6 +425,13 @@ export default function AdsPage() {
         }
       });
     }
+    
+    return result;
+  }, [allCampaigns, statusFilter]);
+
+  // Ordenar campanhas filtradas
+  const filteredAndSortedCampaigns = useMemo(() => {
+    let result = [...filteredCampaigns];
     
     // Ordenar (os dados já vêm ordenados por created_time da API, mas podemos reordenar)
     result.sort((a, b) => {
@@ -448,13 +461,28 @@ export default function AdsPage() {
     });
     
     return result;
-  }, [metrics?.campaigns, statusFilter, sortBy]);
+  }, [filteredCampaigns, sortBy]);
+
+  // Métricas exibidas respeitando filtro de status
+  const displayMetrics = useMemo(() => {
+    return calculateAdsMetrics(filteredCampaigns);
+  }, [filteredCampaigns]);
 
   // Filtrar e ordenar adsets
   const filteredAndSortedAdsets = useMemo(() => {
     if (!adsets || adsets.length === 0) return [];
     
     let result = [...adsets];
+
+    if (statusFilter !== 'all') {
+      result = result.filter(adset => {
+        const status = ((adset as any).effective_status || (adset as any).status || 'UNKNOWN').toUpperCase();
+        if (statusFilter === 'active') return status === 'ACTIVE';
+        if (statusFilter === 'paused') return status === 'PAUSED';
+        if (statusFilter === 'archived') return status === 'ARCHIVED';
+        return true;
+      });
+    }
     
     // Ordenar
     result.sort((a, b) => {
@@ -473,13 +501,23 @@ export default function AdsPage() {
     });
     
     return result;
-  }, [adsets, sortBy]);
+  }, [adsets, sortBy, statusFilter]);
 
   // Filtrar e ordenar ads
   const filteredAndSortedAds = useMemo(() => {
     if (!ads || ads.length === 0) return [];
     
     let result = [...ads];
+
+    if (statusFilter !== 'all') {
+      result = result.filter(ad => {
+        const status = ((ad as any).effective_status || (ad as any).status || 'UNKNOWN').toUpperCase();
+        if (statusFilter === 'active') return status === 'ACTIVE';
+        if (statusFilter === 'paused') return status === 'PAUSED';
+        if (statusFilter === 'archived') return status === 'ARCHIVED';
+        return true;
+      });
+    }
     
     // Ordenar
     result.sort((a, b) => {
@@ -498,13 +536,13 @@ export default function AdsPage() {
     });
     
     return result;
-  }, [ads, sortBy]);
+  }, [ads, sortBy, statusFilter]);
 
   // Encontrar o melhor anúncio (maior CTR com pelo menos 100 impressões)
   const bestAdId = useMemo(() => {
-    if (!ads || ads.length === 0) return null;
+    if (!filteredAndSortedAds || filteredAndSortedAds.length === 0) return null;
     
-    const qualifiedAds = ads.filter(ad => Number(ad.impressions || 0) >= 100);
+    const qualifiedAds = filteredAndSortedAds.filter(ad => Number(ad.impressions || 0) >= 100);
     if (qualifiedAds.length === 0) return null;
     
     const best = qualifiedAds.reduce((best, ad) => 
@@ -512,33 +550,33 @@ export default function AdsPage() {
     );
     
     return best.ad_id || null;
-  }, [ads]);
+  }, [filteredAndSortedAds]);
 
   const kpiCards = [
     { 
       title: 'Investimento Total', 
-      value: metrics?.totalSpend || 0, 
+      value: displayMetrics?.totalSpend || 0, 
       icon: DollarSign, 
       color: 'from-green-500 to-emerald-600',
       format: 'currency'
     },
     { 
       title: 'ROAS', 
-      value: metrics?.roas || 0, 
+      value: displayMetrics?.roas || 0, 
       icon: TrendingUp, 
       color: 'from-purple-500 to-violet-600',
       format: 'roas'
     },
     { 
       title: 'CPA', 
-      value: metrics?.cpa || 0, 
+      value: displayMetrics?.cpa || 0, 
       icon: ShoppingCart, 
       color: 'from-pink-500 to-rose-600',
       format: 'currency'
     },
     { 
       title: 'CTR Médio', 
-      value: metrics?.avgCtr || 0, 
+      value: displayMetrics?.avgCtr || 0, 
       icon: Target, 
       color: 'from-orange-500 to-amber-600',
       format: 'percent'
@@ -548,28 +586,28 @@ export default function AdsPage() {
   const funnelCards = [
     { 
       title: 'Impressões', 
-      value: metrics?.totalImpressions || 0, 
+      value: displayMetrics?.totalImpressions || 0, 
       icon: Eye, 
       color: 'text-gray-400',
       description: 'Vezes que apareceu'
     },
     { 
       title: 'Cliques no Link', 
-      value: metrics?.totalClicks || 0, 
+      value: displayMetrics?.totalClicks || 0, 
       icon: MousePointerClick, 
       color: 'text-blue-400',
       description: 'Interessados'
     },
     { 
       title: 'Cliques de Saída', 
-      value: metrics?.totalOutboundClicks || 0, 
+      value: displayMetrics?.totalOutboundClicks || 0, 
       icon: ExternalLink, 
       color: 'text-cyan-400',
       description: 'Saíram do FB'
     },
     { 
       title: 'CPC Médio', 
-      value: metrics?.avgCpc || 0, 
+      value: displayMetrics?.avgCpc || 0, 
       icon: DollarSign, 
       color: 'text-green-400',
       description: 'Custo por clique',
@@ -580,26 +618,26 @@ export default function AdsPage() {
   const engagementCards = [
     { 
       title: 'Alcance', 
-      value: metrics?.totalReach || 0, 
+      value: displayMetrics?.totalReach || 0, 
       icon: Users, 
       color: 'text-indigo-400'
     },
     { 
       title: 'Video Views', 
-      value: metrics?.totalVideoViews || 0, 
+      value: displayMetrics?.totalVideoViews || 0, 
       icon: PlayCircle, 
       color: 'text-red-400'
     },
     { 
       title: 'Compras (Pixel)', 
-      value: metrics?.totalPurchases || 0, 
+      value: displayMetrics?.totalPurchases || 0, 
       icon: ShoppingCart, 
       color: 'text-emerald-400',
       description: 'Dados do Facebook Pixel'
     },
     { 
       title: 'Valor Pixel', 
-      value: metrics?.totalPurchaseValue || 0, 
+      value: displayMetrics?.totalPurchaseValue || 0, 
       icon: DollarSign, 
       color: 'text-yellow-400',
       isCurrency: true,
@@ -626,19 +664,45 @@ export default function AdsPage() {
     },
   ];
 
+  // Cards de conversão (Meta Ads)
+  const conversionCards = [
+    { 
+      title: 'Leads', 
+      value: displayMetrics?.totalLeads || 0, 
+      icon: Target, 
+      color: 'text-pink-400',
+      description: 'Leads captados'
+    },
+    { 
+      title: 'CPL', 
+      value: displayMetrics?.cpl || 0, 
+      icon: DollarSign, 
+      color: 'text-orange-400',
+      isCurrency: true,
+      description: 'Custo por lead'
+    },
+    { 
+      title: 'Finalizações', 
+      value: displayMetrics?.totalCheckoutComplete || 0, 
+      icon: Zap, 
+      color: 'text-purple-400',
+      description: 'Início de checkout'
+    },
+  ];
+
   // ROAS Real calculado com vendas reais
-  const realRoas = metrics?.totalSpend && realSales?.approvedValue 
-    ? (realSales.approvedValue / metrics.totalSpend) 
+  const realRoas = displayMetrics?.totalSpend && realSales?.approvedValue 
+    ? (realSales.approvedValue / displayMetrics.totalSpend) 
     : 0;
 
   // CPA Real
-  const realCpa = realSales?.approvedSales && metrics?.totalSpend 
-    ? (metrics.totalSpend / realSales.approvedSales) 
+  const realCpa = realSales?.approvedSales && displayMetrics?.totalSpend 
+    ? (displayMetrics.totalSpend / realSales.approvedSales) 
     : 0;
 
   // ROI Real = ((Receita - Investimento) / Investimento) * 100
-  const realROI = metrics?.totalSpend && metrics.totalSpend > 0 && realSales?.approvedValue
-    ? ((realSales.approvedValue - metrics.totalSpend) / metrics.totalSpend) * 100
+  const realROI = displayMetrics?.totalSpend && displayMetrics.totalSpend > 0 && realSales?.approvedValue
+    ? ((realSales.approvedValue - displayMetrics.totalSpend) / displayMetrics.totalSpend) * 100
     : 0;
 
   // ROI do dia (gasto hoje vs vendas hoje)
@@ -840,7 +904,7 @@ export default function AdsPage() {
             </div>
             <div className="flex items-center gap-4 mt-3 text-sm">
               <span className="text-gray-400">
-                Investido: <span className="text-white font-medium">{formatCurrency(metrics?.totalSpend || 0)}</span>
+                Investido: <span className="text-white font-medium">{formatCurrency(displayMetrics?.totalSpend || 0)}</span>
               </span>
               <span className="text-gray-400">
                 Receita: <span className={`font-medium ${realSales?.approvedValue ? 'text-green-400' : 'text-gray-500'}`}>
@@ -942,7 +1006,7 @@ export default function AdsPage() {
             </div>
           </div>
           <div className="text-2xl font-bold text-white">
-            {loading ? <Skeleton className="h-7 w-16 bg-white/10" /> : metrics?.totalPurchases || 0}
+            {loading ? <Skeleton className="h-7 w-16 bg-white/10" /> : displayMetrics?.totalPurchases || 0}
           </div>
           <p className="text-xs text-gray-400 mt-1">Dados do Facebook Pixel</p>
         </motion.div>
@@ -960,7 +1024,7 @@ export default function AdsPage() {
             </div>
           </div>
           <div className="text-2xl font-bold text-white">
-            {loading ? <Skeleton className="h-7 w-24 bg-white/10" /> : formatCurrency(metrics?.totalPurchaseValue || 0)}
+            {loading ? <Skeleton className="h-7 w-24 bg-white/10" /> : formatCurrency(displayMetrics?.totalPurchaseValue || 0)}
           </div>
           <p className="text-xs text-gray-400 mt-1">Dados do Facebook Pixel</p>
         </motion.div>
@@ -1079,6 +1143,40 @@ export default function AdsPage() {
         </div>
       </GlassCard>
 
+      {/* Conversões */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {loading ? (
+          Array(3).fill(0).map((_, i) => (
+            <GlassCard key={i} className="p-4">
+              <Skeleton className="h-4 w-24 bg-white/10 mb-4" />
+              <Skeleton className="h-8 w-32 bg-white/10" />
+            </GlassCard>
+          ))
+        ) : (
+          conversionCards.map((card, index) => (
+            <GlassCard key={card.title} className="p-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 + index * 0.1 }}
+                className="flex items-center justify-between"
+              >
+                <div>
+                  <span className="text-xs font-medium text-gray-400">{card.title}</span>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {card.isCurrency ? formatCurrency(card.value) : formatNumber(card.value)}
+                  </div>
+                  {card.description && (
+                    <span className="text-xs text-gray-500">{card.description}</span>
+                  )}
+                </div>
+                <card.icon className={`h-8 w-8 ${card.color}`} />
+              </motion.div>
+            </GlassCard>
+          ))
+        )}
+      </div>
+
       {/* Engagement Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {loading ? (
@@ -1141,7 +1239,7 @@ export default function AdsPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-500">
-                  {filteredAndSortedCampaigns.length} de {metrics?.campaigns.length || 0} campanhas
+                  {filteredAndSortedCampaigns.length} de {allCampaigns.length || 0} campanhas
                 </span>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>🔥 CTR &gt; 1.5%</span>
@@ -1162,7 +1260,7 @@ export default function AdsPage() {
               ) : filteredAndSortedCampaigns.length === 0 ? (
                 <EmptyState 
                   type="campaign" 
-                  total={metrics?.campaigns.length || 0} 
+                  total={allCampaigns.length || 0} 
                   selectedPeriod={selectedPeriod}
                   statusFilter={statusFilter}
                 />
@@ -1179,6 +1277,9 @@ export default function AdsPage() {
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Cliq. Saída</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPC</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CTR</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Leads</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPL</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Finalizações</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Impressões</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Compras</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Receita</th>
@@ -1190,21 +1291,10 @@ export default function AdsPage() {
                         const status = (campaign as any).effective_status || 'UNKNOWN';
                         const ctr = Number(campaign.ctr || 0);
                         
-                        // Extrair compras das actions
-                        const purchases = campaign.actions?.find(a => 
-                          a.action_type === 'purchase' || 
-                          a.action_type === 'omni_purchase' ||
-                          a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                        );
-                        const purchaseCount = Number(purchases?.value || 0);
-                        
-                        // Extrair valor das compras
-                        const purchaseValue = campaign.action_values?.find(a => 
-                          a.action_type === 'purchase' || 
-                          a.action_type === 'omni_purchase' ||
-                          a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                        );
-                        const purchaseAmount = Number(purchaseValue?.value || 0);
+                        const purchaseCount = sumActions(campaign.actions, ACTION_TYPES.purchases);
+                        const purchaseAmount = sumActionValues(campaign.action_values, ACTION_TYPES.purchases);
+                        const leadCount = sumActions(campaign.actions, ACTION_TYPES.leads);
+                        const checkoutCount = sumActions(campaign.actions, ACTION_TYPES.checkout);
                         
                         // Cliques de saída (outbound clicks)
                         const outboundClicks = campaign.outbound_clicks?.reduce(
@@ -1245,6 +1335,27 @@ export default function AdsPage() {
                                 {formatPercent(ctr)}
                                 <PerformanceIndicator ctr={ctr} />
                               </span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold text-pink-400">{formatNumber(leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right text-orange-400">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold">{formatCurrency(Number(campaign.spend || 0) / leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {checkoutCount > 0 ? (
+                                <span className="font-semibold text-purple-400">{formatNumber(checkoutCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
                             </td>
                             <td className="py-4 px-4 text-right text-gray-400">
                               {formatNumber(Number(campaign.impressions || 0))}
@@ -1317,12 +1428,17 @@ export default function AdsPage() {
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Cliques</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPC</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CTR</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Leads</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPL</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Finalizações</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Impressões</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAndSortedAdsets.map((adset, index) => {
                         const ctr = Number(adset.ctr || 0);
+                        const leadCount = sumActions(adset.actions, ACTION_TYPES.leads);
+                        const checkoutCount = sumActions(adset.actions, ACTION_TYPES.checkout);
                         
                         return (
                           <motion.tr 
@@ -1352,6 +1468,27 @@ export default function AdsPage() {
                                 {formatPercent(ctr)}
                                 <PerformanceIndicator ctr={ctr} />
                               </span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold text-pink-400">{formatNumber(leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right text-orange-400">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold">{formatCurrency(Number(adset.spend || 0) / leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {checkoutCount > 0 ? (
+                                <span className="font-semibold text-purple-400">{formatNumber(checkoutCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
                             </td>
                             <td className="py-4 px-4 text-right text-gray-400">
                               {formatNumber(Number(adset.impressions || 0))}
@@ -1402,6 +1539,9 @@ export default function AdsPage() {
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Cliques</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPC</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CTR</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Leads</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">CPL</th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Finalizações</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Impressões</th>
                       </tr>
                     </thead>
@@ -1409,6 +1549,8 @@ export default function AdsPage() {
                       {filteredAndSortedAds.map((ad, index) => {
                         const ctr = Number(ad.ctr || 0);
                         const isBest = ad.ad_id === bestAdId;
+                        const leadCount = sumActions(ad.actions, ACTION_TYPES.leads);
+                        const checkoutCount = sumActions(ad.actions, ACTION_TYPES.checkout);
                         
                         return (
                           <motion.tr 
@@ -1441,6 +1583,27 @@ export default function AdsPage() {
                                 {formatPercent(ctr)}
                                 <PerformanceIndicator ctr={ctr} />
                               </span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold text-pink-400">{formatNumber(leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right text-orange-400">
+                              {leadCount > 0 ? (
+                                <span className="font-semibold">{formatCurrency(Number(ad.spend || 0) / leadCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              {checkoutCount > 0 ? (
+                                <span className="font-semibold text-purple-400">{formatNumber(checkoutCount)}</span>
+                              ) : (
+                                <span className="text-gray-500">0</span>
+                              )}
                             </td>
                             <td className="py-4 px-4 text-right text-gray-400">
                               {formatNumber(Number(ad.impressions || 0))}

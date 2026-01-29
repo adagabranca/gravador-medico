@@ -17,21 +17,18 @@ const formatNumber = (value: number) => {
 };
 
 const periodOptions = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
   { value: 'last_7d', label: 'Últimos 7 dias' },
   { value: 'last_14d', label: 'Últimos 14 dias' },
   { value: 'last_30d', label: 'Últimos 30 dias' },
   { value: 'this_month', label: 'Este mês' },
-];
-
-// Dados de exemplo
-const mockPlatformData = [
-  { plataforma: 'Instagram', investimento: 3500, impressoes: 165000, cliques: 2800, conversoes: 580, leads: 480, finalizacoes: 420 },
-  { plataforma: 'Facebook', investimento: 1800, impressoes: 52000, cliques: 580, conversoes: 270, leads: 220, finalizacoes: 195 },
-  { plataforma: 'Audience Network', investimento: 150, impressoes: 3000, cliques: 46, conversoes: 17, leads: 12, finalizacoes: 10 },
+  { value: 'last_month', label: 'Mês passado' },
+  { value: 'maximum', label: 'Todo período' },
 ];
 
 export default function PlataformaPage() {
-  const [data, setData] = useState(mockPlatformData);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
 
@@ -43,7 +40,7 @@ export default function PlataformaPage() {
       
       if (apiData.error) {
         console.error('Erro da API:', apiData.error);
-        setData(mockPlatformData);
+        setData([]);
       } else if (Array.isArray(apiData) && apiData.length > 0) {
         // Mapear dados da API para o formato esperado
         const formattedData = apiData.map((item: any) => ({
@@ -61,11 +58,11 @@ export default function PlataformaPage() {
         }));
         setData(formattedData);
       } else {
-        setData(mockPlatformData);
+        setData([]);
       }
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
-      setData(mockPlatformData);
+      setData([]);
     } finally {
       setLoading(false);
     }

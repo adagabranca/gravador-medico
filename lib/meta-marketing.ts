@@ -24,6 +24,8 @@ export interface CampaignInsight {
   date_start?: string;
   date_stop?: string;
   outbound_clicks?: Array<{ action_type: string; value: string }>;
+  video_views?: string;
+  video_thruplay_watched_actions?: Array<{ action_type: string; value: string }>;
   actions?: Array<{
     action_type: string;
     value: string;
@@ -48,6 +50,10 @@ export interface AdsMetrics {
   totalOutboundClicks: number;
   totalPurchases: number;
   totalPurchaseValue: number;
+  totalLeads: number;
+  totalCheckoutComplete: number;
+  cpl: number;
+  costPerCheckout: number;
   roas: number;
   cpa: number;
   campaigns: CampaignInsight[];
@@ -61,10 +67,48 @@ export type InsightLevel = 'campaign' | 'adset' | 'ad';
 
 // Campos por nível
 const FIELDS_BY_LEVEL: Record<InsightLevel, string> = {
-  campaign: 'campaign_name,campaign_id,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop,outbound_clicks',
-  adset: 'adset_name,adset_id,campaign_name,campaign_id,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop',
-  ad: 'ad_name,ad_id,adset_name,adset_id,campaign_name,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop'
+  campaign: 'campaign_name,campaign_id,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop,outbound_clicks,video_thruplay_watched_actions',
+  adset: 'adset_name,adset_id,campaign_name,campaign_id,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop,outbound_clicks,video_thruplay_watched_actions',
+  ad: 'ad_name,ad_id,adset_name,adset_id,campaign_name,spend,impressions,clicks,cpc,ctr,actions,action_values,reach,date_start,date_stop,outbound_clicks,video_thruplay_watched_actions'
 };
+
+// Action types helpers
+export const ACTION_TYPES = {
+  purchases: [
+    'purchase',
+    'omni_purchase',
+    'offsite_conversion.fb_pixel_purchase'
+  ],
+  leads: [
+    'lead',
+    'offsite_conversion.fb_pixel_lead'
+  ],
+  checkout: [
+    'omni_initiated_checkout',
+    'offsite_conversion.fb_pixel_initiate_checkout',
+    'initiate_checkout'
+  ]
+} as const;
+
+export function sumActions(
+  actions: CampaignInsight['actions'] | undefined,
+  types: readonly string[]
+): number {
+  if (!actions || !Array.isArray(actions)) return 0;
+  return actions
+    .filter(action => types.includes(action.action_type))
+    .reduce((sum, action) => sum + Number(action.value || 0), 0);
+}
+
+export function sumActionValues(
+  actionValues: CampaignInsight['action_values'] | undefined,
+  types: readonly string[]
+): number {
+  if (!actionValues || !Array.isArray(actionValues)) return 0;
+  return actionValues
+    .filter(action => types.includes(action.action_type))
+    .reduce((sum, action) => sum + Number(action.value || 0), 0);
+}
 
 /**
  * Converte date_preset para time_range com datas explícitas
@@ -72,7 +116,8 @@ const FIELDS_BY_LEVEL: Record<InsightLevel, string> = {
  */
 function getTimeRange(datePreset: DatePreset): { since: string; until: string } | null {
   const today = new Date();
-  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  const pad = (value: number) => value.toString().padStart(2, '0');
+  const formatDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   
   switch (datePreset) {
     case 'today': {
@@ -122,7 +167,9 @@ function getTimeRange(datePreset: DatePreset): { since: string; until: string } 
  */
 export async function getAdsInsights(
   datePreset: DatePreset = 'maximum',
-  level: InsightLevel = 'campaign'
+  level: InsightLevel = 'campaign',
+  timeRange?: { since: string; until: string },
+  timeIncrement?: string
 ): Promise<CampaignInsight[]> {
   if (!AD_ACCOUNT_ID || !ACCESS_TOKEN) {
     console.error('❌ FACEBOOK_AD_ACCOUNT_ID ou FACEBOOK_ACCESS_TOKEN não configurados');
@@ -130,7 +177,7 @@ export async function getAdsInsights(
   }
 
   // Usar time_range para períodos específicos (garante inclusão do dia atual)
-  const timeRange = getTimeRange(datePreset);
+  const resolvedTimeRange = timeRange || getTimeRange(datePreset);
   
   const params: Record<string, string> = {
     access_token: ACCESS_TOKEN,
@@ -140,10 +187,14 @@ export async function getAdsInsights(
   };
 
   // Se temos time_range, usa ele; senão usa date_preset
-  if (timeRange) {
-    params.time_range = JSON.stringify(timeRange);
+  if (resolvedTimeRange) {
+    params.time_range = JSON.stringify(resolvedTimeRange);
   } else {
     params.date_preset = datePreset;
+  }
+
+  if (timeIncrement) {
+    params.time_increment = timeIncrement;
   }
 
   const url = `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/insights?` + new URLSearchParams(params);
@@ -186,6 +237,10 @@ export function calculateAdsMetrics(campaigns: CampaignInsight[]): AdsMetrics {
       totalOutboundClicks: 0,
       totalPurchases: 0,
       totalPurchaseValue: 0,
+      totalLeads: 0,
+      totalCheckoutComplete: 0,
+      cpl: 0,
+      costPerCheckout: 0,
       roas: 0,
       cpa: 0,
       campaigns: []
@@ -215,30 +270,28 @@ export function calculateAdsMetrics(campaigns: CampaignInsight[]): AdsMetrics {
   }, 0);
   
   // Purchases (compras) das actions
-  const totalPurchases = campaigns.reduce((sum, c) => {
-    if (c.actions && Array.isArray(c.actions)) {
-      const purchase = c.actions.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      return sum + Number(purchase?.value || 0);
-    }
-    return sum;
-  }, 0);
+  const totalPurchases = campaigns.reduce(
+    (sum, c) => sum + sumActions(c.actions, ACTION_TYPES.purchases),
+    0
+  );
   
   // Valor total das compras
-  const totalPurchaseValue = campaigns.reduce((sum, c) => {
-    if (c.action_values && Array.isArray(c.action_values)) {
-      const purchaseValue = c.action_values.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      return sum + Number(purchaseValue?.value || 0);
-    }
-    return sum;
-  }, 0);
+  const totalPurchaseValue = campaigns.reduce(
+    (sum, c) => sum + sumActionValues(c.action_values, ACTION_TYPES.purchases),
+    0
+  );
+
+  // Leads
+  const totalLeads = campaigns.reduce(
+    (sum, c) => sum + sumActions(c.actions, ACTION_TYPES.leads),
+    0
+  );
+
+  // Finalizações (checkout)
+  const totalCheckoutComplete = campaigns.reduce(
+    (sum, c) => sum + sumActions(c.actions, ACTION_TYPES.checkout),
+    0
+  );
   
   // Média ponderada do CPC (gasto total / cliques totais)
   const avgCpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
@@ -251,6 +304,12 @@ export function calculateAdsMetrics(campaigns: CampaignInsight[]): AdsMetrics {
   
   // CPA (Cost per Acquisition) = Gasto / Número de compras
   const cpa = totalPurchases > 0 ? totalSpend / totalPurchases : 0;
+
+  // CPL (Custo por Lead)
+  const cpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+
+  // Custo por Finalização
+  const costPerCheckout = totalCheckoutComplete > 0 ? totalSpend / totalCheckoutComplete : 0;
 
   // Ordena pelo maior gasto
   const sortedCampaigns = [...campaigns].sort((a, b) => Number(b.spend) - Number(a.spend));
@@ -266,6 +325,10 @@ export function calculateAdsMetrics(campaigns: CampaignInsight[]): AdsMetrics {
     totalOutboundClicks,
     totalPurchases,
     totalPurchaseValue,
+    totalLeads,
+    totalCheckoutComplete,
+    cpl,
+    costPerCheckout,
     roas,
     cpa,
     campaigns: sortedCampaigns

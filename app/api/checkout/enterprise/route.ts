@@ -353,10 +353,18 @@ export async function POST(request: NextRequest) {
             .eq('id', order.id)
 
           // Adicionar à fila de provisionamento
-          await supabaseAdmin.from('provisioning_queue').insert({
-            order_id: order.id,
-            status: 'pending'
-          })
+          {
+            const { error: provisioningError } = await supabaseAdmin
+              .from('provisioning_queue')
+              .insert({
+                sale_id: order.id,
+                status: 'pending'
+              })
+
+            if (provisioningError) {
+              console.error('⚠️ Falha ao enfileirar provisionamento (MP):', provisioningError)
+            }
+          }
 
           const totalTime = Date.now() - startTime
           console.log(`✅ Checkout completo em ${totalTime}ms`)
@@ -680,10 +688,18 @@ export async function POST(request: NextRequest) {
             .eq('id', order.id)
 
           // Adicionar à fila de provisionamento
-          await supabaseAdmin.from('provisioning_queue').insert({
-            sale_id: order.id,
-            status: 'pending'
-          })
+          {
+            const { error: provisioningError } = await supabaseAdmin
+              .from('provisioning_queue')
+              .insert({
+                sale_id: order.id,
+                status: 'pending'
+              })
+
+            if (provisioningError) {
+              console.error('⚠️ Falha ao enfileirar provisionamento (AppMax):', provisioningError)
+            }
+          }
 
           const totalTime = Date.now() - startTime
           console.log(`✅ Checkout completo em ${totalTime}ms (resgatado)`)

@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getTrackingStats } from '@/actions/tracking';
+import { fetchAdminUser } from '@/lib/admin-auth';
 import { 
   MousePointerClick, 
   Zap, 
@@ -39,9 +40,9 @@ export default function TrackingDashboard() {
 
   const loadStats = async () => {
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id'; // Placeholder
-      const result = await getTrackingStats(userId);
+      const user = await fetchAdminUser();
+      if (!user?.id) return;
+      const result = await getTrackingStats(user.id);
       if (result.success && result.stats) {
         setStats(result.stats);
       }

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   MessageSquareDashed, 
   Plus, 
@@ -23,83 +23,27 @@ import {
   Target,
   Zap
 } from 'lucide-react';
+import { getTrackingLinksWithStats } from '@/actions/tracking';
+import { fetchAdminUser } from '@/lib/admin-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// Mock data para visualização
-const mockMessages = [
-  {
-    id: '1',
-    campaign_icon: Megaphone,
-    campaign_name: 'Black Friday 2026',
-    title: 'Oferta Exclusiva - 70% OFF',
-    message: 'Olá {nome}! 🎉 Nossa Black Friday começou! Garanta o Gravador Médico com 70% de desconto. Clique aqui: {link}',
-    highlighted_text: '70% OFF',
-    stats: {
-      sent: 1247,
-      conversions: 89,
-      rate: 7.1
-    },
-    color: 'purple'
-  },
-  {
-    id: '2',
-    campaign_icon: Target,
-    campaign_name: 'Recuperação de Carrinho',
-    title: 'Seu carrinho está te esperando',
-    message: 'Oi {nome}, notamos que você deixou o Gravador Médico no carrinho. Finalize agora e ganhe frete grátis! 🚚',
-    highlighted_text: 'frete grátis',
-    stats: {
-      sent: 3421,
-      conversions: 412,
-      rate: 12.0
-    },
-    color: 'green'
-  },
-  {
-    id: '3',
-    campaign_icon: Zap,
-    campaign_name: 'Boas-vindas Novos Leads',
-    title: 'Bem-vindo à família!',
-    message: 'Olá {nome}! 👋 Que bom ter você aqui. Preparamos um guia especial sobre como o Gravador Médico pode transformar seu dia a dia.',
-    highlighted_text: 'guia especial',
-    stats: {
-      sent: 892,
-      conversions: 156,
-      rate: 17.5
-    },
-    color: 'blue'
-  },
-  {
-    id: '4',
-    campaign_icon: TrendingUp,
-    campaign_name: 'Upgrade Pro',
-    title: 'Conheça nossos recursos PRO',
-    message: '{nome}, descubra como nossos recursos PRO podem 10x sua produtividade. Teste grátis por 14 dias! ⚡',
-    highlighted_text: 'Teste grátis',
-    stats: {
-      sent: 645,
-      conversions: 97,
-      rate: 15.0
-    },
-    color: 'orange'
-  },
-  {
-    id: '5',
-    campaign_icon: CheckCircle2,
-    campaign_name: 'Pós-compra Satisfação',
-    title: 'Como está sendo sua experiência?',
-    message: 'Oi {nome}! Esperamos que esteja adorando o Gravador Médico. Que tal compartilhar sua experiência? 🌟',
-    highlighted_text: 'compartilhar',
-    stats: {
-      sent: 2134,
-      conversions: 534,
-      rate: 25.0
-    },
-    color: 'pink'
-  }
-];
+const iconBySource = (source?: string) => {
+  const value = (source || '').toLowerCase();
+  if (value.includes('facebook') || value.includes('meta')) return Megaphone;
+  if (value.includes('whatsapp')) return Target;
+  if (value.includes('email')) return CheckCircle2;
+  if (value.includes('google')) return TrendingUp;
+  return Zap;
+};
+
+const colorByRate = (rate: number) => {
+  if (rate >= 15) return 'green';
+  if (rate >= 7) return 'blue';
+  if (rate >= 3) return 'purple';
+  return 'orange';
+};
 
 const colorClasses = {
   purple: {
@@ -136,12 +80,63 @@ const colorClasses = {
 
 export default function TrackingMessagesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredMessages = mockMessages.filter(msg => 
+  useEffect(() => {
+    loadMessages();
+  }, []);
+
+  const loadMessages = async () => {
+    try {
+      setIsLoading(true);
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        setMessages([]);
+        return;
+      }
+      const result = await getTrackingLinksWithStats(user.id);
+      if (result.success && result.links) {
+        const formatted = result.links.map((link: any) => {
+          const clicks = Number(link.clicks_count || 0);
+          const conversions = Number(link.conversions_count || 0);
+          const rate = clicks > 0 ? (conversions / clicks) * 100 : 0;
+          const Icon = iconBySource(link.utm_source || link.campaign_name);
+          return {
+            id: link.id,
+            campaign_icon: Icon,
+            campaign_name: link.campaign_name || link.slug || 'Campanha',
+            title: link.campaign_name || link.slug || 'Mensagem',
+            message: link.whatsapp_message || link.destination_url || '-',
+            stats: {
+              sent: clicks,
+              conversions,
+              rate: Number(rate.toFixed(1)),
+            },
+            color: colorByRate(rate),
+          };
+        });
+        setMessages(formatted);
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredMessages = messages.filter(msg => 
     msg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     msg.campaign_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     msg.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalClicks = messages.reduce((acc, msg) => acc + (msg.stats?.sent || 0), 0);
+  const totalConversions = messages.reduce((acc, msg) => acc + (msg.stats?.conversions || 0), 0);
+  const avgRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 space-y-6">
@@ -197,7 +192,7 @@ export default function TrackingMessagesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-zinc-400">Total de Mensagens</p>
-                <p className="text-2xl font-bold text-zinc-100 mt-1">{mockMessages.length}</p>
+                <p className="text-2xl font-bold text-zinc-100 mt-1">{messages.length}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-600/30 flex items-center justify-center">
                 <MessageSquareDashed className="w-6 h-6 text-blue-400" />
@@ -210,9 +205,9 @@ export default function TrackingMessagesPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-zinc-400">Total Enviado</p>
+                <p className="text-sm text-zinc-400">Total de Cliques</p>
                 <p className="text-2xl font-bold text-zinc-100 mt-1">
-                  {mockMessages.reduce((acc, msg) => acc + msg.stats.sent, 0).toLocaleString()}
+                  {totalClicks.toLocaleString()}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-purple-600/10 border border-purple-600/30 flex items-center justify-center">
@@ -228,7 +223,7 @@ export default function TrackingMessagesPage() {
               <div>
                 <p className="text-sm text-zinc-400">Conversões</p>
                 <p className="text-2xl font-bold text-zinc-100 mt-1">
-                  {mockMessages.reduce((acc, msg) => acc + msg.stats.conversions, 0).toLocaleString()}
+                  {totalConversions.toLocaleString()}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-green-600/10 border border-green-600/30 flex items-center justify-center">
@@ -244,7 +239,7 @@ export default function TrackingMessagesPage() {
               <div>
                 <p className="text-sm text-zinc-400">Taxa Média</p>
                 <p className="text-2xl font-bold text-zinc-100 mt-1">
-                  {(mockMessages.reduce((acc, msg) => acc + msg.stats.rate, 0) / mockMessages.length).toFixed(1)}%
+                  {avgRate.toFixed(1)}%
                 </p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-orange-600/10 border border-orange-600/30 flex items-center justify-center">
@@ -257,7 +252,14 @@ export default function TrackingMessagesPage() {
 
       {/* Lista de Mensagens */}
       <div className="grid gap-4">
-        {filteredMessages.map((message) => {
+        {isLoading && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardContent className="py-12 text-center text-zinc-400">
+              Carregando mensagens...
+            </CardContent>
+          </Card>
+        )}
+        {!isLoading && filteredMessages.map((message) => {
           const Icon = message.campaign_icon;
           const colors = colorClasses[message.color as keyof typeof colorClasses];
 
@@ -312,16 +314,7 @@ export default function TrackingMessagesPage() {
                   {/* Mensagem */}
                   <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4">
                     <p className="text-sm text-zinc-300 leading-relaxed">
-                      {message.message.split(message.highlighted_text).map((part, i, arr) => (
-                        <span key={i}>
-                          {part}
-                          {i < arr.length - 1 && (
-                            <span className={`font-bold ${colors.text} px-1 py-0.5 rounded`}>
-                              {message.highlighted_text}
-                            </span>
-                          )}
-                        </span>
-                      ))}
+                      {message.message}
                     </p>
                   </div>
 
@@ -332,7 +325,7 @@ export default function TrackingMessagesPage() {
                         <div className="flex items-center gap-2">
                           <MousePointerClick className="w-3.5 h-3.5" />
                           <span className="text-xs font-semibold">
-                            {message.stats.sent.toLocaleString()} envios
+                            {message.stats.sent.toLocaleString()} cliques
                           </span>
                         </div>
                       </div>
@@ -378,7 +371,7 @@ export default function TrackingMessagesPage() {
       </div>
 
       {/* Estado Vazio */}
-      {filteredMessages.length === 0 && (
+      {!isLoading && filteredMessages.length === 0 && (
         <Card className="bg-zinc-900 border-zinc-800">
           <CardContent className="py-16 text-center">
             <MessageSquareDashed className="w-16 h-16 text-zinc-600 mx-auto mb-4" />

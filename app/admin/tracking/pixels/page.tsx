@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { saveIntegration, getIntegration, toggleIntegration } from '@/actions/tracking';
 import { IntegrationMeta } from '@/lib/types/tracking';
+import { fetchAdminUser } from '@/lib/admin-auth';
 import { Zap, Save, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,9 +36,9 @@ export default function PixelsConfigPage() {
 
   const loadIntegration = async () => {
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
-      const result = await getIntegration(userId);
+      const user = await fetchAdminUser();
+      if (!user?.id) return;
+      const result = await getIntegration(user.id);
       if (result.success && result.integration) {
         const data = result.integration as IntegrationMeta;
         setIntegration(data);
@@ -59,11 +60,14 @@ export default function PixelsConfigPage() {
     setIsSaving(true);
 
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        toast('Usuário não autenticado', 'error');
+        return;
+      }
 
       const result = await saveIntegration({
-        user_id: userId,
+        user_id: user.id,
         access_token: formData.access_token,
         pixel_id: formData.pixel_id,
         test_event_code: formData.test_event_code || null,
@@ -87,9 +91,12 @@ export default function PixelsConfigPage() {
     if (!integration) return;
 
     try {
-      // TODO: Pegar userId do contexto de autenticação
-      const userId = 'temp-user-id';
-      const result = await toggleIntegration(userId, !integration.is_active);
+      const user = await fetchAdminUser();
+      if (!user?.id) {
+        toast('Usuário não autenticado', 'error');
+        return;
+      }
+      const result = await toggleIntegration(user.id, !integration.is_active);
       
       if (result.success) {
         toast(

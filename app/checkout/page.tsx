@@ -207,6 +207,9 @@ export default function CheckoutPage() {
         if (data?.status === 'paid' || data?.status === 'approved') {
           console.log('✅ Pagamento APROVADO via Polling! Redirecionando...')
           
+          // 🎯 Remover carrinho abandonado ao confirmar pagamento
+          await markCartAsRecovered(pixData.orderId)
+          
           // Redireciona para página de obrigado
           router.push(`/obrigado?email=${encodeURIComponent(formData.email)}&order_id=${pixData.orderId}`)
         }
@@ -227,16 +230,16 @@ export default function CheckoutPage() {
   // O status fica como 'pending' - um cron job marcará como 'abandoned' após 5 minutos
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // ✅ Salva como PENDING - o cron marcará como abandoned após 5 min
+      // ✅ Marca como ABANDONADO quando o cliente sai da página sem comprar
       if (formData.email && formData.email.length >= 5) {
-        handleSaveAbandonedCart(false) // false = manter como pending
+        handleSaveAbandonedCart(true)
       }
     }
 
     // ✅ Salva como PENDING quando muda de aba/fecha tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && formData.email && formData.email.length >= 5) {
-        handleSaveAbandonedCart(false) // false = manter como pending
+        handleSaveAbandonedCart(true)
       }
     }
 
@@ -758,9 +761,6 @@ export default function CheckoutPage() {
           // Armazena dados do PIX para exibir nativamente
           if (result.pix_qr_code && result.pix_emv) {
             console.log('✅ PIX gerado com sucesso')
-            
-            // 🎯 Marcar carrinho como recuperado
-            await markCartAsRecovered(result.order_id)
             
             setPixData({
               qrCode: result.pix_qr_code,

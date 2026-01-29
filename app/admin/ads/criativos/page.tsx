@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { CampaignInsight } from '@/lib/meta-marketing';
+import { CampaignInsight, ACTION_TYPES, sumActions, sumActionValues } from '@/lib/meta-marketing';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DollarSign, MousePointerClick, Eye, TrendingUp, AlertCircle, 
@@ -59,12 +59,20 @@ const sortOptions = [
   { value: 'ctr_desc', label: 'Melhor CTR' },
 ];
 
+const statusFilterOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'active', label: 'Ativos' },
+  { value: 'paused', label: 'Pausados' },
+  { value: 'archived', label: 'Arquivados' },
+];
+
 export default function CriativosPage() {
   const [ads, setAds] = useState<CampaignInsight[]>([]);
   const [creativeUrls, setCreativeUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('status_date');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
@@ -72,13 +80,14 @@ export default function CriativosPage() {
     if (showRefresh) setRefreshing(true);
     setLoading(true);
     try {
-      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=ad`);
+      const res = await fetch(`/api/ads/insights?period=${selectedPeriod}&level=ad&include_status=1`);
       const data = await res.json();
-      setAds(Array.isArray(data) ? data : []);
+      const adsData = Array.isArray(data) ? data : [];
+      setAds(adsData);
       
       // Buscar URLs dos criativos
-      if (data.length > 0) {
-        const adIds = data.map((ad: any) => ad.ad_id).filter(Boolean).join(',');
+      if (adsData.length > 0) {
+        const adIds = adsData.map((ad: any) => ad.ad_id).filter(Boolean).join(',');
         if (adIds) {
           const creativesRes = await fetch(`/api/ads/creatives?adIds=${adIds}`);
           const creativesData = await creativesRes.json();
@@ -99,14 +108,30 @@ export default function CriativosPage() {
     fetchData();
   }, [selectedPeriod, fetchData]);
 
+  const filteredAds = useMemo(() => {
+    let result = [...ads];
+    if (statusFilter !== 'all') {
+      result = result.filter(ad => {
+        const status = ((ad as any).effective_status || (ad as any).status || 'UNKNOWN').toUpperCase();
+        if (statusFilter === 'active') return status === 'ACTIVE';
+        if (statusFilter === 'paused') return status === 'PAUSED';
+        if (statusFilter === 'archived') return status === 'ARCHIVED';
+        return true;
+      });
+    }
+    return result;
+  }, [ads, statusFilter]);
+
   // Ordenar ads - prioriza ativos primeiro, depois por data mais recente
   const sortedAds = useMemo(() => {
-    return [...ads].sort((a, b) => {
+    return [...filteredAds].sort((a, b) => {
       switch (sortBy) {
         case 'status_date':
           // Primeiro: ativos antes de inativos
-          const aActive = (a as any).effective_status === 'ACTIVE' || (a as any).status === 'ACTIVE' ? 1 : 0;
-          const bActive = (b as any).effective_status === 'ACTIVE' || (b as any).status === 'ACTIVE' ? 1 : 0;
+          const aStatus = ((a as any).effective_status || (a as any).status || '').toUpperCase();
+          const bStatus = ((b as any).effective_status || (b as any).status || '').toUpperCase();
+          const aActive = aStatus === 'ACTIVE' ? 1 : 0;
+          const bActive = bStatus === 'ACTIVE' ? 1 : 0;
           if (bActive !== aActive) return bActive - aActive;
           // Depois: por data de criação/atualização (mais recente primeiro)
           const aDate = new Date((a as any).created_time || (a as any).updated_time || 0).getTime();
@@ -115,17 +140,18 @@ export default function CriativosPage() {
           // Fallback: maior gasto
           return Number(b.spend || 0) - Number(a.spend || 0);
         case 'spend_desc': return Number(b.spend || 0) - Number(a.spend || 0);
-        case 'conversions_desc': return Number((b as any).conversions || 0) - Number((a as any).conversions || 0);
+        case 'conversions_desc':
+          return sumActions(b.actions, ACTION_TYPES.purchases) - sumActions(a.actions, ACTION_TYPES.purchases);
         case 'ctr_desc': return Number(b.ctr || 0) - Number(a.ctr || 0);
         default: return Number(b.spend || 0) - Number(a.spend || 0);
       }
     });
-  }, [ads, sortBy]);
+  }, [filteredAds, sortBy]);
 
   // Calcular totais e métricas
   const totals = useMemo(() => {
     const result = {
-      count: ads.length,
+      count: filteredAds.length,
       spend: 0,
       reach: 0,
       impressions: 0,
@@ -141,7 +167,7 @@ export default function CriativosPage() {
       checkoutComplete: 0,
     };
     
-    ads.forEach(ad => {
+    filteredAds.forEach(ad => {
       result.spend += Number(ad.spend || 0);
       result.reach += Number(ad.reach || 0);
       result.impressions += Number(ad.impressions || 0);
@@ -154,34 +180,16 @@ export default function CriativosPage() {
       result.outbound_clicks += outboundClicks;
       
       // Compras
-      const purchases = ad.actions?.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      result.purchases += Number(purchases?.value || 0);
+      result.purchases += sumActions(ad.actions, ACTION_TYPES.purchases);
       
       // Leads
-      const leads = ad.actions?.find(a => 
-        a.action_type === 'lead' || 
-        a.action_type === 'offsite_conversion.fb_pixel_lead'
-      );
-      result.leads += Number(leads?.value || 0);
+      result.leads += sumActions(ad.actions, ACTION_TYPES.leads);
       
       // Checkout Complete (InitiateCheckout)
-      const checkoutComplete = ad.actions?.find(a => 
-        a.action_type === 'omni_initiated_checkout' ||
-        a.action_type === 'offsite_conversion.fb_pixel_initiate_checkout'
-      );
-      result.checkoutComplete += Number(checkoutComplete?.value || 0);
+      result.checkoutComplete += sumActions(ad.actions, ACTION_TYPES.checkout);
       
       // Receita
-      const purchaseValue = ad.action_values?.find(a => 
-        a.action_type === 'purchase' || 
-        a.action_type === 'omni_purchase' ||
-        a.action_type === 'offsite_conversion.fb_pixel_purchase'
-      );
-      result.revenue += Number(purchaseValue?.value || 0);
+      result.revenue += sumActionValues(ad.action_values, ACTION_TYPES.purchases);
     });
     
     // Calcular métricas derivadas
@@ -191,7 +199,7 @@ export default function CriativosPage() {
     result.cpl = result.leads > 0 ? result.spend / result.leads : 0;
     
     return result;
-  }, [ads]);
+  }, [filteredAds]);
 
   return (
     <div className="p-6 space-y-6">
@@ -218,6 +226,16 @@ export default function CriativosPage() {
             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm"
           >
             {periodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value} className="bg-gray-800">{opt.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm"
+          >
+            {statusFilterOptions.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-gray-800">{opt.label}</option>
             ))}
           </select>
@@ -324,38 +342,17 @@ export default function CriativosPage() {
                     (sum, oc) => sum + Number(oc.value || 0), 0
                   ) || 0;
                   
-                  // Extrair compras das actions
-                  const purchases = ad.actions?.find(a => 
-                    a.action_type === 'purchase' || 
-                    a.action_type === 'omni_purchase' ||
-                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                  );
-                  const purchaseCount = Number(purchases?.value || 0);
-                  
-                  // Extrair leads
-                  const leads = ad.actions?.find(a => 
-                    a.action_type === 'lead' || 
-                    a.action_type === 'offsite_conversion.fb_pixel_lead'
-                  );
-                  const leadCount = Number(leads?.value || 0);
+                  const purchaseCount = sumActions(ad.actions, ACTION_TYPES.purchases);
+                  const leadCount = sumActions(ad.actions, ACTION_TYPES.leads);
                   const cpl = leadCount > 0 ? spend / leadCount : 0;
                   
                   // Extrair finalizações de checkout
-                  const checkoutComplete = ad.actions?.find(a => 
-                    a.action_type === 'omni_initiated_checkout' ||
-                    a.action_type === 'offsite_conversion.fb_pixel_initiate_checkout'
-                  );
-                  const checkoutCount = Number(checkoutComplete?.value || 0);
+                  const checkoutCount = sumActions(ad.actions, ACTION_TYPES.checkout);
                   
                   // Extrair valor das compras
-                  const purchaseValue = ad.action_values?.find(a => 
-                    a.action_type === 'purchase' || 
-                    a.action_type === 'omni_purchase' ||
-                    a.action_type === 'offsite_conversion.fb_pixel_purchase'
-                  );
-                  const purchaseAmount = Number(purchaseValue?.value || 0);
+                  const purchaseAmount = sumActionValues(ad.action_values, ACTION_TYPES.purchases);
                   
-                  const status = (ad as any).effective_status || 'UNKNOWN';
+                  const status = ((ad as any).effective_status || (ad as any).status || 'UNKNOWN').toUpperCase();
                   const creativeUrl = creativeUrls[ad.ad_id || ''];
                   
                   return (

@@ -192,6 +192,7 @@ export default function ReportsPage() {
     try {
       setRefreshing(true)
       const { start, end } = getDateRange()
+      const approvedStatuses = ['approved', 'paid', 'complete']
 
       // Buscar vendas via API (usa supabaseAdmin que ignora RLS)
       const params = new URLSearchParams({
@@ -234,21 +235,28 @@ export default function ReportsPage() {
       // Buscar carrinhos abandonados diretamente do Supabase (checkout_attempts)
       const { data: abandonedData } = await supabase
         .from('checkout_attempts')
-        .select('*')
+        .select('id, status, cart_total, total_amount, created_at, converted_at, recovery_sent_at, sale_id, sales(status,total_amount)')
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
         .in('status', ['abandoned', 'expired', 'pending'])
 
+      const { data: salesItemsData } = await supabase
+        .from('sales_items')
+        .select('product_id, product_name, price, quantity, sales!inner(status, created_at)')
+        .gte('sales.created_at', start.toISOString())
+        .lte('sales.created_at', end.toISOString())
+        .in('sales.status', approvedStatuses)
+
       // Filtrar por status
       const allSales: Sale[] = sales || []
-      const approved = allSales.filter((s: Sale) => ['approved', 'paid', 'complete'].includes(s.status))
+      const approved = allSales.filter((s: Sale) => approvedStatuses.includes(s.status))
       const cancelled = allSales.filter((s: Sale) => ['cancelled', 'canceled', 'cancelado'].includes(s.status))
       const refunded = allSales.filter((s: Sale) => ['refunded', 'reversed', 'chargeback'].includes(s.status))
       const pending = allSales.filter((s: Sale) => ['pending', 'processing'].includes(s.status))
 
       // Período anterior
       const allPrevSales: Sale[] = prevSales || []
-      const prevApproved = allPrevSales.filter((s: Sale) => ['approved', 'paid', 'complete'].includes(s.status))
+      const prevApproved = allPrevSales.filter((s: Sale) => approvedStatuses.includes(s.status))
       const prevRevenue = prevApproved.reduce((sum, s) => sum + Number(s.total_amount || 0), 0)
       const prevOrdersCount = prevApproved.length
 
@@ -284,14 +292,47 @@ export default function ReportsPage() {
       const creditAttempts = allSales.filter((s) => ['credit_card', 'creditCard', 'credit'].includes(s.payment_method))
       const boletoAttempts = allSales.filter((s) => s.payment_method === 'boleto')
 
-      // Parcelamentos (simulado - idealmente viria de sales_items ou metadata)
-      const installmentData = [
-        { installments: '1x', count: Math.floor(creditSales.length * 0.4), revenue: creditSales.reduce((s, sale) => s + Number(sale.total_amount || 0), 0) * 0.4 },
-        { installments: '2x', count: Math.floor(creditSales.length * 0.2), revenue: creditSales.reduce((s, sale) => s + Number(sale.total_amount || 0), 0) * 0.2 },
-        { installments: '3x', count: Math.floor(creditSales.length * 0.15), revenue: creditSales.reduce((s, sale) => s + Number(sale.total_amount || 0), 0) * 0.15 },
-        { installments: '6x', count: Math.floor(creditSales.length * 0.15), revenue: creditSales.reduce((s, sale) => s + Number(sale.total_amount || 0), 0) * 0.15 },
-        { installments: '12x', count: Math.floor(creditSales.length * 0.1), revenue: creditSales.reduce((s, sale) => s + Number(sale.total_amount || 0), 0) * 0.1 },
-      ].filter(i => i.count > 0)
+      const resolveInstallments = (metadata?: Record<string, any>) => {
+        if (!metadata) return null
+        const candidates = [
+          metadata.installments,
+          metadata.installment,
+          metadata.installment_count,
+          metadata.payment_installments,
+          metadata.card_data?.installments,
+          metadata.card_data?.installment,
+          metadata.payment?.installments,
+          metadata.payment?.installment,
+          metadata.card?.installments,
+          metadata.order?.installments,
+          metadata.order?.installment,
+          metadata.payment_details?.installments,
+        ]
+
+        for (const value of candidates) {
+          const parsed = Number(value)
+          if (Number.isFinite(parsed) && parsed > 0) return parsed
+        }
+        return null
+      }
+
+      const installmentMap = new Map<number, { count: number; revenue: number }>()
+      creditSales.forEach((sale) => {
+        const installments = resolveInstallments(sale.metadata)
+        if (!installments) return
+        const entry = installmentMap.get(installments) || { count: 0, revenue: 0 }
+        entry.count += 1
+        entry.revenue += Number(sale.total_amount || 0)
+        installmentMap.set(installments, entry)
+      })
+
+      const installmentData = Array.from(installmentMap.entries())
+        .map(([installments, stats]) => ({
+          installments: `${installments}x`,
+          count: stats.count,
+          revenue: stats.revenue,
+        }))
+        .sort((a, b) => Number(a.installments.replace('x', '')) - Number(b.installments.replace('x', '')))
 
       // Clientes recorrentes
       const emailCounts = new Map<string, number>()
@@ -306,9 +347,18 @@ export default function ReportsPage() {
 
       // Carrinhos abandonados
       const abandonedCarts = abandonedData?.length || 0
-      const abandonedValue = abandonedData?.reduce((sum, c) => sum + Number(c.cart_total || c.total_amount || 0), 0) || 0
-      const recoveredCarts = 0 // Idealmente viria de uma tabela de recuperação
-      const recoveredValue = 0
+      const abandonedValue = abandonedData?.reduce((sum, c) => sum + Number((c as any).cart_total || (c as any).total_amount || 0), 0) || 0
+      const recoveredCandidates = (abandonedData || []).filter((attempt: any) => attempt.converted_at && attempt.recovery_sent_at)
+      const recoveredApproved = recoveredCandidates.filter((attempt: any) => {
+        const saleData = Array.isArray(attempt.sales) ? attempt.sales[0] : attempt.sales
+        return saleData && approvedStatuses.includes(saleData.status)
+      })
+      const recoveredCarts = recoveredApproved.length
+      const recoveredValue = recoveredApproved.reduce((sum: number, attempt: any) => {
+        const saleData = Array.isArray(attempt.sales) ? attempt.sales[0] : attempt.sales
+        const value = saleData?.total_amount ?? attempt.total_amount ?? attempt.cart_total ?? 0
+        return sum + Number(value || 0)
+      }, 0)
 
       // Top estados (baseado em metadata ou dados disponíveis)
       const stateMap = new Map<string, { orders: number; revenue: number }>()
@@ -328,9 +378,22 @@ export default function ReportsPage() {
         .slice(0, 5)
 
       // Top produtos
-      const topProducts = [
-        { name: 'Método Gravador Médico', quantity: approvedOrders, revenue: totalRevenue }
-      ]
+      const productMap = new Map<string, { name: string; quantity: number; revenue: number }>()
+      ;(salesItemsData || []).forEach((item: any) => {
+        const name = item.product_name || item.product_id || 'Produto'
+        const quantity = Number(item.quantity || 0)
+        const price = Number(item.price || 0)
+        const revenue = price * (quantity || 0)
+        if (!productMap.has(name)) {
+          productMap.set(name, { name, quantity: 0, revenue: 0 })
+        }
+        const entry = productMap.get(name)!
+        entry.quantity += quantity || 0
+        entry.revenue += revenue
+      })
+      const topProducts = Array.from(productMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5)
 
       // Receita diária
       const dailyMap = new Map<string, { revenue: number; orders: number }>()

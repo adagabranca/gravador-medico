@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   Footprints, 
   Plus, 
@@ -26,9 +26,10 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { getFunnelEventCounts } from '@/actions/tracking';
 
-// Mock data - Etapas do funil
-const mockJourneySteps = [
+// Etapas do funil
+const baseJourneySteps = [
   {
     id: '1',
     order: 1,
@@ -146,7 +147,29 @@ const iconBgClasses = {
 };
 
 export default function TrackingJourneyPage() {
-  const [steps, setSteps] = useState(mockJourneySteps);
+  const [steps, setSteps] = useState(baseJourneySteps);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadSteps();
+  }, []);
+
+  const loadSteps = async () => {
+    try {
+      setIsLoading(true);
+      const result = await getFunnelEventCounts();
+      if (result.success && result.counts) {
+        setSteps(baseJourneySteps.map(step => ({
+          ...step,
+          conversions: result.counts[step.fb_event] || 0
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar etapas do funil:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Calcula taxa de conversão entre etapas
   const getConversionRate = (currentIndex: number) => {

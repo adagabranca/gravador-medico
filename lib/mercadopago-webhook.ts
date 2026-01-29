@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from './supabase'
 import { getPaymentStatus } from './mercadopago'
-import { createLovableUser, generateSecurePassword } from '@/services/lovable-integration'
 
 /**
  * 🔔 WEBHOOK MERCADO PAGO - COM RACE CONDITION FIX
@@ -10,7 +9,7 @@ import { createLovableUser, generateSecurePassword } from '@/services/lovable-in
  * - Salvamento de payload bruto para auditoria
  * - Retry com delay se venda ainda não existir (race condition)
  * - Enriquecimento de dados (busca detalhes completos na API MP)
- * - Criação de usuário no Lovable quando aprovado
+ * - Enfileiramento de provisionamento quando aprovado
  */
 
 export async function handleMercadoPagoWebhook(request: NextRequest) {
@@ -122,25 +121,40 @@ export async function handleMercadoPagoWebhook(request: NextRequest) {
       
       console.log('✅ Venda atualizada com sucesso')
       
-      // 5️⃣ SE APROVADO, CRIAR USUÁRIO NO LOVABLE
+      // 5️⃣ SE APROVADO, ENFILEIRAR PROVISIONAMENTO
       if (payment.status === 'approved' && sale) {
-        console.log('✅ Pagamento aprovado! Criando usuário no Lovable...')
-        
-        const password = generateSecurePassword()
-        
-        const userResult = await createLovableUser({
-          email: sale.customer_email,
-          password: password,
-          full_name: sale.customer_name
-        })
-        
-        if (userResult.success) {
-          console.log('✅ Usuário criado no Lovable!')
-          
-          // TODO: Enviar email com credenciais
-          // await sendWelcomeEmail(sale.customer_email, password)
-        } else {
-          console.error('❌ Erro ao criar usuário no Lovable:', userResult.error)
+        console.log('✅ Pagamento aprovado! Enfileirando provisionamento...')
+
+        // ✅ Limpar carrinho abandonado quando compra é aprovada
+        if (sale.customer_email) {
+          try {
+            await supabaseAdmin
+              .from('abandoned_carts')
+              .delete()
+              .eq('customer_email', sale.customer_email)
+          } catch (error) {
+            console.warn('⚠️ Erro ao limpar carrinho abandonado após compra MP:', error)
+          }
+        }
+
+        const { data: existingQueue, error: queueCheckError } = await supabaseAdmin
+          .from('provisioning_queue')
+          .select('id')
+          .eq('sale_id', sale.id)
+          .maybeSingle()
+
+        if (queueCheckError) {
+          console.warn('⚠️ Erro ao verificar fila de provisionamento:', queueCheckError)
+        }
+
+        if (!existingQueue) {
+          const { error: enqueueError } = await supabaseAdmin
+            .from('provisioning_queue')
+            .insert({ sale_id: sale.id, status: 'pending' })
+
+          if (enqueueError) {
+            console.error('❌ Erro ao enfileirar provisionamento:', enqueueError)
+          }
         }
       }
       

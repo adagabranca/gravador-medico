@@ -48,6 +48,17 @@ const formatPercent = (value: number) => {
   return `${value.toFixed(2)}%`;
 };
 
+const periodOptions = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
+  { value: 'last_7d', label: 'Últimos 7 dias' },
+  { value: 'last_14d', label: 'Últimos 14 dias' },
+  { value: 'last_30d', label: 'Últimos 30 dias' },
+  { value: 'this_month', label: 'Este mês' },
+  { value: 'last_month', label: 'Mês passado' },
+  { value: 'maximum', label: 'Todo período' },
+];
+
 // Glass Card Component
 const GlassCard = ({ 
   children, 
@@ -109,6 +120,7 @@ export default function HibridoPage() {
   const [fbError, setFbError] = useState(false);
   const [gaError, setGaError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchData = useCallback(async (showRefresh = false) => {
@@ -118,8 +130,8 @@ export default function HibridoPage() {
 
     // Buscar dados em paralelo
     const [fbResult, gaResult] = await Promise.allSettled([
-      fetch('/api/ads/insights?period=last_30d').then(r => r.json()),
-      fetch('/api/analytics/outbound').then(r => r.json()),
+      fetch(`/api/ads/insights?period=${selectedPeriod}`).then(r => r.json()),
+      fetch(`/api/analytics/outbound?period=${selectedPeriod}`).then(r => r.json()),
     ]);
 
     // Processar resultado do Facebook
@@ -141,7 +153,7 @@ export default function HibridoPage() {
     setLastUpdate(new Date());
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [selectedPeriod]);
 
   useEffect(() => {
     fetchData();
@@ -177,6 +189,15 @@ export default function HibridoPage() {
           <span className="text-sm text-gray-500 hidden md:block">
             Atualizado: {lastUpdate.toLocaleTimeString('pt-BR')}
           </span>
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm"
+          >
+            {periodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value} className="bg-gray-800">{opt.label}</option>
+            ))}
+          </select>
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}

@@ -673,6 +673,17 @@ export async function handleAppmaxWebhook(request: NextRequest, endpoint: string
   }
 
   if (SUCCESS_STATUSES.has(status)) {
+    if (customerEmail) {
+      try {
+        await supabaseAdmin
+          .from('abandoned_carts')
+          .delete()
+          .eq('customer_email', customerEmail);
+      } catch (error) {
+        console.warn('⚠️ Erro ao limpar carrinho abandonado após compra:', error);
+      }
+    }
+
     await sendPurchaseEvent({
       orderId,
       customerEmail: customerEmail || undefined,

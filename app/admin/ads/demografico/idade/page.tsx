@@ -17,24 +17,18 @@ const formatNumber = (value: number) => {
 };
 
 const periodOptions = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
   { value: 'last_7d', label: 'Últimos 7 dias' },
   { value: 'last_14d', label: 'Últimos 14 dias' },
   { value: 'last_30d', label: 'Últimos 30 dias' },
   { value: 'this_month', label: 'Este mês' },
-];
-
-// Dados de exemplo
-const mockAgeData = [
-  { idade: '18-24', investimento: 800, impressoes: 45000, cliques: 620, conversoes: 85, leads: 70, finalizacoes: 60 },
-  { idade: '25-34', investimento: 2100, impressoes: 98000, cliques: 1850, conversoes: 380, leads: 320, finalizacoes: 290 },
-  { idade: '35-44', investimento: 1800, impressoes: 72000, cliques: 1100, conversoes: 290, leads: 240, finalizacoes: 210 },
-  { idade: '45-54', investimento: 650, impressoes: 28000, cliques: 420, conversoes: 95, leads: 78, finalizacoes: 68 },
-  { idade: '55-64', investimento: 350, impressoes: 15000, cliques: 180, conversoes: 42, leads: 35, finalizacoes: 30 },
-  { idade: '65+', investimento: 150, impressoes: 6000, cliques: 56, conversoes: 10, leads: 8, finalizacoes: 7 },
+  { value: 'last_month', label: 'Mês passado' },
+  { value: 'maximum', label: 'Todo período' },
 ];
 
 export default function IdadePage() {
-  const [data, setData] = useState(mockAgeData);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
 
@@ -46,7 +40,7 @@ export default function IdadePage() {
       
       if (apiData.error) {
         console.error('Erro da API:', apiData.error);
-        setData(mockAgeData);
+        setData([]);
       } else if (Array.isArray(apiData) && apiData.length > 0) {
         // Mapear dados da API para o formato esperado
         const formattedData = apiData.map((item: any) => ({
@@ -60,11 +54,11 @@ export default function IdadePage() {
         }));
         setData(formattedData);
       } else {
-        setData(mockAgeData);
+        setData([]);
       }
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
-      setData(mockAgeData);
+      setData([]);
     } finally {
       setLoading(false);
     }

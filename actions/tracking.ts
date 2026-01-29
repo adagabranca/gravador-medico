@@ -207,6 +207,27 @@ export async function getTrackingLinks(userId: string) {
   }
 }
 
+// Links com estatísticas (view tracking_links_with_stats)
+export async function getTrackingLinksWithStats(userId: string) {
+  try {
+    const { data: links, error } = await supabaseAdmin
+      .from('tracking_links_with_stats')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar links com stats:', error);
+      throw new Error('Falha ao buscar links com stats');
+    }
+
+    return { success: true, links: links || [] };
+  } catch (error) {
+    console.error('Erro em getTrackingLinksWithStats:', error);
+    return { success: false, error: 'Falha ao buscar links com stats', links: [] };
+  }
+}
+
 // ============================================================================
 // INTEGRAÇÃO META (PIXEL)
 // ============================================================================
@@ -424,5 +445,29 @@ export async function getPixelLogs(userId: string, limit = 50) {
   } catch (error) {
     console.error('Erro em getPixelLogs:', error);
     return { success: false, error: 'Falha ao buscar logs de eventos', logs: [] };
+  }
+}
+
+export async function getFunnelEventCounts() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('funnel_events_map')
+      .select('event_type');
+
+    if (error) {
+      console.error('Erro ao buscar eventos do funil:', error);
+      throw new Error('Falha ao buscar eventos do funil');
+    }
+
+    const counts: Record<string, number> = {};
+    (data || []).forEach((row: any) => {
+      const key = row.event_type || 'Unknown';
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    return { success: true, counts };
+  } catch (error) {
+    console.error('Erro em getFunnelEventCounts:', error);
+    return { success: false, error: 'Falha ao buscar eventos do funil', counts: {} };
   }
 }

@@ -66,14 +66,35 @@ export default function AdminDashboard() {
   const [fbMetrics, setFbMetrics] = useState<AdsMetrics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
+  const resolveMetaAdsRange = useCallback(() => {
+    if (filterType === 'custom') {
+      const start = new Date(`${startDate}T00:00:00`);
+      const end = new Date(`${endDate}T23:59:59.999`);
+      return { start, end };
+    }
+
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - Math.max(quickDays - 1, 0));
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }, [filterType, quickDays, startDate, endDate]);
+
   // Carregar dados de Analytics e META Ads
   const loadAnalyticsData = useCallback(async () => {
     setAnalyticsLoading(true);
     try {
+      const { start, end } = resolveMetaAdsRange();
+      const metaParams = new URLSearchParams({
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+
       const [realtimeRes, trafficRes, fbRes] = await Promise.allSettled([
         fetch('/api/analytics/realtime').then(r => r.json()),
-        fetch('/api/analytics/traffic?period=7d').then(r => r.json()),
-        fetch('/api/ads/insights?period=last_7d').then(r => r.json())
+        fetch(`/api/analytics/traffic?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`).then(r => r.json()),
+        fetch(`/api/ads/insights?${metaParams.toString()}`).then(r => r.json())
       ]);
 
       if (realtimeRes.status === 'fulfilled') {
@@ -92,7 +113,7 @@ export default function AdminDashboard() {
     } finally {
       setAnalyticsLoading(false);
     }
-  }, []);
+  }, [resolveMetaAdsRange]);
 
   useEffect(() => {
     loadAllData()
@@ -152,6 +173,10 @@ export default function AdminDashboard() {
       : quickDays === 1 
         ? 'ontem'
         : `últimos ${quickDays} dias`
+
+  const roiInvested = fbMetrics?.totalSpend || 0
+  const roiReturn = metrics?.revenue || 0
+  const roiDelta = roiReturn - roiInvested
 
   const exportDashboard = () => {
     if (!metrics) return
@@ -386,7 +411,7 @@ Relatório gerado automaticamente pelo Gravador Médico
             <div className="flex items-center gap-3">
               <BarChart3 className="h-5 w-5 text-blue-400" />
               <span className="text-white font-medium">Tráfego do Site</span>
-              <span className="text-gray-500 text-sm">Últimos 7 dias</span>
+              <span className="text-gray-500 text-sm">{periodLabel}</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
@@ -440,8 +465,8 @@ Relatório gerado automaticamente pelo Gravador Médico
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.15 }}
           className={`md:col-span-2 relative overflow-hidden rounded-2xl p-6 ${
-            metrics && fbMetrics?.totalSpend && metrics.totalApproved > 0
-              ? ((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
+            metrics && fbMetrics?.totalSpend && (metrics.revenue || 0) > 0
+              ? (((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
                 ? 'bg-gradient-to-br from-green-600/30 to-emerald-700/30 border-2 border-green-500/40'
                 : 'bg-gradient-to-br from-red-600/30 to-rose-700/30 border-2 border-red-500/40'
               : 'bg-gradient-to-br from-gray-700/40 to-gray-800/60 border border-gray-600/30'
@@ -452,23 +477,23 @@ Relatório gerado automaticamente pelo Gravador Médico
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className={`p-2 rounded-xl ${
-                  metrics && fbMetrics?.totalSpend && metrics.totalApproved > 0
-                    ? ((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
+                  metrics && fbMetrics?.totalSpend && (metrics.revenue || 0) > 0
+                    ? (((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
                       ? 'bg-green-500/30'
                       : 'bg-red-500/30'
                     : 'bg-gray-500/30'
                 }`}>
                   <TrendingUp className={`h-5 w-5 ${
-                    metrics && fbMetrics?.totalSpend && metrics.totalApproved > 0
-                      ? ((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
+                    metrics && fbMetrics?.totalSpend && (metrics.revenue || 0) > 0
+                      ? (((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
                         ? 'text-green-400'
                         : 'text-red-400'
                       : 'text-gray-400'
                   }`} />
                 </div>
                 <span className={`text-lg font-semibold ${
-                  metrics && fbMetrics?.totalSpend && metrics.totalApproved > 0
-                    ? ((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
+                  metrics && fbMetrics?.totalSpend && (metrics.revenue || 0) > 0
+                    ? (((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
                       ? 'text-green-300'
                       : 'text-red-300'
                     : 'text-gray-300'
@@ -478,15 +503,15 @@ Relatório gerado automaticamente pelo Gravador Médico
               </div>
             </div>
             <div className={`text-4xl font-bold ${
-              metrics && fbMetrics?.totalSpend && metrics.totalApproved > 0
-                ? ((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
+              metrics && fbMetrics?.totalSpend && (metrics.revenue || 0) > 0
+                ? (((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0
                   ? 'text-green-400'
                   : 'text-red-400'
                 : 'text-gray-400'
             }`}>
               {analyticsLoading || loading ? '...' : (
-                fbMetrics?.totalSpend && fbMetrics.totalSpend > 0 && metrics?.totalApproved
-                  ? `${((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0 ? '+' : ''}${((metrics.totalApproved - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100).toFixed(1)}%`
+                fbMetrics?.totalSpend && fbMetrics.totalSpend > 0 && metrics?.revenue
+                  ? `${(((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100) >= 0 ? '+' : ''}${(((metrics.revenue || 0) - fbMetrics.totalSpend) / fbMetrics.totalSpend * 100).toFixed(1)}%`
                   : '0%'
               )}
             </div>
@@ -495,8 +520,8 @@ Relatório gerado automaticamente pelo Gravador Médico
                 Investido: <span className="text-white font-medium">{formatCurrencyCompact(fbMetrics?.totalSpend || 0)}</span>
               </span>
               <span className="text-gray-400">
-                Receita: <span className={`font-medium ${metrics?.totalApproved ? 'text-green-400' : 'text-gray-500'}`}>
-                  {formatCurrencyCompact(metrics?.totalApproved || 0)}
+                Receita: <span className={`font-medium ${metrics?.revenue ? 'text-green-400' : 'text-gray-500'}`}>
+                  {formatCurrencyCompact(metrics?.revenue || 0)}
                 </span>
               </span>
             </div>
@@ -559,6 +584,47 @@ Relatório gerado automaticamente pelo Gravador Médico
               </p>
             </div>
           </div>
+        </motion.div>
+      </div>
+
+      {/* ROI Big Numbers */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 rounded-2xl border border-emerald-500/30 p-5"
+        >
+          <p className="text-xs text-emerald-300 mb-1">Investido ({periodLabel})</p>
+          <p className="text-3xl font-bold text-white">
+            {analyticsLoading ? '...' : formatCurrencyCompact(roiInvested)}
+          </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-2xl border border-blue-500/30 p-5"
+        >
+          <p className="text-xs text-blue-300 mb-1">Retorno Real ({periodLabel})</p>
+          <p className="text-3xl font-bold text-white">
+            {loading ? '...' : formatCurrencyCompact(roiReturn)}
+          </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className={`rounded-2xl border p-5 ${
+            roiDelta >= 0
+              ? 'bg-gradient-to-br from-green-600/20 to-emerald-700/20 border-green-500/30'
+              : 'bg-gradient-to-br from-red-600/20 to-rose-700/20 border-red-500/30'
+          }`}
+        >
+          <p className="text-xs text-gray-300 mb-1">Diferença Real ({periodLabel})</p>
+          <p className={`text-3xl font-bold ${roiDelta >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+            {loading ? '...' : `${roiDelta >= 0 ? '+' : ''}${formatCurrencyCompact(roiDelta)}`}
+          </p>
         </motion.div>
       </div>
 

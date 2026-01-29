@@ -17,21 +17,18 @@ const formatNumber = (value: number) => {
 };
 
 const periodOptions = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
   { value: 'last_7d', label: 'Últimos 7 dias' },
   { value: 'last_14d', label: 'Últimos 14 dias' },
   { value: 'last_30d', label: 'Últimos 30 dias' },
   { value: 'this_month', label: 'Este mês' },
-];
-
-// Dados de exemplo (normalmente viria da API de breakdown demográfico)
-const mockGenderData = [
-  { genero: 'Feminino', investimento: 3200, impressoes: 145000, cliques: 2100, conversoes: 540, leads: 420, finalizacoes: 380 },
-  { genero: 'Masculino', investimento: 2100, impressoes: 72000, cliques: 1200, conversoes: 310, leads: 280, finalizacoes: 220 },
-  { genero: 'Desconhecido', investimento: 150, impressoes: 3000, cliques: 126, conversoes: 17, leads: 12, finalizacoes: 8 },
+  { value: 'last_month', label: 'Mês passado' },
+  { value: 'maximum', label: 'Todo período' },
 ];
 
 export default function GeneroPage() {
-  const [data, setData] = useState(mockGenderData);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
 
@@ -43,8 +40,7 @@ export default function GeneroPage() {
       
       if (apiData.error) {
         console.error('Erro da API:', apiData.error);
-        // Fallback para dados mockados em caso de erro
-        setData(mockGenderData);
+        setData([]);
       } else if (Array.isArray(apiData) && apiData.length > 0) {
         // Mapear dados da API para o formato esperado
         const formattedData = apiData.map((item: any) => ({
@@ -60,12 +56,11 @@ export default function GeneroPage() {
         }));
         setData(formattedData);
       } else {
-        // Se não houver dados da API, usar mockados
-        setData(mockGenderData);
+        setData([]);
       }
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
-      setData(mockGenderData);
+      setData([]);
     } finally {
       setLoading(false);
     }
