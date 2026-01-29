@@ -972,7 +972,7 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
                       <div className="min-w-0">
                         <label className="block text-sm font-bold text-gray-900 mb-2">
-                          Telefone <span className="text-red-500">*</span>
+                          Telefone *
                         </label>
                         <input
                           type="tel"
