@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import useEmblaCarousel from 'embla-carousel-react'
@@ -11,6 +11,7 @@ import { useMercadoPago } from '@/hooks/useMercadoPago'
 import { validateCPF, formatCPF } from '@/lib/cpf'
 import { validateCNPJ, formatCNPJ, consultarCNPJ } from '@/lib/cnpj-api'
 import { useAutoSave } from '@/hooks/useAutoSave'
+import SecureCardForm, { SecureCardFormHandle } from '@/components/SecureCardForm'
 import {
   Check,
   Clock,
@@ -84,7 +85,7 @@ export default function CheckoutPage() {
     cpf: "",
   })
 
-  // Card data - Etapa 3
+  // Card data - Etapa 3 (para fallback AppMax - mantemos alguns campos)
   const [cardData, setCardData] = useState({
     number: "",
     holderName: "",
@@ -92,6 +93,11 @@ export default function CheckoutPage() {
     cvv: "",
     installments: 1,
   })
+  
+  // 🔒 Secure Fields (Mercado Pago PCI Compliance)
+  const secureCardFormRef = useRef<SecureCardFormHandle>(null)
+  const [secureCardToken, setSecureCardToken] = useState<string | null>(null)
+  const [secureCardReady, setSecureCardReady] = useState(false)
   
   // Estado para dados PIX
   const [pixData, setPixData] = useState<{
@@ -769,42 +775,34 @@ export default function CheckoutPage() {
         device_id: deviceId, // 🔒 Device ID para antifraude MP
       }
       
-      // 🔐 TOKENIZAÇÃO SEGURA - Se for cartão, tokeniza com Mercado Pago
+      // 🔐 TOKENIZAÇÃO SEGURA - Se for cartão, usa Secure Fields (PCI Compliant)
       if (paymentMethod === 'credit') {
-        console.log('🔐 Tokenizando cartão com Mercado Pago...')
+        console.log('🔐 Gerando token via Secure Fields...')
         
-        // Extrair mês e ano do formato MM/AA
-        const [expMonth, expYear] = cardData.expiry.split('/')
-        
-        const token = await createCardToken({
-          cardNumber: cardData.number,
-          cardholderName: cardData.holderName || formData.name,
-          cardExpirationMonth: expMonth,
-          cardExpirationYear: expYear, // Já está em 2 dígitos (AA)
-          securityCode: cardData.cvv,
-          identificationType: formData.documentType, // CPF ou CNPJ
-          identificationNumber: formData.cpf,
-        })
-
-        console.log('✅ Token gerado:', token.id)
-        
-        payload.mpToken = token.id
-        payload.installments = cardData.installments
-        
-        // 🔄 CASCATA: Enviar dados do cartão para AppMax como fallback
-        // AppMax não usa tokens do Mercado Pago, precisa dos dados brutos
-        payload.appmax_data = {
-          payment_method: 'credit_card',
-          card_data: {
-            number: cardData.number.replace(/\s/g, ''),
-            holder_name: cardData.holderName || formData.name,
-            exp_month: expMonth,
-            exp_year: `20${expYear}`, // AppMax aceita 4 dígitos (20AA)
-            cvv: cardData.cvv,
-            installments: cardData.installments || 1,
-          },
-          order_bumps: selectedBumpProducts,
+        // Gera token no momento do submit
+        if (!secureCardFormRef.current) {
+          throw new Error('Formulário de cartão não está pronto. Tente novamente.')
         }
+        
+        const tokenData = await secureCardFormRef.current.generateToken()
+        
+        if (!tokenData || !tokenData.token) {
+          throw new Error('Por favor, preencha os dados do cartão corretamente.')
+        }
+        
+        console.log('✅ Token gerado:', tokenData.token.substring(0, 20) + '...')
+        
+        payload.mpToken = tokenData.token
+        payload.installments = tokenData.installments || cardData.installments
+        
+        // Atualiza device_id se retornado do Secure Fields
+        if (tokenData.deviceId) {
+          payload.device_id = tokenData.deviceId
+        }
+        
+        // ⚠️ IMPORTANTE: Com Secure Fields, NÃO temos mais acesso aos dados brutos do cartão
+        // O fallback AppMax não funcionará mais para novos pagamentos - isso é esperado para PCI Compliance
+        // Os dados do cartão nunca passam pelo nosso servidor
       }
       
       const response = await fetch('/api/checkout/enterprise', {
@@ -1462,7 +1460,7 @@ export default function CheckoutPage() {
                       </button>
                     </div>
 
-                    {/* Formulário de Cartão */}
+                    {/* Formulário de Cartão - Secure Fields (PCI Compliant) */}
                     {paymentMethod === "credit" && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -1470,107 +1468,31 @@ export default function CheckoutPage() {
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-4"
                       >
-                        <div>
-                          <label className="block text-sm font-bold text-gray-900 mb-2">
-                            Número do Cartão *
-                          </label>
-                          <input
-                            type="text"
-                            name="cardnumber"
-                            autoComplete="cc-number"
-                            value={cardData.number}
-                            onChange={(e) => setCardData({ ...cardData, number: formatCardNumber(e.target.value) })}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors"
-                            placeholder="0000 0000 0000 0000"
-                            maxLength={19}
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-bold text-gray-900 mb-2">
-                            Nome no Cartão *
-                          </label>
-                          <input
-                            type="text"
-                            name="ccname"
-                            autoComplete="cc-name"
-                            value={cardData.holderName}
-                            onChange={(e) => setCardData({ ...cardData, holderName: e.target.value.toUpperCase() })}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors"
-                            placeholder="NOME COMO NO CARTÃO"
-                            required
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-bold text-gray-900 mb-2">
-                              Validade *
-                            </label>
-                            <input
-                              type="text"
-                              name="cc-exp"
-                              autoComplete="cc-exp"
-                              value={cardData.expiry}
-                              onChange={(e) => {
-                                // Formatar como MM/AA
-                                let value = e.target.value.replace(/\D/g, '').slice(0, 4)
-                                if (value.length >= 2) {
-                                  value = value.slice(0, 2) + '/' + value.slice(2)
-                                }
-                                setCardData({ ...cardData, expiry: value })
-                              }}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors"
-                              placeholder="MM/AA"
-                              maxLength={5}
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-bold text-gray-900 mb-2">
-                              CVV *
-                            </label>
-                            <input
-                              type="text"
-                              name="cc-csc"
-                              autoComplete="cc-csc"
-                              value={cardData.cvv}
-                              onChange={(e) => setCardData({ ...cardData, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors"
-                              placeholder="123"
-                              maxLength={4}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* Parcelas */}
-                        <div>
-                          <label className="block text-sm font-bold text-gray-900 mb-2">
-                            Parcelas *
-                          </label>
-                          <select
-                            value={cardData.installments}
-                            onChange={(e) => setCardData({ ...cardData, installments: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors bg-white"
-                            required
-                          >
-                            {parcelasDisponiveis.length > 0 ? (
-                              parcelasDisponiveis.map((parcela) => (
-                                <option key={parcela.numero} value={parcela.numero}>
-                                  {parcela.numero}x de R$ {parcela.valorParcela.toFixed(2).replace('.', ',')}
-                                  {parcela.numero === 1 ? ' sem juros' : ` (Total: R$ ${parcela.valorTotal.toFixed(2).replace('.', ',')})`}
-                                </option>
-                              ))
-                            ) : (
-                              <option value="">Sem opções</option>
-                            )}
-                          </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Parcelamento em até {maxInstallments}x • Taxa: 2,49% a.m.
-                          </p>
+                        <SecureCardForm
+                          ref={secureCardFormRef}
+                          amount={total}
+                          cpf={formData.cpf.replace(/\D/g, '')}
+                          documentType={formData.documentType}
+                          disabled={loading}
+                          onTokenReady={(tokenData) => {
+                            console.log('🔐 Token Secure Fields pronto:', tokenData.token.substring(0, 20) + '...')
+                            setSecureCardToken(tokenData.token)
+                            setCardData(prev => ({ ...prev, installments: tokenData.installments }))
+                            setSecureCardReady(true)
+                          }}
+                          onError={(errorMessage) => {
+                            console.error('❌ Erro Secure Fields:', errorMessage)
+                            alert(`Erro no cartão: ${errorMessage}`)
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Parcelamento em até {maxInstallments}x • Taxa: 2,49% a.m.
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded-lg">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                          </svg>
+                          <span>Pagamento seguro com Mercado Pago - Seus dados estão protegidos</span>
                         </div>
                       </motion.div>
                     )}
@@ -1901,182 +1823,193 @@ export default function CheckoutPage() {
         )}
       </AnimatePresence>
 
-      {/* Tela de Sucesso PIX - Nativa */}
+      {/* Tela de Sucesso PIX - Estilo Kirvano */}
       <AnimatePresence>
         {pixData && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gradient-to-br from-brand-50 via-white to-brand-50 z-40 overflow-y-auto"
+            className="fixed inset-0 bg-white z-40 overflow-y-auto"
           >
-            {/* Mantém o Header do checkout */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white shadow-2xl">
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex items-center justify-center gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-bold">Compra 100% Segura</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    <span className="font-bold">Acesso Imediato</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Gift className="w-5 h-5" />
-                    <span className="font-bold">4 Bônus Grátis</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Conteúdo PIX */}
-            <div className="min-h-screen pt-28 md:pt-24 pb-12 px-4">
-              <div className="container mx-auto max-w-2xl">
+            {/* Conteúdo PIX - Estilo Kirvano */}
+            <div className="min-h-screen py-8 px-4">
+              <div className="container mx-auto max-w-md">
+                
+                {/* QR Code no topo */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center mb-8"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center mb-6"
                 >
-                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-full text-lg font-bold mb-4 shadow-lg">
-                    <CheckCircle2 className="w-6 h-6" />
-                    <span>Pedido Reservado!</span>
+                  <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-4">
+                    <img
+                      src={`data:image/png;base64,${pixData.qrCode}`}
+                      alt="QR Code PIX"
+                      className="w-40 h-40"
+                    />
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
-                    Complete seu Pagamento
+                  
+                  {/* Valor */}
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    Pague R$ {total.toFixed(2).replace('.', ',')} via Pix
                   </h1>
-                  <p className="text-gray-600 text-lg">
-                    Efetue o pagamento via PIX para confirmar seu acesso
+                  <p className="text-gray-500 text-center text-sm px-4">
+                    Copie o código ou use a câmera para ler o QR Code e realize o pagamento no app do seu banco.
                   </p>
                 </motion.div>
 
-                {/* Card PIX */}
+                {/* Card principal */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-brand-100"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4"
                 >
-                  {/* Pix Copia e Cola - PRIMEIRO */}
-                  <div className="mb-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-4 text-center">
-                      Pix Copia e Cola
-                    </h3>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={pixData.emv}
-                        readOnly
-                        className="w-full px-4 py-4 pr-12 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-mono text-gray-700 focus:outline-none focus:border-brand-500 transition-colors"
-                      />
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(pixData.emv)
-                          alert("Código PIX copiado!")
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg transition-colors group"
-                      >
-                        <Copy className="w-5 h-5 text-gray-600 group-hover:text-brand-600" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-3 text-center">
-                      Copie o código e cole no app do seu banco
+                  {/* Código Copia e Cola */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-gray-500 text-sm font-mono truncate mb-3">
+                      {pixData.emv.substring(0, 40)}...
                     </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(pixData.emv)
+                        alert("✅ Código PIX copiado!")
+                      }}
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Copy className="w-5 h-5" />
+                      Copiar
+                    </button>
                   </div>
 
-                  {/* Separador */}
-                  <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t-2 border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500 font-bold">OU</span>
-                    </div>
-                  </div>
+                  {/* Botão Confirmar pagamento */}
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/checkout/check-payment?order_id=${pixData.orderId}`)
+                        const data = await response.json()
+                        
+                        if (data.is_paid) {
+                          await markCartAsRecovered(pixData.orderId)
+                          router.push(`/obrigado?email=${encodeURIComponent(formData.email)}&order_id=${pixData.orderId}`)
+                        } else {
+                          alert("⏳ Pagamento ainda não detectado. Aguarde alguns segundos após pagar e tente novamente.")
+                        }
+                      } catch (error) {
+                        alert("Erro ao verificar pagamento. Tente novamente.")
+                      }
+                    }}
+                    className="w-full bg-white hover:bg-gray-50 text-gray-900 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    Confirmar pagamento
+                  </button>
 
-                  {/* QR Code - DEPOIS */}
-                  <div className="flex flex-col items-center mb-8">
-                    <h3 className="text-xl font-black text-gray-900 mb-4">
-                      Escaneie o QR Code
-                    </h3>
-                    <div className="bg-white p-4 rounded-2xl border-4 border-gray-100 shadow-lg">
-                      <img
-                        src={`data:image/png;base64,${pixData.qrCode}`}
-                        alt="QR Code PIX"
-                        className="w-64 h-64 md:w-72 md:h-72"
-                      />
-                    </div>
-                    <p className="text-sm text-gray-600 mt-4 text-center">
-                      Abra o app do seu banco e escaneie o código
-                    </p>
-                  </div>
+                  {/* Botão WhatsApp */}
+                  <button
+                    onClick={() => {
+                      const message = `🎯 *Código PIX - Gravador Médico*\n\n💰 Valor: R$ ${total.toFixed(2).replace('.', ',')}\n\n📋 *Código Copia e Cola:*\n${pixData.emv}\n\n⏱️ Este código expira em 30 minutos.\n\n📱 Cole no app do seu banco para pagar!`
+                      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
+                      window.open(whatsappUrl, '_blank')
+                    }}
+                    className="w-full bg-white hover:bg-gray-50 text-gray-900 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    Enviar por WhatsApp
+                  </button>
 
-                  {/* ⏱️ CONTADOR DE EXPIRAÇÃO PIX */}
-                  <div className={`rounded-2xl p-4 mb-6 text-center ${pixTimeLeft <= 300 ? 'bg-red-100 border-2 border-red-300' : 'bg-amber-100 border-2 border-amber-300'}`}>
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Clock className={`w-6 h-6 ${pixTimeLeft <= 300 ? 'text-red-600 animate-pulse' : 'text-amber-600'}`} />
-                      <span className={`text-lg font-black ${pixTimeLeft <= 300 ? 'text-red-700' : 'text-amber-700'}`}>
-                        {pixTimeLeft <= 0 ? (
-                          'PIX EXPIRADO'
-                        ) : (
-                          <>
-                            Expira em {String(Math.floor(pixTimeLeft / 60)).padStart(2, '0')}:{String(pixTimeLeft % 60).padStart(2, '0')}
-                          </>
-                        )}
+                  {/* Contador de expiração */}
+                  <div className={`rounded-xl p-4 flex items-center justify-center gap-2 border-2 border-dashed ${pixTimeLeft <= 300 ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                    <Clock className={`w-5 h-5 ${pixTimeLeft <= 300 ? 'text-red-500' : 'text-gray-500'}`} />
+                    <span className={`font-bold ${pixTimeLeft <= 300 ? 'text-red-600' : 'text-gray-700'}`}>
+                      Código expira em
+                    </span>
+                    <div className="flex gap-1">
+                      <span className="bg-gray-900 text-white font-mono font-bold px-2 py-1 rounded text-lg">
+                        {String(Math.floor(pixTimeLeft / 60)).padStart(2, '0').charAt(0)}
+                      </span>
+                      <span className="bg-gray-900 text-white font-mono font-bold px-2 py-1 rounded text-lg">
+                        {String(Math.floor(pixTimeLeft / 60)).padStart(2, '0').charAt(1)}
+                      </span>
+                      <span className="font-bold text-gray-900 text-lg">:</span>
+                      <span className="bg-gray-900 text-white font-mono font-bold px-2 py-1 rounded text-lg">
+                        {String(pixTimeLeft % 60).padStart(2, '0').charAt(0)}
+                      </span>
+                      <span className="bg-gray-900 text-white font-mono font-bold px-2 py-1 rounded text-lg">
+                        {String(pixTimeLeft % 60).padStart(2, '0').charAt(1)}
                       </span>
                     </div>
-                    <p className={`text-sm ${pixTimeLeft <= 300 ? 'text-red-600' : 'text-amber-600'}`}>
-                      {pixTimeLeft <= 0 ? 'Gere um novo PIX para continuar' : 'Complete o pagamento antes do tempo acabar'}
-                    </p>
-                  </div>
-
-                  {/* Informações */}
-                  <div className="bg-brand-50 rounded-2xl p-6 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-gray-900">Pagamento detectado automaticamente</p>
-                        <p className="text-sm text-gray-600">Assim que pagar, você será redirecionado</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-gray-900">Pagamento 100% seguro</p>
-                        <p className="text-sm text-gray-600">Seus dados estão protegidos</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Zap className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-gray-900">Acesso instantâneo</p>
-                        <p className="text-sm text-gray-600">Receba tudo por email assim que confirmar</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ordem */}
-                  <div className="mt-6 pt-6 border-t-2 border-gray-100">
-                    <p className="text-sm text-gray-500 text-center">
-                      Pedido #{pixData.orderId}
-                    </p>
                   </div>
                 </motion.div>
 
-                {/* Aguardando pagamento */}
+                {/* Instruções */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4"
+                >
+                  {/* Passo 1 */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Acesse seu banco</p>
+                      <p className="text-sm text-gray-500">Abra o app do seu banco, é rapidinho.</p>
+                    </div>
+                  </div>
+
+                  {/* Passo 2 */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7.5 3.5a2 2 0 012-2h5a2 2 0 012 2v1a1 1 0 01-1 1h-7a1 1 0 01-1-1v-1zM5 7.5a1 1 0 011-1h12a1 1 0 011 1v11a2 2 0 01-2 2H7a2 2 0 01-2-2v-11zM10 11a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm0 4a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Escolha a opção Pix</p>
+                      <p className="text-sm text-gray-500">Selecione "Pix Copia e Cola" ou "Ler QR code".</p>
+                    </div>
+                  </div>
+
+                  {/* Passo 3 */}
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Conclua o pagamento</p>
+                      <p className="text-sm text-gray-500">Cole o código ou leia o QR code.</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Aguardando + Número do pedido */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-8 text-center"
+                  className="mt-6 text-center"
                 >
-                  <div className="inline-flex items-center gap-2 text-gray-600">
+                  <div className="inline-flex items-center gap-2 text-gray-500 mb-2">
                     <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                     <div className="w-2 h-2 bg-brand-600 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                    <span className="ml-2 font-semibold">Aguardando pagamento...</span>
+                    <span className="ml-2 text-sm">Aguardando pagamento...</span>
                   </div>
+                  <p className="text-xs text-gray-400">
+                    Pedido #{pixData.orderId.substring(0, 8)}
+                  </p>
                 </motion.div>
+
               </div>
             </div>
           </motion.div>
