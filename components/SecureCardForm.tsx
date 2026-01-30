@@ -83,6 +83,7 @@ const SecureCardForm = forwardRef<SecureCardFormHandle, SecureCardFormProps>(({
         const cardForm = mp.cardForm({
           amount: String(amount),
           iframe: true,
+          autoMount: true,
           form: {
             id: 'secure-card-form',
             cardNumber: {
@@ -157,6 +158,12 @@ const SecureCardForm = forwardRef<SecureCardFormHandle, SecureCardFormProps>(({
               if (!err && data && data.length > 0) {
                 console.log('💳 Bandeira detectada:', data[0].id)
                 setCardBrand(data[0].id)
+              }
+            },
+            onInstallmentsReceived: (err: any, data: any) => {
+              if (!err && data) {
+                console.log('📊 Parcelas recebidas:', data)
+                // O select de parcelas é populado automaticamente pelo cardForm
               }
             },
             onCardTokenReceived: (err: any, token: string) => {
@@ -361,8 +368,14 @@ const SecureCardForm = forwardRef<SecureCardFormHandle, SecureCardFormProps>(({
             id="installments-container"
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-brand-500 focus:outline-none transition-colors bg-white"
           >
-            <option value="">Selecione...</option>
+            <option value="">Digite o cartão para ver parcelas</option>
           </select>
+          {cardBrand && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              Parcelas disponíveis para {cardBrand}
+            </p>
+          )}
         </div>
 
         {/* Documento - Hidden, preenchido automaticamente */}
