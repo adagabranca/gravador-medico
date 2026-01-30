@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { getWhatsAppLink } from '@/lib/contact-helpers'
 import {
   DollarSign,
   Clock,
@@ -106,19 +107,8 @@ export default function RecoveryPage() {
 
   // Função para abrir WhatsApp
   const openWhatsApp = (phone: string, name: string, amount: string) => {
-    // Remover caracteres não numéricos
-    const cleanPhone = phone.replace(/\D/g, '')
-    
-    // Mensagem personalizada
-    const message = `Olá ${name}! 👋
-
-Notamos que você iniciou uma compra no valor de *R$ ${formatMoney(parseFloat(amount))}*, mas não finalizou o pagamento. 
-
-Posso te ajudar a concluir seu pedido? Se tiver alguma dúvida, estou à disposição! 😊`
-
-    const encodedMessage = encodeURIComponent(message)
-    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`
-    
+    // Usar helper personalizado para recuperação
+    const whatsappUrl = getWhatsAppLink(phone, 'recovery', name)
     window.open(whatsappUrl, '_blank')
   }
 

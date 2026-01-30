@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       .from('sales')
       .select('customer_email, customer_name, customer_phone, customer_cpf, status, created_at, total_amount')
       .in('status', ['paid', 'provisioning', 'active'])
-      .is('deleted_at', null) // 🗑️ Filtrar deletados
       .order('created_at', { ascending: false })
     
     if (error) {

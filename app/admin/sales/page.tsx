@@ -8,6 +8,7 @@ import { formatCpfCnpj, formatPhone } from '@/lib/display-helpers'
 import { refundOrder } from '@/actions/refund-order'
 import { SyncAppmaxButton } from '@/components/dashboard/SyncAppmaxButton'
 import { SyncMercadoPagoButton } from '@/components/dashboard/SyncMercadoPagoButton'
+import { ContactButtons, WhatsAppIcon, EmailIcon } from '@/components/ContactButtons'
 import Image from 'next/image'
 import {
   Search,
@@ -56,6 +57,7 @@ export default function SalesPage() {
   const [filteredSales, setFilteredSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
@@ -317,6 +319,36 @@ export default function SalesPage() {
     }
   }
 
+  const handleSyncAll = async () => {
+    if (!confirm('Sincronizar TODAS as vendas do AppMax?\n\nIsso pode levar alguns minutos e irá buscar todas as vendas aprovadas que ainda não estão no sistema.')) {
+      return
+    }
+
+    setSyncing(true)
+    try {
+      const response = await fetch('/api/admin/sync-all-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao sincronizar vendas')
+      }
+
+      alert(`✅ Sincronização completa!\n\n${data.new} vendas novas adicionadas\n${data.existing} vendas já existiam\nTotal AppMax: ${data.total}`)
+      
+      // Recarregar vendas
+      await loadSales()
+    } catch (error: any) {
+      console.error('Erro ao sincronizar:', error)
+      alert(`❌ Erro ao sincronizar vendas: ${error.message}`)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const handleRefund = async (sale: Sale) => {
     const saleId = sale.sale_id || (sale.source === 'sale' ? sale.id : null)
     if (!saleId) {
@@ -375,6 +407,16 @@ export default function SalesPage() {
 
           <SyncMercadoPagoButton />
           <SyncAppmaxButton />
+          
+          <button 
+            onClick={handleSyncAll} 
+            disabled={syncing}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Sincronizar TODAS as vendas do AppMax"
+          >
+            <Download className={`w-4 h-4 ${syncing ? 'animate-bounce' : ''}`} />
+            {syncing ? 'Sincronizando...' : 'Sync Completo'}
+          </button>
 
           <button onClick={loadSales} disabled={loading} className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 flex items-center gap-2">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -495,9 +537,26 @@ export default function SalesPage() {
                           <button onClick={(e) => { e.stopPropagation(); copyToClipboard(sale.id, 'ID') }} className="p-1 hover:bg-gray-600 rounded">
                             <Copy className="w-3.5 h-3.5 text-gray-400" />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${sale.customer_email}` }} className="p-1 hover:bg-gray-600 rounded">
-                            <Mail className="w-3.5 h-3.5 text-gray-400" />
-                          </button>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            {sale.customer_phone && (
+                              <WhatsAppIcon 
+                                phone={sale.customer_phone}
+                                context="support"
+                                customerName={sale.customer_name}
+                              />
+                            )}
+                          </div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <EmailIcon
+                              email={sale.customer_email}
+                              context="support"
+                              customerName={sale.customer_name}
+                              extraData={{
+                                orderId: sale.appmax_order_id,
+                                saleId: sale.id
+                              }}
+                            />
+                          </div>
                         </div>
                       </td>
                     </motion.tr>
@@ -612,10 +671,21 @@ export default function SalesPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <button onClick={() => window.location.href = `mailto:${selectedSale.customer_email}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 text-white rounded-lg hover:bg-brand-700">
-                    <Mail className="w-5 h-5" />
-                    Enviar Email
-                  </button>
+                  {/* Botões de contato personalizados */}
+                  <ContactButtons
+                    email={selectedSale.customer_email}
+                    phone={selectedSale.customer_phone}
+                    customerName={selectedSale.customer_name}
+                    emailContext="support"
+                    whatsappContext="support"
+                    extraData={{
+                      orderId: selectedSale.appmax_order_id,
+                      saleId: selectedSale.id
+                    }}
+                    variant="stacked"
+                    showLabels={true}
+                  />
+                  
                   {selectedSale.appmax_order_id && (
                     <button onClick={() => window.open(`https://admin.appmax.com.br/orders/${selectedSale.appmax_order_id}`, '_blank')} className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-700/50">
                       <ExternalLink className="w-5 h-5" />
