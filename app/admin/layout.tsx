@@ -363,7 +363,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     menuItems.forEach((item) => {
-      if ('items' in item) {
+      if ('items' in item && item.items) {
         initial[item.label] = item.items.some((child) => child.href === pathname)
       }
     })
@@ -403,7 +403,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setOpenGroups((prev) => {
       const next = { ...prev }
       menuItems.forEach((item) => {
-        if ('items' in item) {
+        if ('items' in item && item.items) {
           if (item.items.some((child) => child.href === pathname)) {
             next[item.label] = true
           }
@@ -565,7 +565,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1">
             {menuItems.map((item) => {
-              if ('items' in item) {
+              if ('items' in item && item.items) {
                 const isGroupActive = item.items.some((child) => pathname === child.href)
                 const Icon = item.icon
                 const isOpen = !!openGroups[item.label]
@@ -587,7 +587,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {isOpen && (
+                    {isOpen && item.items && (
                       <div className="ml-6 space-y-1">
                         {item.items.map((child) => {
                           const isActive = pathname === child.href
@@ -769,7 +769,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {/* Navigation */}
               <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
-                  if ('items' in item) {
+                  if ('items' in item && item.items) {
                     const isGroupActive = item.items.some((child) => pathname === child.href)
                     const Icon = item.icon
                     const isOpen = !!openGroups[item.label]
@@ -789,7 +789,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                         </button>
 
-                        {isOpen && (
+                        {isOpen && item.items && (
                           <div className="ml-6 space-y-1">
                             {item.items.map((child) => {
                               const isActive = pathname === child.href
