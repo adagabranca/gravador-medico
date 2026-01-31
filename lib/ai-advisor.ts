@@ -8,10 +8,14 @@
 import OpenAI from 'openai';
 import { AdsMetrics, CampaignInsight } from './meta-marketing';
 
-// Inicializa cliente OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Função para obter cliente OpenAI (lazy initialization)
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  return new OpenAI({ apiKey });
+}
 
 // =====================================================
 // TIPOS
@@ -154,6 +158,7 @@ export async function analyzeCampaigns(
 ): Promise<AIAnalysisResult> {
   try {
     const prompt = buildAnalysisPrompt(metrics, dashboardMetrics);
+    const openai = getOpenAIClient();
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Mais barato e rápido, mas pode usar 'gpt-4o' para melhor qualidade
@@ -204,6 +209,7 @@ Analise esta campanha de Facebook Ads e dê 2-3 dicas práticas em português:
 
 Seja conciso e direto. Máximo 150 palavras.
 `;
+    const openai = getOpenAIClient();
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -250,6 +256,7 @@ Contexto das campanhas:
       { role: 'user', content: question }
     ];
 
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages,
