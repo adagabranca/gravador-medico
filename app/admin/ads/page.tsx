@@ -227,7 +227,7 @@ export default function AdsPage() {
   const [loadingAds, setLoadingAds] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today'); // HOJE como padrão
   
   // Estado para vendas reais do Supabase
   const [realSales, setRealSales] = useState<SalesData | null>(null);

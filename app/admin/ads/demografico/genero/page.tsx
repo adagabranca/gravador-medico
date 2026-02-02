@@ -30,7 +30,7 @@ const periodOptions = [
 export default function GeneroPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
 
   const fetchData = useCallback(async () => {
     setLoading(true);

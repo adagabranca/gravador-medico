@@ -71,7 +71,7 @@ export default function CriativosPage() {
   const [creativeUrls, setCreativeUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('status_date');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());

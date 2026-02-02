@@ -43,7 +43,7 @@ export default function HistoricoPage() {
   const [campaigns, setCampaigns] = useState<CampaignInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
 
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);

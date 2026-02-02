@@ -465,7 +465,7 @@ function ChatInterface({ period }: { period: string }) {
 export default function AIPerformancePage() {
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('last_7d');
+  const [period, setPeriod] = useState('today');
   const [activeTab, setActiveTab] = useState<'overview' | 'actions' | 'creatives' | 'chat'>('overview');
   
   const fetchAnalysis = useCallback(async (forceRefresh = false) => {

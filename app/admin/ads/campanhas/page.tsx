@@ -78,7 +78,7 @@ export default function CampanhasPage() {
   const [metrics, setMetrics] = useState<AdsMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('spend_desc');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());

@@ -52,11 +52,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filterType, setFilterType] = useState<'quick' | 'custom'>('quick')
-  const [quickDays, setQuickDays] = useState(30)
+  const [quickDays, setQuickDays] = useState(0) // HOJE como padrão
   const [startDate, setStartDate] = useState(() => {
-    const date = new Date()
-    date.setDate(date.getDate() - 30)
-    return date.toISOString().split('T')[0]
+    return new Date().toISOString().split('T')[0] // Hoje
   })
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0])
   

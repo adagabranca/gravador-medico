@@ -61,7 +61,7 @@ export default function EngajamentoPage() {
   const [ads, setAds] = useState<CampaignInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_7d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
   const [statusFilter, setStatusFilter] = useState('all');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 

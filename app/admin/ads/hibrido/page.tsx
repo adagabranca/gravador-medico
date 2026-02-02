@@ -120,7 +120,7 @@ export default function HibridoPage() {
   const [fbError, setFbError] = useState(false);
   const [gaError, setGaError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('last_30d');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchData = useCallback(async (showRefresh = false) => {

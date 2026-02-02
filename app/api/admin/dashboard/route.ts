@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth-server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-function getSaoPauloDate(): Date {
+// Retorna a data atual em São Paulo como string YYYY-MM-DD
+function getTodaySP(): string {
   const now = new Date()
-  const offset = -3 * 60
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
-  return new Date(utc + (offset * 60000))
+  // Formatar em timezone de SP
+  const formatter = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+  return formatter.format(now) // retorna YYYY-MM-DD
 }
 
 export async function GET(request: NextRequest) {
@@ -22,57 +28,61 @@ export async function GET(request: NextRequest) {
     const daysParam = Number.parseInt(searchParams.get('days') || '', 10)
     const days = Number.isFinite(daysParam) ? daysParam : 30
 
-    const nowSP = getSaoPauloDate()
-    let startDate: Date
-    let endDate: Date
+    const todayStr = getTodaySP() // YYYY-MM-DD em SP
+    let startISO: string
+    let endISO: string
     let label: string
 
     if (start && end) {
-      startDate = new Date(start)
-      endDate = new Date(end)
-      label = `${startDate.toLocaleDateString('pt-BR')} até ${endDate.toLocaleDateString('pt-BR')}`
+      // Modo custom - usar as datas passadas
+      startISO = start
+      endISO = end
+      label = 'Período personalizado'
     } else {
-      const todaySP = new Date(nowSP.getFullYear(), nowSP.getMonth(), nowSP.getDate())
+      // Calcular baseado em dias
+      const todayDate = new Date(todayStr + 'T00:00:00-03:00') // Forçar timezone SP
       
       if (days === 0) {
-        startDate = new Date(todaySP)
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date(todaySP)
-        endDate.setHours(23, 59, 59, 999)
+        // Hoje: 00:00:00 até 23:59:59 em SP
+        startISO = todayStr + 'T00:00:00-03:00'
+        endISO = todayStr + 'T23:59:59.999-03:00'
         label = 'Hoje'
       } else if (days === 1) {
-        startDate = new Date(todaySP)
-        startDate.setDate(startDate.getDate() - 1)
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date(startDate)
-        endDate.setHours(23, 59, 59, 999)
+        // Ontem
+        const yesterday = new Date(todayDate)
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStr = yesterday.toISOString().split('T')[0]
+        startISO = yesterdayStr + 'T00:00:00-03:00'
+        endISO = yesterdayStr + 'T23:59:59.999-03:00'
         label = 'Ontem'
       } else {
-        endDate = new Date(todaySP)
-        endDate.setHours(23, 59, 59, 999)
-        startDate = new Date(todaySP)
-        startDate.setDate(startDate.getDate() - days)
-        startDate.setHours(0, 0, 0, 0)
+        // Últimos N dias
+        const startDay = new Date(todayDate)
+        startDay.setDate(startDay.getDate() - days)
+        const startStr = startDay.toISOString().split('T')[0]
+        startISO = startStr + 'T00:00:00-03:00'
+        endISO = todayStr + 'T23:59:59.999-03:00'
         label = `Últimos ${days} dias`
       }
     }
 
-    const startUTC = new Date(startDate.getTime() + (3 * 60 * 60 * 1000))
-    const endUTC = new Date(endDate.getTime() + (3 * 60 * 60 * 1000))
+    console.log('[Dashboard API] Período:', label)
+    console.log('[Dashboard API] Range:', startISO, 'até', endISO)
 
-    console.log('[Dashboard API] Período:', label, 'Start:', startUTC.toISOString(), 'End:', endUTC.toISOString())
-
-    const duration = endDate.getTime() - startDate.getTime()
-    const prevStartUTC = new Date(startUTC.getTime() - duration)
-    const prevEndUTC = new Date(startUTC.getTime() - 1)
+    // Calcular período anterior para comparação
+    const startMs = new Date(startISO).getTime()
+    const endMs = new Date(endISO).getTime()
+    const duration = endMs - startMs
+    const prevStartISO = new Date(startMs - duration).toISOString()
+    const prevEndISO = new Date(startMs - 1).toISOString()
 
     const [salesResult, prevSalesResult, visitorsResult, prevVisitorsResult, chartResult, cartsResult] = await Promise.all([
-      supabaseAdmin.from('sales').select('id, total_amount, order_status, payment_gateway, created_at').gte('created_at', startUTC.toISOString()).lte('created_at', endUTC.toISOString()).is('deleted_at', null),
-      supabaseAdmin.from('sales').select('id, total_amount, order_status').gte('created_at', prevStartUTC.toISOString()).lte('created_at', prevEndUTC.toISOString()).is('deleted_at', null),
-      supabaseAdmin.from('analytics_visits').select('session_id').gte('created_at', startUTC.toISOString()).lte('created_at', endUTC.toISOString()),
-      supabaseAdmin.from('analytics_visits').select('session_id').gte('created_at', prevStartUTC.toISOString()).lte('created_at', prevEndUTC.toISOString()),
-      supabaseAdmin.from('sales').select('total_amount, created_at').gte('created_at', startUTC.toISOString()).lte('created_at', endUTC.toISOString()).is('deleted_at', null).in('order_status', ['approved', 'paid', 'authorized']),
-      supabaseAdmin.from('abandoned_carts').select('id, total_amount, status, created_at').gte('created_at', startUTC.toISOString()).lte('created_at', endUTC.toISOString()).is('deleted_at', null)
+      supabaseAdmin.from('sales').select('id, total_amount, order_status, payment_gateway, created_at').gte('created_at', startISO).lte('created_at', endISO).is('deleted_at', null),
+      supabaseAdmin.from('sales').select('id, total_amount, order_status').gte('created_at', prevStartISO).lte('created_at', prevEndISO).is('deleted_at', null),
+      supabaseAdmin.from('analytics_visits').select('session_id').gte('created_at', startISO).lte('created_at', endISO),
+      supabaseAdmin.from('analytics_visits').select('session_id').gte('created_at', prevStartISO).lte('created_at', prevEndISO),
+      supabaseAdmin.from('sales').select('total_amount, created_at').gte('created_at', startISO).lte('created_at', endISO).is('deleted_at', null).in('order_status', ['approved', 'paid', 'authorized']),
+      supabaseAdmin.from('abandoned_carts').select('id, total_amount, status, created_at').gte('created_at', startISO).lte('created_at', endISO).is('deleted_at', null)
     ])
 
     const approvedStatuses = ['approved', 'paid', 'authorized']
@@ -151,7 +161,7 @@ export async function GET(request: NextRequest) {
         failedPayments: { count: failedSales.length, totalValue: Math.round(failedValue * 100) / 100, reasons: [] },
         chargebacks: { count: 0, totalValue: 0 }
       },
-      debug: { period: label, startUTC: startUTC.toISOString(), endUTC: endUTC.toISOString(), totalSalesInPeriod: allSales.length, approvedSalesInPeriod: approvedSales.length }
+      debug: { period: label, startISO, endISO, totalSalesInPeriod: allSales.length, approvedSalesInPeriod: approvedSales.length }
     }
 
     console.log('[Dashboard API] Resultado:', totalSales, 'vendas, R$', totalRevenue.toFixed(2), ',', visitors, 'visitantes')
