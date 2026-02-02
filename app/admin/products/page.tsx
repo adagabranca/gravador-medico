@@ -71,68 +71,20 @@ export default function ProductsPage() {
     try {
       setLoading(true)
       
-      // Buscar produtos
-      const { data: productsData, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('❌ Erro ao carregar produtos:', error)
+      // Usar API route que tem acesso admin ao Supabase
+      const response = await fetch('/api/admin/products-metrics')
+      const data = await response.json()
+      
+      if (data.error) {
+        console.error('❌ Erro ao carregar produtos:', data.error)
         return
       }
 
-      console.log('📦 Produtos encontrados:', productsData?.length)
+      console.log('� PRODUTOS COM MÉTRICAS:', data.products)
+      console.log('📊 STATS:', data.stats)
 
-      // Buscar performance de cada produto via view
-      const { data: performanceData, error: perfError } = await supabase
-        .from('product_performance')
-        .select('*')
-
-      if (perfError) {
-        console.error('⚠️ Erro ao carregar performance:', perfError)
-        console.log('ℹ️ Isso pode ser normal se a view product_performance não existir ou não tiver dados')
-      } else {
-        console.log('📊 Performance encontrada:', performanceData?.length)
-        if (performanceData && performanceData.length > 0) {
-          console.log('📊 Exemplo de performance:', performanceData[0])
-        }
-      }
-
-      // Combinar dados
-      const productsWithPerformance = (productsData || []).map(product => {
-        // Tentar encontrar por nome exato primeiro
-        let perf = performanceData?.find(p => p.product_name === product.name)
-        
-        // Se não encontrou, tentar por similaridade (remover espaços e comparar)
-        if (!perf) {
-          const normalizedProductName = product.name.toLowerCase().trim()
-          perf = performanceData?.find(p => 
-            p.product_name?.toLowerCase().trim() === normalizedProductName
-          )
-        }
-        
-        if (!perf) {
-          console.log(`ℹ️ Produto sem vendas: "${product.name}"`)
-        }
-        return {
-          ...product,
-          performance: perf || {
-            total_sales: 0,
-            total_revenue: 0,
-            refund_rate: 0,
-            conversion_rate: 0,
-            health_score: 0,
-            unique_customers: 0,
-            last_sale_at: null
-          }
-        }
-      })
-
-      setProducts(productsWithPerformance)
-      
-      // Calcular stats
-      calculateStats(productsWithPerformance)
+      setProducts(data.products || [])
+      setStats(data.stats || null)
 
     } catch (error) {
       console.error('❌ Erro:', error)

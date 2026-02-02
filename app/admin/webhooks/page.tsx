@@ -93,6 +93,9 @@ export default function WebhooksPage() {
       'order.refunded': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
       'pix.generated': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       'pix.paid': 'bg-green-500/20 text-green-400 border-green-500/30',
+      'mercadopago.payment': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      'mercadopago.merchant_order': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+      'appmax.order': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     }
 
     return (
@@ -123,7 +126,7 @@ export default function WebhooksPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-black text-white">Webhooks</h1>
-          <p className="text-gray-400 mt-1">Histórico de notificações da Appmax</p>
+          <p className="text-gray-400 mt-1">Histórico de notificações (MercadoPago, AppMax, etc)</p>
         </div>
         <button
           onClick={loadWebhooks}

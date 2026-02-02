@@ -57,34 +57,10 @@ const automationItems = [
     href: '/admin/recovery',
     badge: null
   },
-]
-
-const lovableItems = [
-  { 
-    icon: Users, 
-    label: 'Gerenciar Usuários', 
-    href: '/admin/lovable/users',
-    badge: null
-  },
-  { 
-    icon: Mail, 
-    label: 'Logs de Integração', 
-    href: '/admin/lovable/emails',
-    badge: null
-  },
-  { 
-    icon: ExternalLink, 
-    label: 'Abrir Lovable App', 
-    href: 'https://gravador-medico.lovable.app',
-    badge: null,
-    external: true
-  },
-]
-
-const trackingItems = [
+  // TRACKING (integrado à Automação)
   { 
     icon: LayoutDashboard, 
-    label: 'Dashboard', 
+    label: 'Tracking Dashboard', 
     href: '/admin/tracking',
     badge: null
   },
@@ -120,9 +96,38 @@ const trackingItems = [
   },
   { 
     icon: Settings, 
-    label: 'Configurações', 
+    label: 'Config. Tracking', 
     href: '/admin/tracking/settings',
     badge: null
+  },
+  // WEBHOOKS (logs de integrações)
+  { 
+    icon: Bell, 
+    label: 'Webhooks', 
+    href: '/admin/webhooks',
+    badge: null
+  },
+]
+
+const lovableItems = [
+  { 
+    icon: Users, 
+    label: 'Gerenciar Usuários', 
+    href: '/admin/lovable/users',
+    badge: null
+  },
+  { 
+    icon: Mail, 
+    label: 'Logs de Integração', 
+    href: '/admin/lovable/emails',
+    badge: null
+  },
+  { 
+    icon: ExternalLink, 
+    label: 'Abrir Lovable App', 
+    href: 'https://gravador-medico.lovable.app',
+    badge: null,
+    external: true
   },
 ]
 
@@ -198,23 +203,7 @@ const demograficoItems = [
   },
 ]
 
-// Menu de Produção (Pagamentos, Relatórios) - Vendas ficou standalone
-const producaoItems = [
-  { 
-    icon: CreditCard, 
-    label: 'Pagamentos', 
-    href: '/admin/payments',
-    badge: null
-  },
-  { 
-    icon: BarChart3, 
-    label: 'Relatórios', 
-    href: '/admin/reports',
-    badge: null
-  },
-]
-
-// Menu de Gestão (CRM, Clientes) - E-mails ficou standalone
+// Menu de Gestão (CRM, Clientes, Produtos, Cupons, Pagamentos, Relatórios)
 const gestaoItems = [
   { 
     icon: Users, 
@@ -226,6 +215,30 @@ const gestaoItems = [
     icon: Users, 
     label: 'Clientes', 
     href: '/admin/customers',
+    badge: null
+  },
+  { 
+    icon: Package, 
+    label: 'Produtos', 
+    href: '/admin/products',
+    badge: null
+  },
+  { 
+    icon: Ticket, 
+    label: 'Cupons', 
+    href: '/admin/cupons',
+    badge: null
+  },
+  { 
+    icon: CreditCard, 
+    label: 'Pagamentos', 
+    href: '/admin/payments',
+    badge: null
+  },
+  { 
+    icon: BarChart3, 
+    label: 'Relatórios', 
+    href: '/admin/reports',
     badge: null
   },
 ]
@@ -254,21 +267,6 @@ const menuItems = [
     label: 'Automação', 
     icon: Sparkles,
     items: automationItems
-  },
-  
-  // 🛍️ CATÁLOGO (Produtos + Cupons)
-  { 
-    label: 'Catálogo', 
-    icon: Package,
-    items: catalogItems
-  },
-  
-  // 💬 CHAT INTERNO
-  { 
-    icon: MessageCircle, 
-    label: 'Chat Interno', 
-    href: '/admin/chat',
-    badge: null
   },
   
   // ⚙️ CONFIGURAÇÕES
@@ -312,21 +310,7 @@ const menuItems = [
     subItems: demograficoItems  // Sub-submenu demográfico
   },
   
-  // 💰 PRODUÇÃO (Pagamentos, Relatórios)
-  { 
-    label: 'Produção', 
-    icon: ShoppingBag,
-    items: producaoItems
-  },
-  
-  // 🔗 TRACKING
-  { 
-    label: 'Tracking', 
-    icon: MousePointerClick,
-    items: trackingItems
-  },
-  
-  // 🛒 VENDAS (Standalone - destaque)
+  //  VENDAS (Standalone - destaque)
   { 
     icon: ShoppingCart, 
     label: 'Vendas', 
@@ -335,19 +319,11 @@ const menuItems = [
     highlight: true
   },
   
-  // � VISÃO GERAL
+  // 📊 VISÃO GERAL
   { 
     icon: LayoutDashboard, 
     label: 'Visão Geral', 
     href: '/admin/dashboard',
-    badge: null
-  },
-  
-  // 🔔 WEBHOOKS
-  { 
-    icon: Bell, 
-    label: 'Webhooks', 
-    href: '/admin/webhooks',
     badge: null
   },
   
